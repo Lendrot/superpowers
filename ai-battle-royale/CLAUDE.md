@@ -59,6 +59,23 @@ Ein `KnowledgeEntry` entsteht an **genau einer** Stelle: `world/perception.ts`
 - Jeder Eintrag trägt `sourceEventId`. Ohne diesen Herkunftsnachweis ist
   `no-omniscience` nicht prüfbar.
 
+## Entscheidungsgewichte
+
+Die Utility-Policy vergleicht Handlungen auf einer gemeinsamen Skala. Zwei
+Fallen, die dort schon zweimal zugeschnappt haben:
+
+1. **Größenordnung vor Feinabstimmung.** Ein Term, der die Gegenterme nicht
+   erreichen kann, ist toter Code — nicht ein schwaches Gewicht. Der
+   Erkundungsterm lag bei maximal 0,15 gegen Wegkosten von mindestens 0,45; die
+   Folge war eine Welt, die nach Runde 289 stillstand. Bei jedem neuen Term:
+   Maximum ausrechnen und gegen die Alternativen halten.
+2. **Ertragsterme multiplizieren, nicht addieren.** Wer einen Bonus fürs bloße
+   Können addiert (Energie haben, Vorrat haben), gewinnt auch dort, wo nichts zu
+   holen ist. Alle Ertragsterme hängen deshalb am erwarteten Anteil.
+
+Und: Vergleiche sind Vergleiche. Eine Erinnerung an einen anderen Ort zählt
+gegen den eigenen Standort, nicht absolut.
+
 ## Golden-Hashes
 
 `tests/golden/determinism.test.ts` nagelt drei Log-Hashes fest. Bricht einer,

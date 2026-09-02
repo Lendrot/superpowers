@@ -34,6 +34,12 @@ const SATURATION: Record<ResourceKind, number> = { food: 12, coins: 40, material
 /** Grober Erwartungswert einer Ernte, fuer die Einschaetzung der Konkurrenz. */
 const EXPECTED_YIELD = 3;
 
+/** Ab diesem Bestand gilt ein Ort als reichlich versorgt. **[ANNAHME]** */
+const STOCK_SCALE = 20;
+
+/** Nahrung zaehlt mehr als Material, weil nur sie das Ueberleben sichert. */
+const KIND_WEIGHT = { food: 1, materials: 0.6 } as const;
+
 export const policyProvider: DecisionProvider = {
   name: 'policy',
 
@@ -120,9 +126,17 @@ function scoreMove(view: Readonly<AgentView>, to: LocationId): Record<string, nu
   for (const kind of ['food', 'materials'] as const) {
     const belief = believedStock(view, to, kind, stockInfoId);
     if (!belief) continue;
-    const weight = kind === 'food' ? 1 : 0.6;
-    expectation += weight * Math.min(1, belief.value / 20) * belief.certainty;
+    expectation += KIND_WEIGHT[kind] * Math.min(1, belief.value / STOCK_SCALE) * belief.certainty;
     confidence = Math.max(confidence, belief.certainty);
+  }
+
+  // Dieselbe Rechnung fuer den eigenen Ort, damit die Erinnerung einen
+  // Vergleich ergibt und keine absolute Zahl. Vorher zog eine Erinnerung an
+  // "dort lagen 20 Nahrung" auch dann, wenn hier 40 liegen — ein Umzug, der
+  // nichts verbessert, aber eine Runde kostet.
+  let hereValue = 0;
+  for (const kind of ['food', 'materials'] as const) {
+    hereValue += KIND_WEIGHT[kind] * Math.min(1, view.here.stock[kind] / STOCK_SCALE);
   }
 
   // Was ist hier noch zu holen? Dieselbe Rechnung wie bei `gather`, damit
@@ -142,17 +156,38 @@ function scoreMove(view: Readonly<AgentView>, to: LocationId): Record<string, nu
   const foodHere = expectedShareOf(view, 'food');
   const foodStore = Math.min(1, view.self.resources.food / 5);
 
+  // Nachsehen lohnt sich, wenn man wenig weiss und es sich leisten kann.
+  //
+  // Beide Faktoren sind noetig, und beide waren vorher falsch modelliert:
+  //
+  // - `1 - confidence` statt `confidence === 0`. Wissen verfaellt (Doc 03
+  //   §3.4.2), also ist Unwissen kein Zustand, sondern ein Grad. Eine
+  //   Ueberzeugung, die auf halbe Sicherheit gefallen ist, ist ein halber Grund
+  //   nachzusehen — kein gar keiner.
+  //
+  // - `slack`: Erkundung ist Luxus. Wer Energie im Speicher und Nahrung im
+  //   Beutel hat, kann eine Runde fuer einen Blick opfern; wer knapp dran ist,
+  //   nicht.
+  //
+  // Entscheidend ist die Groessenordnung: der Term muss die Wegkosten
+  // ueberhaupt schlagen koennen. Vorher lag er bei hoechstens 0.15 gegen
+  // Kosten von mindestens 0.45 — er konnte also nie gewinnen, und die Welt
+  // stand nach Runde 289 still: 1 700 Runden lang zog kein Agent mehr um,
+  // obwohl seine Ueberzeugungen ueber die Nachbarorte laengst verfallen waren.
+  // Ausgerechnet der Wissensverfall, der Neugier ausloesen sollte, schaltete
+  // sie ab.
+  const slack = energy * foodStore;
+  const curiosity = 0.35 + 0.65 * (view.self.personality.riskTaking / 100);
+
   return {
     survival: 1.6 * hunger * (1 - foodHere) * (1 - foodStore),
-    // Erinnerung an einen besseren Ort — der beste Grund, ueberhaupt zu gehen.
-    memory: 0.9 * expectation,
+    // Erinnerung an einen BESSEREN Ort — der beste Grund, ueberhaupt zu gehen.
+    // Ein Umzug zahlt sich ueber viele Runden aus, nicht nur in der naechsten;
+    // deshalb wiegt der Vorsprung schwerer als die einmaligen Wegkosten.
+    memory: 1.4 * Math.max(0, expectation - hereValue),
     // Je weniger hier fuer einen abfaellt, desto eher lohnt der Aufbruch.
     scarcityHere: 0.6 * (1 - hereProspect),
-    // Neugier: wer ueber das Ziel nichts weiss, geht seltener — aber nicht nie.
-    // Ohne diesen Term kaeme nie jemand irgendwo an, also entstuende nie Wissen
-    // ueber andere Orte, also gaebe es nie einen Grund zu gehen. Exploration
-    // bricht diesen Zirkel.
-    exploration: confidence === 0 ? 0.15 * (view.self.personality.riskTaking / 100) : 0,
+    exploration: 0.7 * (1 - confidence) * slack * curiosity,
     // Wandern kostet Energie und eine Runde.
     cost: -0.45 - 0.25 * (1 - energy),
   };

@@ -22,9 +22,9 @@ Gemessen auf Node 22 in dieser Umgebung:
 
 | Lauf | Ergebnis |
 |---|---|
-| `--rounds 100 --agents 30 --seed 42` | Log-Hash `a2df957087c04137`, 3 202 Events, ~220 ms |
-| `--rounds 400 --agents 30 --seed 42` | Log-Hash `45c6a5bf3317d008`, ~0,57 s |
-| `pnpm test` | 17 Dateien, 217 Tests grün, ~8 s |
+| `--rounds 100 --agents 30 --seed 42` | Log-Hash `50c9804c24f80316`, 3 202 Events, ~220 ms |
+| `--rounds 400 --agents 30 --seed 42` | Log-Hash `3fe0466fcdecc45d`, ~0,63 s |
+| `pnpm test` | 20 Dateien, 238 Tests grün, ~10 s |
 
 Der Zielwert aus Doc 01 §1.5.7 (400 Runden × 30 Agenten headless unter 5 s) wird
 mit ~0,6 s eingehalten — ohne Memory, Lernen und Sozialsystem. Die Zahl ist mit
@@ -39,6 +39,7 @@ jeder weiteren Phase neu zu messen.
 | `tests/unit/agentViewIsolation.test.ts` | Die `AgentView` enthält kein Fremdwissen — geprüft an der Serialisierung |
 | `tests/unit/eslintBoundary.test.ts` | Die Engine kann React, Next, DB und `Math.random` nicht importieren |
 | `tests/unit/noLieActions.test.ts` | Die vier verbotenen Aktionen existieren im Quelltext nicht |
+| `tests/simulation/movement.test.ts` | Die Welt friert nicht ein — Bewegung bleibt über den ganzen Lauf möglich |
 
 Der `no-omniscience`-Test prüft **nicht** gegen die Perception-Funktion — das
 wäre ein Vergleich mit sich selbst. Er rekonstruiert die Aufenthaltsorte
@@ -122,10 +123,28 @@ Jede davon ist eine Entscheidung, keine Auslassung.
    ist ohnehin am eigenen Ort sichtbar. Bewertet wird ausschließlich auf der
    Sicht.
 
-## Zwei Fehler, die das Messen aufgedeckt hat
+## Drei Fehler, die das Messen aufgedeckt hat
 
-Beide waren in Tag 1 nicht sichtbar, weil es die Aktionen noch nicht gab, mit
-denen sie sich zeigen.
+Alle drei waren in Tag 1 nicht sichtbar, weil es die Aktionen noch nicht gab,
+mit denen sie sich zeigen.
+
+0. **Die Welt fror nach Runde 289 ein.** In den folgenden 1 700 Runden zog kein
+   einziger Agent mehr um. Die Ursache war kein Gewicht, sondern eine
+   Größenordnung: der Erkundungsterm der Policy erreichte höchstens 0,15, die
+   Wegkosten mindestens 0,45 — Nachsehen konnte also *nie* gewinnen. Sobald die
+   Überzeugungen über die Nachbarorte verfallen waren, war die Neugier dauerhaft
+   unbezahlbar. Ausgerechnet der Wissensverfall aus T10, der Neugier auslösen
+   sollte, schaltete sie ab.
+
+   Zwei Korrekturen: Unwissen ist ein Grad (`1 - certainty`) statt eines
+   Zustands (`certainty === 0`), und Erkundung ist Luxus — sie zählt nur, wenn
+   Energie und Vorrat es zulassen, dafür dann stark genug, um die Wegkosten zu
+   schlagen. Zusätzlich vergleicht die Erinnerung an einen anderen Ort jetzt
+   gegen den eigenen Standort, statt absolut zu werten; vorher zog eine
+   Erinnerung an „dort lagen 20" auch dann, wenn hier 40 lagen.
+
+   Ergebnis über 2 000 Runden: 1 154 / 972 / 930 / 976 Ortswechsel je Viertel
+   statt 179 / 0 / 0 / 0.
 
 1. **`move` wurde in 400 Runden kein einziges Mal gewählt.** Ursache war nicht
    das Gewicht des Ortswechsels, sondern die Bewertung des Erntens: sie addierte
@@ -145,28 +164,48 @@ denen sie sich zeigen.
 
 | Größe | Wert |
 |---|---|
-| Überlebende | 26 von 30 |
-| Aktionen | 6 696 ernten, 3 707 ruhen, 574 essen, 179 umziehen |
+| Überlebende | 30 von 30 |
+| Aktionen | 7 232 ernten, 3 276 ruhen, 892 umziehen, 600 essen |
 | Reject-Rate der Validierungskette | 0 |
-| Fehlernten (FCFS verloren) | 2 719 von 6 696 |
-| Wissenseinträge je Agent | ⌀ 6 |
-| Überzeugungen über andere Orte | 21 |
-| veraltete Überzeugungen am Matchende | 59 |
+| Fehlernten (FCFS verloren) | 2 878 von 7 232 |
+| Laufzeit | ~0,63 s |
 
-Die 59 veralteten Überzeugungen sind kein Mangel, sondern der Beleg, dass das
+Veraltete Überzeugungen sind kein Mangel, sondern der Beleg, dass das
 Wissenssystem etwas anderes ist als eine Kopie der Weltwahrheit: Agenten glauben
 Dinge, die nicht mehr stimmen. Genau darauf baut die Truthfulness-Regel auf —
 ein Agent, der eine veraltete Überzeugung ausspricht, irrt sich, er lügt nicht
-(Doc 03 §3.4.2). Der Determinismus-Test prüft diese Eigenschaft mit.
+(Doc 03 §3.4.2). `noOmniscience.test.ts` prüft diese Eigenschaft mit.
+
+## Die Ökonomie ist zu großzügig — gemessen, nicht vermutet
+
+Dass jetzt alle 30 Agenten überleben, ist **kein** Zeichen von Balance. Bis zur
+Reparatur der Bewegung starben Agenten nicht an Knappheit, sondern weil sie an
+Orten festsaßen, an denen nie Nahrung nachwächst. Die eigentlichen Zahlen:
+
+| `satietyDecayPerRound` | Bedarf/Runde | Überlebende von 30 |
+|---|---|---|
+| **1 (Default)** | 1,2 | 30 |
+| 4 | 4,8 | 24 |
+| 8 | 9,6 | 23 |
+| 12 | 14,4 | 21 |
+| 20 | 24,0 | 18 |
+
+Dem steht ein Nahrungsnachschub von **23 pro Runde** gegenüber (fields 12,
+well 6, commons 3, warehouse 2). Beim Default ist das ein 19-facher Überschuss —
+Nahrung ist wertlos, und damit wären auch Handel (T17) und Allianzlager (T20)
+ohne Einsatz. Der Default bleibt vorerst bei 1, weil Kalibrierung eine eigene
+Aufgabe ist (T43) und jede Änderung alle Golden-Hashes verschiebt;
+`tests/integration/elimination.test.ts` prüft das Ausscheiden deshalb unter
+`satietyDecayPerRound: 8`.
 
 ## Was noch offen ist
 
-- **41 % der Ernten laufen ins Leere.** Kein Validierungsfehler — die Reject-Rate
-  ist exakt 0 —, sondern echte Knappheit: 30 Agenten auf 6 Orten mit zusammen
-  ~36 Einheiten Regeneration pro Runde. `trade` (T17) und
-  `share_information` (T18) fehlen noch, also gibt es keine Möglichkeit,
-  Knappheit anders als durch Weggehen aufzulösen. Eingang für den
-  Kalibrierungs-Sweep (T43).
+- **40 % der Ernten laufen ins Leere** (2 878 von 7 232). Kein
+  Validierungsfehler — die Reject-Rate ist exakt 0 —, sondern die Konkurrenz um
+  denselben Bestand: der Agent sieht beim Entscheiden, wie viel da liegt und wer
+  daneben steht, aber nicht, wer vor ihm aufgelöst wird. `trade` (T17) und
+  `share_information` (T18) fehlen noch, also gibt es keine Möglichkeit, das
+  anders als durch Weggehen aufzulösen. Eingang für den Kalibrierungs-Sweep (T43).
 - **Wissen entsteht nur durch Anwesenheit.** Der zweite Pfad —
   `share_information` — kommt mit T18. Bis dahin ist die Informationsasymmetrie
   vollständig, aber statisch.

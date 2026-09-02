@@ -16,18 +16,19 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben in Tag 2 (T08, T10, T11, T16). Die Aenderung war
- * beabsichtigt: Perception schreibt Wissen, Agenten ziehen um, essen und
- * scheiden aus, und die Utility-Policy bewertet Ernten multiplikativ statt
- * additiv. Jede dieser Aenderungen verschiebt das Verhalten — und damit den Hash.
+ * Zuletzt neu geschrieben nach der Reparatur der eingefrorenen Bewegung. Die
+ * Aenderung war beabsichtigt: der Erkundungsterm der Policy kann die Wegkosten
+ * jetzt ueberhaupt schlagen, und die Erinnerung an einen anderen Ort wird gegen
+ * den eigenen Standort verglichen statt absolut gewertet. Beides verschiebt
+ * jede Entscheidung, die auf einen Ortswechsel hinauslaeuft — und damit den Hash.
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'a2df957087c04137',
+  seed42x100: '50c9804c24f80316',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '45c6a5bf3317d008',
+  seed42x400: '3fe0466fcdecc45d',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: '1897c8432d0c93eb',
+  seed7x100: 'dbdd4a791d444bc3',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {
@@ -114,10 +115,24 @@ describe('Golden — der Lauf ist nicht entartet', () => {
     }
   });
 
-  it('laesst Agenten ausscheiden, aber nicht alle', () => {
-    const alive = result.leaderboard.filter((entry) => entry.alive).length;
-    expect(alive).toBeLessThan(30);
-    expect(alive).toBeGreaterThan(10);
+  it('laesst bei Standardeinstellung niemanden verhungern', () => {
+    // Gemessene Tatsache, keine Zielvorgabe: dem Bedarf von 1,2 Nahrung pro
+    // Runde (30 Agenten, 1 Saettigung Verfall, 25 Saettigung je Nahrung) steht
+    // ein Nachschub von 23 pro Runde gegenueber. Bis zur Reparatur der
+    // eingefrorenen Bewegung starben trotzdem Agenten — nicht an Knappheit,
+    // sondern weil sie an Orten festsassen, an denen nie Nahrung nachwaechst.
+    // Dass jetzt alle ueberleben, heisst also nicht, dass die Oekonomie
+    // ausgewogen waere; sie ist im Gegenteil viel zu grosszuegig und der
+    // naechste Kandidat fuer den Kalibrierungs-Sweep (T43).
+    //
+    // Dass Ausscheiden funktioniert, prueft `tests/integration/elimination.test.ts`
+    // unter einer knappen Oekonomie.
+    expect(result.leaderboard.filter((entry) => entry.alive)).toHaveLength(30);
+  });
+
+  it('bewegt Agenten ueber den ganzen Lauf', () => {
+    const moves = result.log.events.filter((event) => event.type === 'agent_moved');
+    expect(moves.filter((event) => event.round > 300).length).toBeGreaterThan(0);
   });
 
   it('erzeugt Wissen', () => {

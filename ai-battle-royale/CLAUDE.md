@@ -28,7 +28,7 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    verändert nie State.** Ab T12/T13.
 7. **Neue Aktion ⇒ neue Datei in `actions/defs/` + Unit-Test + Eintrag in
    `resolutionOrder`.** Ein Eintrag in `registry.ts` ist die Zusage, dass die
-   Aktion funktioniert — `ActionType` kennt alle 13, implementiert sind vier.
+   Aktion funktioniert — `ActionType` kennt 14, implementiert sind fünf.
 8. **Jede Lesson braucht `supportingEpisodeIds` aus dem eigenen Speicher des
    Agenten.** Ab T24.
 9. **Vor jedem Commit: `pnpm test` inklusive `determinism.test.ts` grün.**
@@ -75,6 +75,30 @@ Fallen, die dort schon zweimal zugeschnappt haben:
 
 Und: Vergleiche sind Vergleiche. Eine Erinnerung an einen anderen Ort zählt
 gegen den eigenen Standort, nicht absolut.
+
+## Fähigkeiten, Macht und Gewalt
+
+Erweiterung auf Ansage, gegen die Spezifikation (Doc 01 §1.4 schließt ein
+Kampfsystem aus, Doc 03 §3.2.1 nennt die Persönlichkeit konstant). Die Regeln
+dieses Repos gelten trotzdem weiter:
+
+- **Attribute werden nicht gespeichert, sondern abgeleitet.** Im State steht nur
+  die Erfahrung; `agents/attributes.ts` rechnet daraus Fähigkeit, Instinkt und
+  Macht. Zwei Zahlen für dieselbe Sache driften auseinander — derselbe Grund,
+  aus dem `InfoItem` keinen `trueValue` trägt.
+- **Alle starten gleich.** Wer stark wird, ist es geworden. Dass alle gleich
+  starten, ist Weltwissen (`AgentView.world`), keine Beobachtung an einer
+  Person — deshalb darf es in der Sicht stehen, ohne die Epistemik zu verletzen.
+- **Verfall ist proportional zum Niveau, mit Boden.** Ohne Proportionalität
+  treibt jede häufige Tätigkeit ihre Fähigkeit ins Maximum; ohne Boden fällt
+  eine vernachlässigte auf null, und ein Agent ohne Intelligenz hat keinen
+  Überlebensinstinkt mehr.
+- **Gewalt läuft über dieselben Wege wie alles andere.** `attack` ist eine reine
+  Funktion, jeder Wurf geht durch einen benannten Stream, getötet wird über den
+  `eliminate`-Effekt.
+- **Wer in Phase 6 fällt, handelt nicht mehr und wird nicht mehr angegriffen.**
+  Der Tod steht erst nach Phase 7 im State, ist aber vorher beschlossen — die
+  `EffectProjection` führt ihn mit.
 
 ## Golden-Hashes
 

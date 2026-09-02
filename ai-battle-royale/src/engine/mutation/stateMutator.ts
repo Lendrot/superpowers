@@ -13,6 +13,7 @@
 import { getAgent, getLocation } from '../core/access.js';
 import { InvariantError, assertInvariants, totalResources } from '../core/invariants.js';
 import { RESOURCE_KINDS } from '../core/resources.js';
+import { ATTRIBUTE_TRACKS, PERSONALITY_TRAITS } from '../core/types.js';
 import type { Effect, Resources, WorldState } from '../core/types.js';
 import { describeEffect, expectedResourceDelta } from './effects.js';
 
@@ -154,6 +155,60 @@ function applyOne(state: WorldState, item: Effect): void {
       agent.alive = false;
       agent.eliminatedRound = state.round;
       agent.eliminationCause = item.cause;
+      if (item.killedBy) agent.killedBy = item.killedBy;
+      return;
+    }
+
+    case 'experience': {
+      const agent = getAgent(state, item.agentId);
+      const max = state.config.attributes.maxExperience;
+      for (const track of ATTRIBUTE_TRACKS) {
+        const delta = item.delta[track];
+        if (delta === undefined || delta === 0) continue;
+        requireInteger(item, track, delta);
+        const next = agent.experience[track] + delta;
+        if (next < 0 || next > max) {
+          // Kein stilles Kappen: wer Erfahrung vergibt, muss selbst gegen die
+          // Grenzen rechnen (`clampExperienceDelta`), sonst weicht die
+          // angekuendigte von der tatsaechlichen Aenderung ab.
+          throw new InvariantError(
+            `${describeEffect(item)}: ${track} wuerde auf ${next} laufen (erlaubt 0..${max})`,
+          );
+        }
+        agent.experience[track] = next;
+      }
+      return;
+    }
+
+    case 'personality': {
+      const agent = getAgent(state, item.agentId);
+      const limit = state.config.attributes.maxPersonalityDrift;
+      for (const trait of PERSONALITY_TRAITS) {
+        const delta = item.delta[trait];
+        if (delta === undefined || delta === 0) continue;
+        requireInteger(item, trait, delta);
+        if (Math.abs(delta) > limit) {
+          // Doc 03 §3.2.4 deckelt aus gutem Grund, wie schnell sich ein Agent
+          // veraendern darf: ohne Deckel entstehen oszillierende Agenten, deren
+          // Verhalten niemand mehr erklaeren kann.
+          throw new InvariantError(
+            `${describeEffect(item)}: Drift ${delta} ueberschreitet das Limit ±${limit}`,
+          );
+        }
+        agent.personality[trait] = clampStat(agent.personality[trait] + delta);
+      }
+      return;
+    }
+
+    case 'cooldown': {
+      const agent = getAgent(state, item.agentId);
+      agent.cooldowns[item.action] = item.readyAtRound;
+      return;
+    }
+
+    case 'kill': {
+      const agent = getAgent(state, item.agentId);
+      agent.kills += 1;
       return;
     }
 

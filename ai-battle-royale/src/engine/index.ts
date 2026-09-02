@@ -22,7 +22,6 @@ export { ARCHETYPES, ARCHETYPE_IDS } from './agents/archetypes.js';
 export { IMPLEMENTED_ACTIONS, findAction, isImplemented, requireAction } from './actions/registry.js';
 export { actionClassOf, initiativeOf, orderActions } from './actions/resolutionOrder.js';
 export type { ActionCandidate, ActionContext, ActionDef } from './actions/types.js';
-export { createStockLedger } from './actions/stockLedger.js';
 
 export { generateCandidates } from './decision/candidates.js';
 export { policyProvider } from './decision/policyProvider.js';

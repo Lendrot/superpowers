@@ -8,6 +8,7 @@
  */
 
 import type { ActionType } from '../core/types.js';
+import { attackAction } from './defs/attack.js';
 import { consumeAction } from './defs/consume.js';
 import { gatherResourceAction } from './defs/gatherResource.js';
 import { moveAction } from './defs/move.js';
@@ -20,6 +21,7 @@ export const IMPLEMENTED_ACTIONS: readonly ActionDef[] = [
   gatherResourceAction,
   moveAction,
   consumeAction,
+  attackAction,
 ];
 
 const REGISTRY = new Map<ActionType, ActionDef>(

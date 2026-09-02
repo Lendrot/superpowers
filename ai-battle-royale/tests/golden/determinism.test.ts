@@ -16,19 +16,19 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben nach der Reparatur der eingefrorenen Bewegung. Die
- * Aenderung war beabsichtigt: der Erkundungsterm der Policy kann die Wegkosten
- * jetzt ueberhaupt schlagen, und die Erinnerung an einen anderen Ort wird gegen
- * den eigenen Standort verglichen statt absolut gewertet. Beides verschiebt
- * jede Entscheidung, die auf einen Ortswechsel hinauslaeuft — und damit den Hash.
+ * Zuletzt neu geschrieben mit der Erweiterung um Faehigkeiten, Macht und Kampf.
+ * Die Aenderung war beabsichtigt und gross: Agenten entwickeln Attribute,
+ * greifen einander an und koennen getoetet werden, ihre Veranlagung driftet,
+ * Glueck wirkt auf jeden Wurf, und die Saettigung faellt jetzt um 4 statt 1 pro
+ * Runde. Jeder dieser Punkte allein verschiebt den Hash.
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: '50c9804c24f80316',
+  seed42x100: 'd9e6f96d7548c356',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '3fe0466fcdecc45d',
+  seed42x400: '4a81207b75a1a77d',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: 'dbdd4a791d444bc3',
+  seed7x100: 'c967f10a741f89ac',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {
@@ -109,30 +109,32 @@ describe('Golden — der Lauf ist nicht entartet', () => {
     expect(result.decisions).toBeGreaterThan(400 * 20);
   });
 
-  it('nutzt alle vier implementierten Aktionen', () => {
-    for (const type of ['rest', 'gather_resource', 'move', 'consume']) {
+  it('nutzt alle fuenf implementierten Aktionen', () => {
+    for (const type of ['rest', 'gather_resource', 'consume']) {
       expect(result.actionCounts[type], `${type} wurde nie gewaehlt`).toBeGreaterThan(50);
+    }
+    // Umziehen und Angreifen sind seltener — aber sie muessen vorkommen.
+    for (const type of ['move', 'attack']) {
+      expect(result.actionCounts[type], `${type} wurde nie gewaehlt`).toBeGreaterThan(10);
     }
   });
 
-  it('laesst bei Standardeinstellung niemanden verhungern', () => {
-    // Gemessene Tatsache, keine Zielvorgabe: dem Bedarf von 1,2 Nahrung pro
-    // Runde (30 Agenten, 1 Saettigung Verfall, 25 Saettigung je Nahrung) steht
-    // ein Nachschub von 23 pro Runde gegenueber. Bis zur Reparatur der
-    // eingefrorenen Bewegung starben trotzdem Agenten — nicht an Knappheit,
-    // sondern weil sie an Orten festsassen, an denen nie Nahrung nachwaechst.
-    // Dass jetzt alle ueberleben, heisst also nicht, dass die Oekonomie
-    // ausgewogen waere; sie ist im Gegenteil viel zu grosszuegig und der
-    // naechste Kandidat fuer den Kalibrierungs-Sweep (T43).
-    //
-    // Dass Ausscheiden funktioniert, prueft `tests/integration/elimination.test.ts`
-    // unter einer knappen Oekonomie.
-    expect(result.leaderboard.filter((entry) => entry.alive)).toHaveLength(30);
+  it('laesst Agenten ausscheiden, aber nicht das ganze Feld', () => {
+    // Mit `satietyDecayPerRound: 4` steht einem Bedarf von 4,8 Nahrung pro
+    // Runde ein Nachschub von 23 gegenueber — knapp genug, dass die Wahl des
+    // Ortes zaehlt, weit genug von der Ausloeschung entfernt, dass ein Lauf
+    // etwas zeigt. Beim frueheren Wert 1 ueberlebten alle 30 und niemand hatte
+    // je einen Grund zu kaempfen.
+    const alive = result.leaderboard.filter((entry) => entry.alive).length;
+    expect(alive).toBeLessThan(30);
+    expect(alive).toBeGreaterThan(5);
   });
 
-  it('bewegt Agenten ueber den ganzen Lauf', () => {
-    const moves = result.log.events.filter((event) => event.type === 'agent_moved');
-    expect(moves.filter((event) => event.round > 300).length).toBeGreaterThan(0);
+  it('entwickelt unterschiedliche Faehigkeiten', () => {
+    const strengths = result.leaderboard
+      .filter((entry) => entry.alive)
+      .map((entry) => entry.attributes.strength);
+    expect(Math.max(...strengths) - Math.min(...strengths)).toBeGreaterThan(10);
   });
 
   it('erzeugt Wissen', () => {

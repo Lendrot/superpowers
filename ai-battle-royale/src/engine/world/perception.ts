@@ -69,6 +69,12 @@ export interface PerceptionResult {
   effects: Effect[];
   /** Nur zur Diagnose: wieviele Wissenseintraege diese Runde entstanden sind. */
   written: number;
+  /**
+   * Wieviel je Agent *neu* war — also eine Info, die er vorher nicht kannte.
+   * Phase 8 macht daraus Intelligenz: dasselbe zum zehnten Mal zu sehen lehrt
+   * nichts.
+   */
+  newKnowledgePerAgent: Map<AgentId, number>;
 }
 
 /**
@@ -84,6 +90,7 @@ export function perceptionEffects(
   round: Round,
 ): PerceptionResult {
   const effects: Effect[] = [];
+  const newKnowledgePerAgent = new Map<AgentId, number>();
   let written = 0;
 
   for (const event of previousRoundEvents) {
@@ -110,6 +117,10 @@ export function perceptionEffects(
 
       for (const observerId of observers) {
         const observer = getAgent(state, observerId);
+        const previous = observer.knowledge[infoId];
+        if (!previous) {
+          newKnowledgePerAgent.set(observerId, (newKnowledgePerAgent.get(observerId) ?? 0) + 1);
+        }
         effects.push(
           effect.knowledge(
             observerId,
@@ -120,7 +131,7 @@ export function perceptionEffects(
               // Wer selbst gehandelt hat, hat teilgenommen; alle anderen haben zugesehen.
               source: event.actorId === observerId ? 'participated' : 'observed',
               sourceEventId: event.id,
-              previous: observer.knowledge[infoId],
+              previous,
             }),
           ),
         );
@@ -129,5 +140,5 @@ export function perceptionEffects(
     }
   }
 
-  return { effects, written };
+  return { effects, written, newKnowledgePerAgent };
 }

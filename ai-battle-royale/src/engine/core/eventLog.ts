@@ -103,6 +103,12 @@ export function isEventType(value: string): value is EventType {
     value === 'agent_rested' ||
     value === 'resource_gathered' ||
     value === 'gather_failed' ||
+    value === 'agent_moved' ||
+    value === 'food_consumed' ||
+    value === 'agent_attacked' ||
+    value === 'agent_killed' ||
+    value === 'attribute_grown' ||
+    value === 'agent_eliminated' ||
     value === 'action_rejected' ||
     value === 'round_ended' ||
     value === 'match_ended'

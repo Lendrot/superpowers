@@ -11,8 +11,9 @@
 import { agentId } from '../core/ids.js';
 import type { RngBundle } from '../core/rng.js';
 import { PERSONALITY_TRAITS } from '../core/types.js';
-import type { Agent, LocationId, Personality } from '../core/types.js';
+import type { Agent, AttributeConfig, LocationId, Personality } from '../core/types.js';
 import { ARCHETYPES } from './archetypes.js';
+import { startingExperience } from './attributes.js';
 import { nameForIndex } from './names.js';
 
 /** Streuung um den Archetyp-Mittelwert, in Stat-Punkten. **[ANNAHME]** */
@@ -22,9 +23,10 @@ export interface CreateAgentOptions {
   index: number;
   rng: RngBundle;
   locations: readonly LocationId[];
+  attributes: Readonly<AttributeConfig>;
 }
 
-export function createAgent({ index, rng, locations }: CreateAgentOptions): Agent {
+export function createAgent({ index, rng, locations, attributes }: CreateAgentOptions): Agent {
   if (locations.length === 0) {
     throw new RangeError('createAgent: keine Orte vorhanden');
   }
@@ -45,6 +47,10 @@ export function createAgent({ index, rng, locations }: CreateAgentOptions): Agen
     alive: true,
     location: stream.pick(locations),
     personality,
+    // Nicht gezogen: alle starten mit demselben Koennen. Persoenlichkeit ist
+    // Veranlagung und darf sich unterscheiden — Faehigkeit wird erworben.
+    experience: startingExperience(attributes),
+    kills: 0,
     needs: {
       satiety: stream.int(70, 90),
       energy: stream.int(70, 100),

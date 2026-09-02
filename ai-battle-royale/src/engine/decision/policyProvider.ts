@@ -20,7 +20,7 @@
 
 import type { AgentView } from '../agents/agentView.js';
 import { believedStock } from '../agents/agentView.js';
-import type { AgentAction, LocationId, ResourceKind } from '../core/types.js';
+import type { AgentAction, AgentId, LocationId, ResourceKind } from '../core/types.js';
 import { stockInfoId } from '../information/infoRegistry.js';
 import type { ActionCandidate } from '../actions/types.js';
 import type { Decision, DecisionProvider, ScoredCandidate } from './provider.js';
@@ -85,6 +85,8 @@ function scoreOf(view: Readonly<AgentView>, candidate: ActionCandidate): Record<
       return scoreMove(view, candidate.params['to'] as LocationId);
     case 'gather_resource':
       return scoreGather(view, candidate.params['resource'] as ResourceKind);
+    case 'attack':
+      return scoreAttack(view, candidate.params['target'] as AgentId);
     default:
       // Ein Kandidat ohne Bewertung waere ein stiller Nulltreffer. Lieber laut.
       throw new Error(`policyProvider kennt die Aktion ${candidate.type} nicht`);
@@ -95,7 +97,7 @@ function scoreRest(view: Readonly<AgentView>): Record<string, number> {
   const energy = view.self.needs.energy / 100;
   return {
     // Je leerer der Energiespeicher, desto attraktiver Ruhe.
-    survival: 0.9 * (1 - energy),
+    survival: 0.9 * (1 - energy) * (0.7 + 0.6 * view.self.instincts.survival),
     // Vorsichtige Naturen ruhen frueher.
     caution: 0.25 * (1 - view.self.personality.riskTaking / 100),
     base: 0.15,
@@ -110,10 +112,99 @@ function scoreConsume(view: Readonly<AgentView>): Record<string, number> {
     // Essen ist die einzige Handlung, die Verhungern abwendet. Der Term waechst
     // quadratisch: bei halber Saettigung ist es eine Option, bei leerem Magen
     // schlaegt es alles andere.
-    survival: 2.2 * hungerPressure * hungerPressure,
+    //
+    // Der Ueberlebensinstinkt aus der Intelligenz wirkt hier: kluge Agenten
+    // essen frueher, statt es darauf ankommen zu lassen.
+    survival: 2.2 * hungerPressure * hungerPressure * (0.7 + 0.6 * view.self.instincts.survival),
     // Wer schon hungert, hat keine Zeit mehr zu ueberlegen.
     urgency: view.self.status.hungerStreak > 0 ? 1.5 : 0,
     base: 0.1,
+  };
+}
+
+/**
+ * Angriff.
+ *
+ * Der Machtinstinkt aus der Kraft treibt ihn, die eingeschaetzte Staerke des
+ * Gegenuebers bremst ihn — und diese Einschaetzung ist **Wissen**, keine
+ * Weltwahrheit: wer den anderen nie hat kaempfen sehen, geht davon aus, dass
+ * alle gleich stark begonnen haben. Er kann sich irren, und das ist der Punkt.
+ *
+ * Persoenlichkeit entscheidet mit: Dominanz und Ehrgeiz treiben, Empathie und
+ * Loyalitaet halten zurueck. Weil beides driftet (Phase 8), wird ein Agent, der
+ * einmal zugeschlagen hat, es beim naechsten Mal leichter tun.
+ */
+function scoreAttack(view: Readonly<AgentView>, targetId: AgentId): Record<string, number> {
+  const target = view.coLocated.find((other) => other.id === targetId);
+  if (!target) return { unknown: -10 };
+
+  const own = view.self.attributes.strength;
+  const theirs = target.believedStrength;
+  // −1 (deutlich unterlegen) bis +1 (deutlich ueberlegen).
+  const rawEdge = own + theirs === 0 ? 0 : (own - theirs) / (own + theirs);
+  // Unsicherheit macht Angreifen nicht schlecht, sondern die Einschaetzung
+  // weniger aussagekraeftig: eine ungepruefte Annahme zieht den vermuteten
+  // Vorsprung zur Null hin. Ein flacher Abzug waere hier falsch — er koennte
+  // sich nie aufloesen, weil ohne Kaempfe niemand etwas ueber fremde Kraft
+  // erfaehrt, und genau diese Form von Term hat schon die Bewegung eingefroren.
+  const edge = rawEdge * (0.4 + 0.6 * target.strengthCertainty);
+
+  const empathy = view.self.personality.empathy / 100;
+  const loyalty = view.self.personality.loyalty / 100;
+
+  // Wie sehr dieser Charakter ueberhaupt zur Gewalt neigt. Der Faktor macht
+  // aus dem Machtinstinkt eine Minderheitenposition: gemessen an einem Lauf
+  // ueber 500 Runden fehlten dem aggressivsten Agenten 0.32 Punkte zum
+  // Zuschlagen, dem durchschnittlichen ueber 0.45. Mit diesem Faktor kippt
+  // genau die Spitze der Verteilung, nicht das Feld.
+  const aggression =
+    0.5 * (view.self.personality.dominance / 100) +
+    0.3 * (view.self.personality.ambition / 100) +
+    0.2 * (1 - empathy);
+
+  // Was ein Angriff einbringt, sieht der Angreifer nicht: fremde Vorraete
+  // stehen nicht in seiner Sicht, und das soll auch so bleiben. Was er weiss:
+  // dass hier nichts mehr zu holen ist, dass sein eigener Beutel leer ist und
+  // dass der andere etwas bei sich traegt. Der Term wiegt also die eigene Not,
+  // nicht die fremde Beute — Raub als Ueberlebensweg.
+  //
+  // Ohne diesen Term hat `attack` als einzige Aktion keinen Ertragsteil und
+  // besteht nur aus Antrieb und Hemmung. Dieselbe Luecke hatte `move`, bevor
+  // die Welt einfror.
+  const hunger = 1 - view.self.needs.satiety / 100;
+  const foodHere = expectedShareOf(view, 'food');
+  const foodStore = Math.min(1, view.self.resources.food / 5);
+
+  // Ein Konkurrent weniger heisst mehr Ertrag fuer die, die bleiben. Der Agent
+  // sieht, wer neben ihm steht und was hier liegt — er kann das ausrechnen.
+  // In einer grossen Menge bringt ein Toter fast nichts, in einer kleinen
+  // Gruppe um einen knappen Bestand sehr viel.
+  const competitors = view.coLocated.length + 1;
+  const shareNow = Math.min(1, view.here.stock.food / (competitors * EXPECTED_YIELD));
+  const shareAfter = Math.min(
+    1,
+    view.here.stock.food / (Math.max(1, competitors - 1) * EXPECTED_YIELD),
+  );
+
+  return {
+    loot: 1.2 * hunger * (1 - foodHere) * (1 - foodStore),
+    rivalry: 1.4 * (shareAfter - shareNow),
+    // Der Machtinstinkt ist die Triebfeder. Er haengt an der eigenen Kraft und
+    // waechst mit dem eingeschaetzten Vorsprung — aber er ist auch ohne
+    // Vorsprung nicht null, sonst koennte ein Feld aus lauter gleich starken
+    // Agenten nie in Bewegung kommen.
+    powerDrive:
+      7.5 * view.self.instincts.power * aggression * (0.3 + 0.7 * Math.max(0, edge)),
+    // Ehrgeiz und Dominanz als Veranlagung. Beide driften mit dem, was der
+    // Agent tut — wer einmal zugeschlagen hat, tut es beim naechsten Mal leichter.
+    disposition:
+      0.7 * (view.self.personality.dominance / 100) + 0.4 * (view.self.personality.ambition / 100),
+    // Unterlegenheit schreckt ab — und je klueger, desto ernster nimmt er das.
+    risk: -2 * Math.max(0, -edge) * (0.6 + 0.8 * view.self.instincts.survival),
+    // Mitgefuehl und Loyalitaet halten zurueck.
+    restraint: -0.7 * empathy - 0.3 * loyalty,
+    // Angreifen kostet Energie, die dann fehlt.
+    cost: -0.3 - 0.5 * (1 - view.self.needs.energy / 100),
   };
 }
 
@@ -176,7 +267,10 @@ function scoreMove(view: Readonly<AgentView>, to: LocationId): Record<string, nu
   // obwohl seine Ueberzeugungen ueber die Nachbarorte laengst verfallen waren.
   // Ausgerechnet der Wissensverfall, der Neugier ausloesen sollte, schaltete
   // sie ab.
-  const slack = energy * foodStore;
+  // Nur der Vorrat, nicht die Energie: die steckt schon in den Wegkosten. Als
+  // beides zaehlte, war der Erkundungsterm bei mittlerer Energie zwangslaeufig
+  // kleiner als die Kosten — und die Welt fror ein zweiten Mal ein.
+  const slack = foodStore;
   const curiosity = 0.35 + 0.65 * (view.self.personality.riskTaking / 100);
 
   return {

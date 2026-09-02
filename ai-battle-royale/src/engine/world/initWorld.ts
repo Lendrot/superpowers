@@ -13,8 +13,9 @@ import { matchId as makeMatchId } from '../core/ids.js';
 import { createRngBundle } from '../core/rng.js';
 import type { RngBundle } from '../core/rng.js';
 import { RESOURCE_KINDS } from '../core/resources.js';
-import type { MatchConfig, WorldState } from '../core/types.js';
-import { stockInfoItem } from '../information/infoRegistry.js';
+import { ATTRIBUTE_TRACKS } from '../core/types.js';
+import type { AgentId, MatchConfig, WorldState } from '../core/types.js';
+import { attributeInfoItem, stockInfoItem } from '../information/infoRegistry.js';
 import { LOCATION_IDS, createLocations } from './locations.js';
 
 export interface InitWorldResult {
@@ -29,7 +30,7 @@ export function initWorld(config: MatchConfig): InitWorldResult {
 
   const agents: WorldState['agents'] = {};
   for (let index = 0; index < config.agentCount; index += 1) {
-    const agent = createAgent({ index, rng, locations: LOCATION_IDS });
+    const agent = createAgent({ index, rng, locations: LOCATION_IDS, attributes: config.attributes });
     agents[agent.id] = agent;
   }
 
@@ -41,6 +42,15 @@ export function initWorld(config: MatchConfig): InitWorldResult {
   for (const locationId of LOCATION_IDS) {
     for (const kind of RESOURCE_KINDS) {
       const item = stockInfoItem(locationId, kind, 1);
+      infoRegistry[item.id] = item;
+    }
+  }
+  // Dass jeder Agent drei Faehigkeiten hat, ist ebenfalls eine Tatsache der
+  // Welt. Ihre Werte sind es auch — aber niemand kennt sie ausser den eigenen,
+  // bis er jemanden handeln sieht.
+  for (const agentId of Object.keys(agents) as AgentId[]) {
+    for (const track of ATTRIBUTE_TRACKS) {
+      const item = attributeInfoItem(agentId, track, 1);
       infoRegistry[item.id] = item;
     }
   }

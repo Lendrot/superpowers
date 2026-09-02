@@ -7,6 +7,7 @@
  */
 
 import { RESOURCE_KINDS } from './resources.js';
+import { ATTRIBUTE_TRACKS } from './types.js';
 import type { Resources, WorldState } from './types.js';
 
 export class InvariantError extends Error {
@@ -57,6 +58,25 @@ export function assertInvariants(state: Readonly<WorldState>): void {
 
     if (agent.status.hungerStreak < 0 || agent.status.exhaustionStreak < 0) {
       throw new InvariantError(`${who}: negativer Streak-Zaehler`);
+    }
+
+    for (const track of ATTRIBUTE_TRACKS) {
+      const points = agent.experience[track];
+      if (!Number.isInteger(points) || points < 0 || points > state.config.attributes.maxExperience) {
+        throw new InvariantError(
+          `${who}: experience.${track} = ${points} (erlaubt 0..${state.config.attributes.maxExperience})`,
+        );
+      }
+    }
+
+    if (!Number.isInteger(agent.kills) || agent.kills < 0) {
+      throw new InvariantError(`${who}: kills = ${agent.kills}`);
+    }
+    if (agent.killedBy !== undefined && agent.eliminationCause !== 'killed') {
+      throw new InvariantError(`${who}: killedBy gesetzt, aber nicht getoetet`);
+    }
+    if (agent.eliminationCause === 'killed' && agent.killedBy === undefined) {
+      throw new InvariantError(`${who}: getoetet, aber ohne Taeter`);
     }
 
     // alive und eliminatedRound duerfen nicht auseinanderlaufen — sonst zaehlt

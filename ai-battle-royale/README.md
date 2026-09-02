@@ -7,8 +7,56 @@ Stand: **Tag 1 und Tag 2** aus `12-build-order.md`.
 - **Tag 2** (T08, T10, T11, T16): Agenten essen, ziehen um und scheiden aus.
   Wissen entsteht ausschließlich in Phase 2 und veraltet. Entscheidungen fallen
   nur noch auf Basis einer `AgentView`.
+- **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
+  sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
+  Kampfsystem, in dem Agenten einander töten können. Siehe unten.
 
 Kein UI, kein LLM, keine Allianzen, kein Handel, kein Lernsystem.
+
+## Fähigkeiten, Instinkte, Macht, Gewalt
+
+Alle Agenten starten mit **je 50** in Intelligenz, Kraft und Intuition — und
+jeder weiß das (`AgentView.world.startingAttribute`). Was sie werden,
+entscheidet ihr Weg:
+
+| Fähigkeit | Wächst durch | Instinkt |
+|---|---|---|
+| **Intelligenz** | Ruhen (Nachdenken), neues Wissen | **Überlebensinstinkt** — isst und ruht früher, schätzt Risiken ernster ein |
+| **Kraft** | Ernten (körperliche Arbeit), gewonnene Kämpfe | **Machtinstinkt** — sucht Vorrang und Auseinandersetzung |
+| **Intuition** | Umziehen, verlorene Kämpfe | **Glück** — wirkt auf jeden Wurf, den der Agent macht |
+
+Gespeichert wird nicht die Fähigkeit, sondern die Erfahrung dahinter; der Wert
+ist eine Funktion davon. Was nicht benutzt wird, bildet sich zurück — der
+Verfall wächst mit dem Niveau, hört aber bei einer Grundkompetenz auf. Dadurch
+bildet die Fähigkeit ab, **wie oft** ein Agent etwas tut: wer 80 % seiner Runden
+erntet, landet bei Kraft ~80; wer sich verteilt, bei je ~33.
+
+**Glück ist wörtlich gemeint.** `luckyRoll` würfelt bei Intuition 0 einmal, bei
+100 dreimal und nimmt den besten Wurf. Monoton, beschränkt, deterministisch, mit
+ausrechenbarem Erwartungswert (¾ statt ½) — anders als ein Bonus, den man auf
+das Ergebnis addiert.
+
+**Macht** ist eine abgeleitete Kennzahl, kein Bestand — genau wie Doc 03 §3.2.2
+es für `influence` verlangt: 45 % Kraft, 20 % Intelligenz, 10 % Intuition, 15 %
+Besitz, 10 % Getötete (gedeckelt bei drei — Macht ist keine Leichenzählung).
+
+**Kampf.** Kraft × (0,7 + 0,6 · Wurf) auf beiden Seiten, jeweils mit eigenem
+Glück; der Verteidiger zusätzlich × (1 + 0,4 · Intelligenz/100) — Klugheit
+schützt, ohne Kraft zu ersetzen. Tödlich ab einem Vorsprung von 35 % **oder**
+wenn der Schaden den Erschöpften umwirft; der zweite Weg ist der übliche, weil
+der erste zwischen vergleichbaren Agenten fast nie eintritt. Der Sieger erbeutet
+Vorräte. Ein Angriff kann nach hinten losgehen: fällt der Vergleich zugunsten
+des Verteidigers aus, trägt der Angreifer den Schaden.
+
+**Wer angreift, entscheidet die Veranlagung.** Dominanz und Ehrgeiz treiben,
+Empathie und Loyalität halten zurück. Und weil beides driftet (Phase 8), fällt
+der zweite Schlag leichter als der erste: wer die Hand erhebt, gewöhnt sich
+daran.
+
+**Was ein Angreifer über sein Ziel weiß, ist eine Schätzung.** Fremde Kraft wird
+nur beobachtbar, wer einen Kampf gesehen hat (`agent_attribute`-Info,
+Volatilität `slow`). Ohne eigene Beobachtung bleibt der Startwert — er kann sich
+also irren, und das ist der Punkt.
 
 ## Abnahme
 
@@ -22,9 +70,9 @@ Gemessen auf Node 22 in dieser Umgebung:
 
 | Lauf | Ergebnis |
 |---|---|
-| `--rounds 100 --agents 30 --seed 42` | Log-Hash `50c9804c24f80316`, 3 202 Events, ~220 ms |
-| `--rounds 400 --agents 30 --seed 42` | Log-Hash `3fe0466fcdecc45d`, ~0,63 s |
-| `pnpm test` | 20 Dateien, 238 Tests grün, ~10 s |
+| `--rounds 100 --agents 30 --seed 42` | Log-Hash `d9e6f96d7548c356` |
+| `--rounds 400 --agents 30 --seed 42` | Log-Hash `4a81207b75a1a77d` |
+| `pnpm test` | 23 Dateien, 281 Tests grün |
 
 Der Zielwert aus Doc 01 §1.5.7 (400 Runden × 30 Agenten headless unter 5 s) wird
 mit ~0,6 s eingehalten — ohne Memory, Lernen und Sozialsystem. Die Zahl ist mit
@@ -64,11 +112,13 @@ prüft jeden Wissenseintrag gegen diese Rekonstruktion.
 | `information/knowledge.ts` | `KnowledgeEntry`, Verfall der Sicherheit, Assert-Schwelle |
 | `agents/agentView.ts` | die abgeschottete Sicht eines Agenten (Doc 05 §5.1) |
 | `mutation/stateMutator.ts` | die einzige Schreibstelle, inkl. Erhaltungsprüfung |
-| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume` |
+| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack` |
+| `agents/attributes.ts` | Fähigkeiten, Instinkte, Glück, Macht — alles abgeleitet |
+| `world/consequence.ts` | Phase 8: Erfahrungsgewinn und -verfall, Drift der Veranlagung |
 | `actions/resolutionOrder.ts` | Klassenreihenfolge + Initiative (Doc 04 §4.3) |
 | `decision/policyProvider.ts` | deterministische Utility-Policy auf `AgentView` (Vorstufe von T23) |
 | `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 9 |
-| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 11 |
+| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 11 |
 | `cli/sim.ts` | headless, JSON-Report |
 
 ## Bewusste Abweichungen von der Spezifikation
@@ -116,7 +166,18 @@ Jede davon ist eine Entscheidung, keine Auslassung.
    zum Zeitpunkt der letzten Bestätigung; was heute gilt, rechnet
    `effectiveCertainty`.
 
-8. **`generate` liest den `WorldState`, `decide` nur die `AgentView`.** Doc 04
+8. **Töten ist möglich.** Doc 01 §1.4 schließt ein Kampf- und Tötungssystem
+   ausdrücklich aus („Schwerpunkt ist sozial. Ausscheiden nur über Bedürfnisse
+   und Exile"). Auf Ansage aufgehoben: `attack`, `EliminationCause: 'killed'`.
+   Der Rest der Architektur bleibt unangetastet — der Kampf ist eine reine
+   Funktion, jeder Wurf läuft durch einen benannten Stream.
+
+9. **Die Persönlichkeit driftet.** Doc 03 §3.2.1 nennt sie konstant. Auf Ansage
+   verschiebt Phase 8 sie um höchstens ±1 pro Runde und Achse — die Deckelung
+   ist aus Doc 03 §3.2.4 übernommen, wo sie für die Strategiegewichte gilt und
+   mit oszillierenden Agenten begründet wird.
+
+10. **`generate` liest den `WorldState`, `decide` nur die `AgentView`.** Doc 04
    §4.0 und Doc 05 §5.1 widersprechen sich hier. Aufgelöst nach Zweck: der
    Generator muss gegen die Weltwahrheit prüfen, sonst kann er keine Legalität
    garantieren (Doc 08 §8.2.4, erste Verteidigungslinie) — und was dabei zählt,

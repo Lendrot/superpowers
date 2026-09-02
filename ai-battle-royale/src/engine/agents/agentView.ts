@@ -21,6 +21,9 @@ import { getAgent, getLocation, occupantsOf } from '../core/access.js';
 import type {
   Agent,
   AgentId,
+  Attributes,
+  Instincts,
+  Stat,
   InfoId,
   KnowledgeEntry,
   Location,
@@ -32,11 +35,23 @@ import type {
   WorldState,
 } from '../core/types.js';
 import { effectiveCertainty } from '../information/knowledge.js';
+import { attributeInfoId } from '../information/infoRegistry.js';
+import { attributeValue, attributesOf, instinctsOf, powerOf } from './attributes.js';
 
-/** Was ein Agent von einem anderen sieht, wenn beide am selben Ort stehen. */
+/**
+ * Was ein Agent von einem anderen sieht, wenn beide am selben Ort stehen.
+ *
+ * `believedStrength` ist ausdruecklich eine *Einschaetzung*, keine Tatsache:
+ * sie stammt aus dem eigenen Wissen (wer den anderen kaempfen sah) und faellt
+ * sonst auf den Startwert zurueck, den jeder kennt. Ein Agent, der einen
+ * Fremden angreift, tut das auf Basis einer Annahme — und kann sich irren.
+ */
 export interface PublicAgent {
   id: AgentId;
   name: string;
+  believedStrength: Stat;
+  /** 0 = reine Annahme aus dem Startwert, 1 = gerade selbst gesehen */
+  strengthCertainty: Score01;
 }
 
 /** Was ein Agent von seinem eigenen Ort sieht. */
@@ -57,12 +72,32 @@ export interface BeliefView {
   assertable: boolean;
 }
 
+/**
+ * Was jeder Agent ueber die Regeln der Welt weiss, ohne es beobachtet zu haben.
+ *
+ * Das ist kein Schlupfloch in der Epistemik: "alle starten gleich stark" ist
+ * eine Eigenschaft der Welt, keine Beobachtung an einer bestimmten Person.
+ * Wissen ueber *einzelne* Agenten entsteht weiterhin ausschliesslich in Phase 2.
+ */
+export interface WorldKnowledge {
+  /** Faehigkeitswert, mit dem jeder Agent begonnen hat. */
+  startingAttribute: Stat;
+}
+
 export interface AgentView {
   round: Round;
+  world: WorldKnowledge;
   self: {
     id: AgentId;
     name: string;
     personality: Readonly<Personality>;
+    /** erworbenes Koennen — entwickelt sich ueber das Match */
+    attributes: Attributes;
+    /** was daraus folgt: Ueberlebensinstinkt, Machtinstinkt, Glueck */
+    instincts: Instincts;
+    /** abgeleitete Kennzahl, kein Bestand (Doc 03 §3.2.2) */
+    power: Score01;
+    kills: number;
     needs: Agent['needs'];
     resources: Agent['resources'];
     status: Agent['status'];
@@ -99,12 +134,20 @@ export function buildAgentView(state: Readonly<WorldState>, agentId: AgentId): A
     };
   }
 
+  const attributes = attributesOf(agent, config.attributes);
+  const startingAttribute = attributeValue(config.attributes.startExperience, config.attributes);
+
   return {
     round: state.round,
+    world: { startingAttribute },
     self: {
       id: agent.id,
       name: agent.name,
       personality: { ...agent.personality },
+      attributes,
+      instincts: instinctsOf(attributes),
+      power: powerOf(agent, config.attributes),
+      kills: agent.kills,
       needs: { ...agent.needs },
       resources: { ...agent.resources },
       status: { ...agent.status, exiledFrom: [...agent.status.exiledFrom] },
@@ -120,7 +163,20 @@ export function buildAgentView(state: Readonly<WorldState>, agentId: AgentId): A
     },
     coLocated: occupantsOf(state, agent.location)
       .filter((other) => other.id !== agent.id)
-      .map((other) => ({ id: other.id, name: other.name })),
+      .map((other) => {
+        const belief = beliefs[attributeInfoId(other.id, 'strength')];
+        const believed = belief && typeof belief.entry.believedValue === 'number'
+          ? belief.entry.believedValue
+          : null;
+        return {
+          id: other.id,
+          name: other.name,
+          // Ohne eigenes Wissen bleibt nur, was jeder weiss: am Anfang waren
+          // alle gleich stark.
+          believedStrength: believed ?? startingAttribute,
+          strengthCertainty: believed === null ? 0 : belief!.certainty,
+        };
+      }),
     beliefs,
     economy: { ...config.economy },
   };

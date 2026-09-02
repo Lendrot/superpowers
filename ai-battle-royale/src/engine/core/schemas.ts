@@ -30,6 +30,7 @@ export const actionTypeSchema = z.enum([
   'help',
   'investigate',
   'confront',
+  'attack',
 ]);
 
 const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
@@ -62,6 +63,12 @@ export const worldEventSchema = z.object({
     'agent_rested',
     'resource_gathered',
     'gather_failed',
+    'agent_moved',
+    'food_consumed',
+    'agent_attacked',
+    'agent_killed',
+    'attribute_grown',
+    'agent_eliminated',
     'action_rejected',
     'round_ended',
     'match_ended',

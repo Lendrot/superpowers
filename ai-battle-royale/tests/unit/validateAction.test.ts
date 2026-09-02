@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createStockLedger } from '@/engine/actions/stockLedger.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
 import { createRngBundle } from '@/engine/core/rng.js';
@@ -21,7 +20,7 @@ beforeEach(() => {
   state.agents[A]!.needs = { satiety: 50, energy: 50 };
   state.agents[A]!.resources = { food: 3, coins: 0, materials: 0 };
   state.locations['commons']!.stock = { food: 10, coins: 0, materials: 4 };
-  ctx = { state, round: state.round, rng: createRngBundle(1), ledger: createStockLedger(state) };
+  ctx = { state, round: state.round, rng: createRngBundle(1), projection: new EffectProjection(state) };
 });
 
 const action = (patch: Partial<AgentAction> = {}): AgentAction => ({

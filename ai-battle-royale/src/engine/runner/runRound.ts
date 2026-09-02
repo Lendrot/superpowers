@@ -1,10 +1,9 @@
 /**
  * T07 — Rundenskelett.
  *
- * Implementiert sind die Phasen 1, 2, 3, 4, 5, 6, 7 und 11 aus Doc 02 §2.3. Die
+ * Implementiert sind die Phasen 1, 2, 3, 4, 5, 6, 7, 8 und 11 aus Doc 02 §2.3. Die
  * uebrigen fehlen NICHT aus Versehen:
  *
- *   Phase 8  Consequence  → T19 (Beziehungsdeltas)
  *   Phase 9  Memory       → T22
  *   Phase 10 Reflection   → T24/T34
  *
@@ -15,7 +14,6 @@
  * einzeln testbare Funktion (Doc 13 §8).
  */
 
-import { createStockLedger } from '../actions/stockLedger.js';
 import { orderActions } from '../actions/resolutionOrder.js';
 import { requireAction } from '../actions/registry.js';
 import type { ActionContext } from '../actions/types.js';
@@ -23,13 +21,14 @@ import { buildAgentView } from '../agents/agentView.js';
 import { aliveAgents } from '../core/access.js';
 import type { EventLog } from '../core/eventLog.js';
 import type { RngBundle } from '../core/rng.js';
-import type { AgentAction, Effect, WorldEvent, WorldState } from '../core/types.js';
+import type { AgentAction, AgentId, Effect, WorldEvent, WorldState } from '../core/types.js';
 import { generateCandidates } from '../decision/candidates.js';
 import type { DecisionProvider } from '../decision/provider.js';
 import { applyEffects } from '../mutation/stateMutator.js';
 import { EffectProjection, validateAction } from '../validation/validateAction.js';
 import type { RejectCounts } from '../validation/rejectReasons.js';
 import { emptyRejectCounts } from '../validation/rejectReasons.js';
+import { consequence } from '../world/consequence.js';
 import { perceptionEffects } from '../world/perception.js';
 import { scoringEffects } from '../world/scoring.js';
 import { upkeep } from '../world/upkeep.js';
@@ -49,6 +48,8 @@ export interface RoundResult {
   decisions: number;
   /** Wieviele Wissenseintraege Phase 2 geschrieben hat. */
   perceived: number;
+  /** Wieviele Agenten in Phase 8 Erfahrung gewonnen oder verloren haben. */
+  developed: number;
   /** Wer in dieser Runde ausgeschieden ist. */
   eliminated: AgentAction['actorId'][];
   finished: boolean;
@@ -91,8 +92,10 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   // ── Phase 3 — Kandidaten & Phase 4 — Entscheidung ─────────────────────────
   // Ein Ledger fuer die ganze Runde: Kandidaten und Auflösung sehen denselben
   // Bestand, und was in Phase 6 vergeben wird, ist danach vergeben.
-  const ledger = createStockLedger(state);
-  const ctx: ActionContext = { state, round, rng: deps.rng, ledger };
+  // Eine Buchhaltung fuer die ganze Runde: sie beantwortet den Aktionen, was
+  // noch da ist, und prueft zugleich Stufe 9 der Validierungskette.
+  const projection = new EffectProjection(state);
+  const ctx: ActionContext = { state, round, rng: deps.rng, projection };
 
   const chosen: AgentAction[] = [];
   for (const agent of aliveAgents(state)) {
@@ -129,10 +132,29 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   }
 
   // ── Phase 6 — Resolution ──────────────────────────────────────────────────
-  const projection = new EffectProjection(state);
   const batch: Effect[] = [];
 
   for (const { action } of orderActions(chosen, state, round, deps.rng)) {
+    // Wer in dieser Runde bereits gefallen ist, handelt nicht mehr — und wird
+    // auch nicht mehr angegriffen. Der Tod steht erst nach Phase 7 im State,
+    // ist aber hier schon beschlossen; ohne diese Pruefung schluege jemand auf
+    // einen Toten ein, und der StateMutator wuerde das zu Recht als
+    // Invariantenbruch werfen.
+    const target = action.params['target'];
+    const targetGone = typeof target === 'string' && projection.isEliminated(target as AgentId);
+    if (projection.isEliminated(action.actorId) || targetGone) {
+      rejects.target_invalid += 1;
+      emit({
+        round,
+        type: 'action_rejected',
+        actorId: action.actorId,
+        locationId: state.agents[action.actorId]?.location ?? null,
+        payload: { action: action.type, reason: 'target_invalid', detail: 'in dieser Runde bereits gefallen' },
+        visibility: { scope: 'private', agentIds: [action.actorId] },
+        infoRefs: [],
+      });
+      continue;
+    }
     const def = requireAction(action.type);
     const resolved = def.resolve(action, ctx);
 
@@ -160,6 +182,13 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
 
   // ── Phase 7 — Mutation ────────────────────────────────────────────────────
   applyEffects(state, batch);
+
+  // ── Phase 8 — Consequence ─────────────────────────────────────────────────
+  // Faehigkeiten und Veranlagung folgen aus dem, was gerade geschehen ist.
+  // Anders als Perception laeuft das NICHT eine Runde nach: wer eben gekaempft
+  // hat, ist danach staerker.
+  const consequences = consequence(state, events, perception.newKnowledgePerAgent);
+  applyEffects(state, consequences.effects);
 
   // ── Phase 11 — Scoring ────────────────────────────────────────────────────
   const scoring = scoringEffects(state);
@@ -193,6 +222,7 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     actionCounts,
     decisions: chosen.length,
     perceived: perception.written,
+    developed: consequences.changed,
     eliminated: upkeepResult.events.flatMap((e) => (e.actorId ? [e.actorId] : [])),
     // Nicht `state.status` lesen: der Typ ist an dieser Stelle bereits auf
     // 'running' verengt, weil TypeScript die Mutation im Mutator nicht sieht.

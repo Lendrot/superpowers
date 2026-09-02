@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createStockLedger } from '@/engine/actions/stockLedger.js';
 import { consumeAction } from '@/engine/actions/defs/consume.js';
 import { gatherResourceAction } from '@/engine/actions/defs/gatherResource.js';
 import { moveAction } from '@/engine/actions/defs/move.js';
@@ -8,9 +7,11 @@ import { restAction } from '@/engine/actions/defs/rest.js';
 import { IMPLEMENTED_ACTIONS, findAction, requireAction } from '@/engine/actions/registry.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
+import { EffectProjection } from '@/engine/validation/validateAction.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
 import { canonicalJson } from '@/engine/core/hash.js';
+import { effect } from '@/engine/mutation/effects.js';
 import { initWorld } from '@/engine/world/initWorld.js';
 
 const A: AgentId = 'agent_000';
@@ -19,7 +20,7 @@ let state: WorldState;
 let ctx: ActionContext;
 
 function makeCtx(current: WorldState): ActionContext {
-  return { state: current, round: current.round, rng: createRngBundle(1), ledger: createStockLedger(current) };
+  return { state: current, round: current.round, rng: createRngBundle(1), projection: new EffectProjection(current) };
 }
 
 beforeEach(() => {
@@ -41,6 +42,7 @@ const action = (type: AgentAction['type'], params: AgentAction['params'] = {}): 
 describe('registry', () => {
   it('kennt genau die implementierten Aktionen', () => {
     expect(IMPLEMENTED_ACTIONS.map((d) => d.type).sort()).toEqual([
+      'attack',
       'consume',
       'gather_resource',
       'move',
@@ -122,7 +124,7 @@ describe('gather_resource', () => {
   });
 
   it('respektiert die Reservierungen frueherer Agenten (first-come-first-served)', () => {
-    ctx.ledger.reserve('commons', 'food', 10);
+    ctx.projection.commit([effect.locationStock('commons', { food: -10 }, 'transfer')]);
     const { effects, events } = gatherResourceAction.resolve(
       action('gather_resource', { resource: 'food' }),
       ctx,

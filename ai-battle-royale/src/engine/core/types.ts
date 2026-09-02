@@ -57,6 +57,54 @@ export interface Personality {
   dominance: Stat;
 }
 
+// ── Attribute: was ein Agent KANN (Erweiterung gegenueber Doc 03) ────────────
+
+/**
+ * Drei Faehigkeiten, die sich im Lauf eines Matches entwickeln.
+ *
+ * Abgrenzung zur `Personality`: die Persoenlichkeit ist die *Veranlagung* (aus
+ * dem Archetyp gezogen), die Attribute sind das *Koennen* (erworben). Alle
+ * Agenten starten mit demselben Wert — wer stark wird, ist es geworden.
+ *
+ * Gespeichert wird nicht das Attribut, sondern die Erfahrung dahinter
+ * (`Experience`); der Attributwert ist eine Funktion davon
+ * (`agents/attributes.ts`). Sonst gaebe es zwei Zahlen fuer dieselbe Sache, die
+ * bei jeder Aenderung synchron gehalten werden muessten — derselbe Grund, aus
+ * dem `InfoItem` keinen `trueValue` traegt.
+ */
+export interface Attributes {
+  /** Verstand: schuetzt im Kampf, erhoeht den Ueberlebensinstinkt */
+  intelligence: Stat;
+  /** Kraft: entscheidet Kaempfe, erhoeht den Machtinstinkt */
+  strength: Stat;
+  /** Gespuer: erhoeht das Glueck bei jedem Wurf */
+  intuition: Stat;
+}
+
+export type AttributeTrack = keyof Attributes;
+
+export const ATTRIBUTE_TRACKS = [
+  'intelligence',
+  'strength',
+  'intuition',
+] as const satisfies readonly AttributeTrack[];
+
+/** Erfahrungspunkte je Faehigkeit. 0..`attributes.maxExperience`. */
+export type Experience = Record<AttributeTrack, number>;
+
+/**
+ * Die drei Instinkte, die aus den Attributen folgen — der Mechanismus, ueber den
+ * sich das Verhalten eines Agenten im Lauf des Matches veraendert.
+ */
+export interface Instincts {
+  /** aus Intelligenz: Neigung, das eigene Ueberleben ueber alles zu stellen */
+  survival: Score01;
+  /** aus Kraft: Neigung, Macht zu suchen und durchzusetzen */
+  power: Score01;
+  /** aus Intuition: wirkt auf jeden Wurf, den der Agent macht */
+  luck: Score01;
+}
+
 export const PERSONALITY_TRAITS = [
   'ambition',
   'loyalty',
@@ -79,7 +127,11 @@ export interface StatusFlags {
   exiledFrom: AllianceId[];
 }
 
-export type EliminationCause = 'starvation' | 'exhaustion' | 'exile';
+/**
+ * `killed` ist eine bewusste Abweichung von Doc 01 §1.4, wo ein Kampf- und
+ * Toetungssystem ausdruecklich ausgeschlossen ist. Auf Ansage aufgenommen.
+ */
+export type EliminationCause = 'starvation' | 'exhaustion' | 'exile' | 'killed';
 
 // ── 4.1 Aktionen ─────────────────────────────────────────────────────────────
 
@@ -106,7 +158,9 @@ export type ActionType =
   | 'expel_member'
   | 'help'
   | 'investigate'
-  | 'confront';
+  | 'confront'
+  /** Erweiterung gegenueber Doc 04 §4.1 — siehe `EliminationCause`. */
+  | 'attack';
 
 export type ActionTier = 'routine' | 'social' | 'strategic';
 
@@ -120,10 +174,20 @@ export interface Agent {
   alive: boolean;
   eliminatedRound?: Round;
   eliminationCause?: EliminationCause;
+  /** wer den Agenten getoetet hat, falls `eliminationCause === 'killed'` */
+  killedBy?: AgentId;
   location: LocationId;
 
-  /** konstant ueber das Match */
+  /**
+   * Veranlagung. Doc 03 §3.2.1 nennt sie konstant; sie driftet jetzt in engen
+   * Grenzen (max ±1 pro Runde und Achse, Phase 8) aus dem, was der Agent
+   * erlebt. Bewusste Abweichung auf Ansage.
+   */
   personality: Personality;
+  /** Erfahrungspunkte je Faehigkeit; der Attributwert wird daraus abgeleitet. */
+  experience: Experience;
+  /** Wieviele Agenten dieser hier getoetet hat — Grundlage der Macht. */
+  kills: number;
   needs: Needs;
   resources: Resources;
   status: StatusFlags;
@@ -152,6 +216,8 @@ export type InfoTopic =
   | 'stock_at_location'
   /** wieviel Y Agent Z besitzt */
   | 'agent_resource'
+  /** wie stark/klug/intuitiv Agent Z ist (Erweiterung, siehe `Attributes`) */
+  | 'agent_attribute'
   /** in welcher Allianz Z ist */
   | 'agent_alliance'
   /** Z's geheimes Ziel */
@@ -244,6 +310,9 @@ export type EventType =
   | 'gather_failed'
   | 'agent_moved'
   | 'food_consumed'
+  | 'agent_attacked'
+  | 'agent_killed'
+  | 'attribute_grown'
   | 'agent_eliminated'
   | 'action_rejected'
   | 'round_ended'
@@ -303,7 +372,15 @@ export type Effect =
   | { t: 'need'; agentId: AgentId; delta: Partial<Needs> }
   | { t: 'status'; agentId: AgentId; patch: Partial<Pick<StatusFlags, 'hungerStreak' | 'exhaustionStreak'>> }
   | { t: 'move'; agentId: AgentId; to: LocationId }
-  | { t: 'eliminate'; agentId: AgentId; cause: EliminationCause }
+  | { t: 'eliminate'; agentId: AgentId; cause: EliminationCause; killedBy?: AgentId }
+  /** Erfahrungsgewinn oder -verfall; der Attributwert folgt daraus. */
+  | { t: 'experience'; agentId: AgentId; delta: Partial<Experience> }
+  /** Drift der Veranlagung — max ±`attributes.maxPersonalityDrift` pro Achse. */
+  | { t: 'personality'; agentId: AgentId; delta: Partial<Personality> }
+  /** Frueheste Runde, in der eine Aktion wieder erlaubt ist. */
+  | { t: 'cooldown'; agentId: AgentId; action: ActionType; readyAtRound: Round }
+  /** Erhoeht den Toetungszaehler — Grundlage der Macht. */
+  | { t: 'kill'; agentId: AgentId }
   /** Registriert eine Info als existent. Traegt keinen Wahrheitswert — siehe `InfoItem`. */
   | { t: 'info_item'; item: InfoItem }
   /** Der einzige Weg, auf dem ein `KnowledgeEntry` entsteht oder sich aendert. */
@@ -372,8 +449,65 @@ export interface MatchConfig {
   llmMode: 'off' | 'mock' | 'live';
   economy: EconomyConfig;
   info: InfoConfig;
+  attributes: AttributeConfig;
+  combat: CombatConfig;
   /** Invarianten nach jeder Mutation pruefen. In Long-Run-Batches abschaltbar. */
   strictInvariants: boolean;
+}
+
+/** Entwicklung der Faehigkeiten. Alle Werte sind **[ANNAHME]**. */
+export interface AttributeConfig {
+  /** Erfahrung, mit der jeder Agent startet — daher sind alle gleich stark. */
+  startExperience: number;
+  /** Erfahrungspunkte je Attributpunkt */
+  pointsPerLevel: number;
+  /** Obergrenze; entspricht Attributwert 100 */
+  maxExperience: number;
+  /**
+   * Verfall pro Runde, **proportional zum Niveau**: `max(1, round(punkte /
+   * decayScale))`. Ein fester Verfall haette dazu gefuehrt, dass jede haeufige
+   * Taetigkeit ihre Faehigkeit ins Maximum treibt und alle anderen auf null —
+   * gemessen: Kraft 100, Intelligenz 14, Intuition 11 bei jedem Agenten.
+   * Proportional entsteht ein Gleichgewicht bei `25 · Haeufigkeit · Gewinn`:
+   * Spezialisten kommen auf ~80, Allrounder auf ~33.
+   */
+  decayScale: number;
+  /**
+   * Unterhalb dieser Punktzahl verfaellt nichts mehr. Grundkompetenz erodiert
+   * nicht: ohne Boden fielen vernachlaessigte Faehigkeiten auf null, und ein
+   * Agent mit Intelligenz 0 hat keinen Ueberlebensinstinkt mehr — gemessen ein
+   * Todesspiral, in der die Vernachlaessigung sich selbst verstaerkt.
+   */
+  decayFloor: number;
+  /** Kraft durch koerperliche Arbeit (Ernte) */
+  gatherGain: number;
+  /** Intuition durch Ortswechsel */
+  moveGain: number;
+  /** Intelligenz durch Ruhe — Nachdenken ist die Taetigkeit, die klug macht */
+  restGain: number;
+  /** Intelligenz je neu erworbenem Wissenseintrag, zusaetzlich */
+  learnGain: number;
+  /** Kraft durch einen gewonnenen Kampf */
+  fightWinGain: number;
+  /** auch Verlieren lehrt etwas — Intuition */
+  fightLossGain: number;
+  /** maximale Drift der Veranlagung pro Runde und Achse */
+  maxPersonalityDrift: number;
+}
+
+/** Kampfsystem. Abweichung von Doc 01 §1.4, auf Ansage. */
+export interface CombatConfig {
+  energyCost: number;
+  cooldown: number;
+  /**
+   * Ab diesem relativen Vorsprung endet ein Kampf toedlich. Darunter kostet er
+   * das Opfer nur Energie und Saettigung.
+   */
+  killMargin: Score01;
+  /** Anteil der Vorraete, den der Sieger erbeutet */
+  lootShare: Score01;
+  /** Skalierung des Schadens auf Energie und Saettigung */
+  damageScale: number;
 }
 
 /** Doc 03 §3.10, Abschnitt `info`. */

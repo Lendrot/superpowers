@@ -19,7 +19,7 @@ import type {
   Round,
   WorldState,
 } from '../core/types.js';
-import type { StockLedger } from './stockLedger.js';
+import type { EffectProjection } from '../validation/validateAction.js';
 
 export interface ActionCandidate {
   type: ActionType;
@@ -33,12 +33,13 @@ export interface ActionContext {
   round: Round;
   rng: RngBundle;
   /**
-   * Bestandsreservierung der laufenden Runde (Doc 08 §8.1, Stufe 5). Zwei
-   * Agenten, die denselben Bestand ernten wollen, sehen hier, was vor ihnen
-   * schon vergeben wurde — first-come-first-served nach Auflösungsreihenfolge
-   * (Doc 04 §4.3), nicht anteilig.
+   * Die Buchhaltung der laufenden Runde (Doc 08 §8.1, Stufe 5). Zwei Agenten,
+   * die denselben Bestand ernten wollen, sehen hier, was vor ihnen schon
+   * vergeben wurde — first-come-first-served nach Auflösungsreihenfolge
+   * (Doc 04 §4.3), nicht anteilig. Dasselbe gilt fuer Vorraete, die in dieser
+   * Runde schon den Besitzer gewechselt haben.
    */
-  ledger: StockLedger;
+  projection: EffectProjection;
 }
 
 export type PreconditionResult = { ok: true } | { ok: false; reason: RejectReason; detail: string };

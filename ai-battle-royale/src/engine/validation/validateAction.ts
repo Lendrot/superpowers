@@ -8,7 +8,7 @@
  *   2 Identity           ✔
  *   3 Target             —  keine zielgerichtete Aktion in Schritt 1
  *   4 Precondition       ✔  (`ActionDef.precondition`)
- *   5 Resource           ✔  soweit anwendbar: Bestandsreservierung im Ledger
+ *   5 Resource           ✔  soweit anwendbar: ueber die `EffectProjection`
  *   6 Knowledge          —  T10/T13
  *   7 TRUTH              —  T13, der eigentliche Kern des Projekts
  *   8 Parameter clamp    —  keine numerischen Parameter in Schritt 1
@@ -79,17 +79,47 @@ export function validateAction(action: AgentAction, ctx: ActionContext): Validat
 }
 
 /**
- * Stufe 9 — Effect Sanity.
+ * Stufe 9 — Effect Sanity, und zugleich die Buchhaltung der laufenden Runde.
  *
  * Prueft eine Effektliste gegen den State PLUS alles, was in dieser Runde schon
  * akzeptiert wurde, ohne den State zu kopieren. Ein `structuredClone` pro
  * Aktion waere bei 40 Agenten × 400 Runden 16 000 Kopien des Weltzustands.
+ *
+ * Sie ist zugleich Stufe 9 der Validierungskette **und** die Auskunft, die
+ * Aktionen beim Aufloesen brauchen ("wieviel liegt hier noch?", "was hat der
+ * andere noch?"). Beides muss dieselbe Quelle haben: als das getrennt war —
+ * ein Ledger fuer Ortsbestaende, eine Projektion fuer Agentenvorraete —,
+ * rechnete ein Beutezug gegen einen Stand, von dem die andere Haelfte nichts
+ * wusste, und die Kette lehnte die eigene Aktion ab.
  */
 export class EffectProjection {
   private readonly resourceDelta = new Map<string, number>();
   private readonly stockDelta = new Map<string, number>();
+  private readonly eliminated = new Set<AgentId>();
 
   constructor(private readonly state: Readonly<WorldState>) {}
+
+  /**
+   * Ist dieser Agent in der laufenden Runde bereits gefallen?
+   *
+   * Der Tod wird erst in Phase 7 geschrieben, aber schon in Phase 6
+   * beschlossen. Wer das nicht beruecksichtigt, laesst einen Toten noch
+   * handeln oder schlaegt auf ihn ein — und der StateMutator wirft dann zu
+   * Recht, weil Effekte fuer Ausgeschiedene unzulaessig sind.
+   */
+  isEliminated(agentId: AgentId): boolean {
+    return this.eliminated.has(agentId);
+  }
+
+  /** Was an diesem Ort in dieser Runde noch frei ist. */
+  stockAvailable(locationId: LocationId, kind: ResourceKind): number {
+    return this.stockAmount(locationId, kind);
+  }
+
+  /** Was dieser Agent in dieser Runde noch besitzt. */
+  agentResource(agentId: AgentId, kind: ResourceKind): number {
+    return this.agentAmount(agentId, kind);
+  }
 
   check(effects: readonly Effect[]): ValidationResult {
     const pendingResource = new Map<string, number>();
@@ -140,7 +170,9 @@ export class EffectProjection {
   /** Uebernimmt gepruefte Effekte in die Projektion der laufenden Runde. */
   commit(effects: readonly Effect[]): void {
     for (const item of effects) {
-      if (item.t === 'resource') {
+      if (item.t === 'eliminate') {
+        this.eliminated.add(item.agentId);
+      } else if (item.t === 'resource') {
         for (const kind of RESOURCE_KINDS) {
           const delta = item.delta[kind];
           if (!delta) continue;

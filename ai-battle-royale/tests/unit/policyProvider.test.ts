@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { buildAgentView } from '@/engine/agents/agentView.js';
 import type { AgentView } from '@/engine/agents/agentView.js';
-import { createStockLedger } from '@/engine/actions/stockLedger.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
+import { EffectProjection } from '@/engine/validation/validateAction.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentId, WorldState } from '@/engine/core/types.js';
 import { generateCandidates } from '@/engine/decision/candidates.js';
@@ -33,7 +33,7 @@ function decide(): { type: string; params: Record<string, unknown>; view: AgentV
     state,
     round: state.round,
     rng: createRngBundle(1),
-    ledger: createStockLedger(state),
+    projection: new EffectProjection(state),
   };
   const view = buildAgentView(state, A);
   const candidates = generateCandidates(state.agents[A]!, ctx);
@@ -199,7 +199,7 @@ describe('Policy — Form der Bewertung', () => {
       state,
       round: state.round,
       rng: createRngBundle(1),
-      ledger: createStockLedger(state),
+      projection: new EffectProjection(state),
     };
     const view = buildAgentView(state, A);
     const decision = policyProvider.decide(view, generateCandidates(state.agents[A]!, ctx), {
@@ -225,7 +225,7 @@ describe('Policy — Form der Bewertung', () => {
       state,
       round: state.round,
       rng: createRngBundle(1),
-      ledger: createStockLedger(state),
+      projection: new EffectProjection(state),
     };
     const decision = policyProvider.decide(
       buildAgentView(state, A),

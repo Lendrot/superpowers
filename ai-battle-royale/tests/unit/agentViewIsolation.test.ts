@@ -86,10 +86,25 @@ describe('AgentView — Isolation', () => {
     expect(canonicalJson(view)).not.toContain('infoRegistry');
   });
 
-  it('enthaelt weder Persoenlichkeit noch Beduerfnisse anderer Agenten', () => {
+  it('enthaelt von anderen Agenten nur Name, Id und eine Krafteinschaetzung', () => {
     const view = buildAgentView(state, SELF);
     for (const other of view.coLocated) {
-      expect(Object.keys(other).sort()).toEqual(['id', 'name']);
+      expect(Object.keys(other).sort()).toEqual([
+        'believedStrength',
+        'id',
+        'name',
+        'strengthCertainty',
+      ]);
+    }
+  });
+
+  it('schaetzt fremde Kraft auf den Startwert, solange nichts beobachtet wurde', () => {
+    // "Alle starten gleich stark" ist Weltwissen, keine Beobachtung an einer
+    // Person — deshalb darf es hier stehen, ohne die Epistemik zu verletzen.
+    const view = buildAgentView(state, SELF);
+    for (const other of view.coLocated) {
+      expect(other.believedStrength).toBe(view.world.startingAttribute);
+      expect(other.strengthCertainty).toBe(0);
     }
   });
 

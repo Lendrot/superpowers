@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveConfig } from '@/engine/core/config.js';
-import type { InfoId } from '@/engine/core/types.js';
+import type { AgentId, InfoId } from '@/engine/core/types.js';
 import { runMatch } from '@/engine/runner/runMatch.js';
 
 /**
@@ -34,15 +34,26 @@ describe('Ausscheiden im vollen Lauf', () => {
   });
 
   it('macht jedes Ausscheiden im Log nachvollziehbar', () => {
-    const events = result.log.events.filter((event) => event.type === 'agent_eliminated');
+    // Zwei Wege hinaus: Verhungern (Phase 1) und Getoetetwerden (Phase 6).
+    const starved = result.log.events.filter((event) => event.type === 'agent_eliminated');
+    const killed = result.log.events.filter((event) => event.type === 'agent_killed');
     const dead = Object.values(result.state.agents).filter((agent) => agent && !agent.alive);
 
-    expect(events).toHaveLength(dead.length);
-    for (const event of events) {
+    expect(starved.length + killed.length).toBe(dead.length);
+    expect(starved.length).toBeGreaterThan(0);
+
+    for (const event of starved) {
       expect(event.visibility).toEqual({ scope: 'public' });
       expect(event.payload['cause']).toBe('starvation');
-      const agent = result.state.agents[event.actorId!];
-      expect(agent?.eliminatedRound).toBe(event.round);
+      expect(result.state.agents[event.actorId!]?.eliminatedRound).toBe(event.round);
+    }
+    for (const event of killed) {
+      expect(event.visibility).toEqual({ scope: 'public' });
+      // Der Unterlegene kann der Angreifer selbst sein — deshalb steht er im
+      // Payload und nicht in `targetId`.
+      const victim = result.state.agents[event.payload['loserId'] as AgentId];
+      expect(victim?.eliminationCause).toBe('killed');
+      expect(victim?.killedBy).toBe(event.payload['winnerId']);
     }
   });
 
@@ -57,7 +68,9 @@ describe('Ausscheiden im vollen Lauf', () => {
   });
 
   it('teilt jedes Ausscheiden allen Ueberlebenden mit', () => {
-    const firstDead = Object.values(result.state.agents).find((agent) => agent && !agent.alive);
+    const firstDead = Object.values(result.state.agents).find(
+      (agent) => agent && !agent.alive && agent.eliminationCause === 'starvation',
+    );
     expect(firstDead).toBeDefined();
 
     const infoId: InfoId = `info_event_eliminated_${firstDead!.id}`;

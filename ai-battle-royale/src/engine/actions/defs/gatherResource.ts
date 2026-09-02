@@ -11,7 +11,8 @@
 
 import { getAgent, getLocation } from '../../core/access.js';
 import { RESOURCE_KINDS } from '../../core/resources.js';
-import type { JsonValue, ResourceKind } from '../../core/types.js';
+import type { Agent, JsonValue, ResourceKind } from '../../core/types.js';
+import { attributesOf, instinctsOf, luckyRoll } from '../../agents/attributes.js';
 import { stockInfoId } from '../../information/infoRegistry.js';
 import { effect } from '../../mutation/effects.js';
 import type { ActionContext, ActionDef, ActionCandidate } from '../types.js';
@@ -64,7 +65,7 @@ export const gatherResourceAction: ActionDef = {
     }
 
     const location = getLocation(ctx.state, agent.location);
-    const free = ctx.ledger.available(location.id, kind);
+    const free = ctx.projection.stockAvailable(location.id, kind);
     const energyCost = Math.min(ctx.state.config.economy.gatherEnergyCost, agent.needs.energy);
 
     if (free <= 0) {
@@ -95,8 +96,10 @@ export const gatherResourceAction: ActionDef = {
       };
     }
 
-    const amount = Math.min(free, rollYield(agent.needs.energy, ctx, action.actorId));
-    ctx.ledger.reserve(location.id, kind, amount);
+    // Keine eigene Reservierung noetig: die Effekte dieser Aktion werden
+    // unmittelbar nach der Pruefung in die Projektion uebernommen, und der
+    // naechste Agent sieht den verringerten Bestand.
+    const amount = Math.min(free, rollYield(agent, ctx));
 
     return {
       effects: [
@@ -126,8 +129,11 @@ export const gatherResourceAction: ActionDef = {
  * Mindestens 1 — eine Ernte, die nichts einbringt, waere nur Energieverlust.
  * Die Faktoren sind **[ANNAHME]** und Kalibrierungsmasse (T43).
  */
-function rollYield(energy: number, ctx: ActionContext, actorId: string): number {
-  const roll = ctx.rng.derive('gather', ctx.round, actorId).float();
+function rollYield(agent: Readonly<Agent>, ctx: ActionContext): number {
+  // Glueck wirkt auf jeden Wurf, den ein Agent macht — auch auf die Ernte.
+  const luck = instinctsOf(attributesOf(agent, ctx.state.config.attributes)).luck;
+  const roll = luckyRoll(ctx.rng.derive('gather', ctx.round, agent.id), luck);
+  const energy = agent.needs.energy;
   const energyFactor = 0.6 + 0.8 * (energy / 100);
   const raw = ctx.state.config.economy.gatherBase * energyFactor * (0.75 + 0.5 * roll);
   return Math.max(1, Math.round(raw));

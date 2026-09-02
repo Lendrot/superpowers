@@ -44,7 +44,7 @@ describe('Upkeep — Beduerfnisse', () => {
   it('senkt Saettigung und hebt Energie', () => {
     state.agents[A]!.needs = { satiety: 50, energy: 50 };
     applyEffects(state, upkeep(state).effects);
-    expect(state.agents[A]!.needs).toEqual({ satiety: 49, energy: 52 });
+    expect(state.agents[A]!.needs).toEqual({ satiety: 46, energy: 52 });
   });
 
   it('zaehlt Hunger erst ab null', () => {
@@ -67,9 +67,9 @@ describe('Upkeep — Beduerfnisse', () => {
 
 describe('T08 — Ausscheiden', () => {
   it('laesst einen Agenten in der erwarteten Runde verhungern', () => {
-    // Der Mechanismus, isoliert: Saettigung 3, Verfall 1 pro Runde. Sie
-    // erreicht in Runde 3 die Null — dann steht der Zaehler auf 1 —, und in
-    // Runde 5 erreicht er die Schwelle 3.
+    // Der Mechanismus, isoliert: Saettigung 3 und ein Verfall von 4 pro Runde
+    // bringen die Saettigung schon in Runde 1 auf null. Der Zaehler steht dann
+    // auf 1 und erreicht in Runde 3 die Schwelle 3.
     //
     // Bewusst ohne `runRound`: dort erntet und isst die Policy, und ein Agent,
     // der zu essen findet, verhungert zu Recht nicht. Dass Ausscheiden auch im
@@ -85,9 +85,9 @@ describe('T08 — Ausscheiden', () => {
       applyEffects(state, [{ t: 'round_advance' }]);
     }
 
-    expect(eliminatedIn).toEqual([5]);
+    expect(eliminatedIn).toEqual([3]);
     expect(state.agents[A]!.eliminationCause).toBe('starvation');
-    expect(state.agents[A]!.eliminatedRound).toBe(5);
+    expect(state.agents[A]!.eliminatedRound).toBe(3);
   });
 
   it('laesst einen erschoepften Agenten ausscheiden', () => {

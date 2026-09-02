@@ -25,6 +25,9 @@ const ACTION_CLASS: Record<ActionType, number> = {
   leave_alliance: 6,
   expel_member: 6,
   confront: 7,
+  // Gewalt zuletzt: wer angreift, trifft auf den Zustand, den alle anderen
+  // Aktionen dieser Runde hinterlassen haben.
+  attack: 8,
 };
 
 export interface OrderedAction {

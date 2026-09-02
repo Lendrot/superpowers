@@ -8,15 +8,19 @@
 
 import { RESOURCE_KINDS, emptyResources } from '../core/resources.js';
 import type {
+  ActionType,
   AgentId,
   Effect,
   EliminationCause,
   EndReason,
+  Experience,
   InfoItem,
   KnowledgeEntry,
   LocationId,
   Needs,
+  Personality,
   Resources,
+  Round,
   StockChangeReason,
 } from '../core/types.js';
 
@@ -36,8 +40,20 @@ export const effect = {
   move(agentId: AgentId, to: LocationId): Effect {
     return { t: 'move', agentId, to };
   },
-  eliminate(agentId: AgentId, cause: EliminationCause): Effect {
-    return { t: 'eliminate', agentId, cause };
+  eliminate(agentId: AgentId, cause: EliminationCause, killedBy?: AgentId): Effect {
+    return killedBy ? { t: 'eliminate', agentId, cause, killedBy } : { t: 'eliminate', agentId, cause };
+  },
+  experience(agentId: AgentId, delta: Partial<Experience>): Effect {
+    return { t: 'experience', agentId, delta };
+  },
+  personality(agentId: AgentId, delta: Partial<Personality>): Effect {
+    return { t: 'personality', agentId, delta };
+  },
+  cooldown(agentId: AgentId, action: ActionType, readyAtRound: Round): Effect {
+    return { t: 'cooldown', agentId, action, readyAtRound };
+  },
+  kill(agentId: AgentId): Effect {
+    return { t: 'kill', agentId };
   },
   infoItem(item: InfoItem): Effect {
     return { t: 'info_item', item };
@@ -86,6 +102,14 @@ export function describeEffect(item: Effect): string {
       return `move ${item.agentId} -> ${item.to}`;
     case 'eliminate':
       return `eliminate ${item.agentId} (${item.cause})`;
+    case 'experience':
+      return `experience ${item.agentId} ${JSON.stringify(item.delta)}`;
+    case 'personality':
+      return `personality ${item.agentId} ${JSON.stringify(item.delta)}`;
+    case 'cooldown':
+      return `cooldown ${item.agentId} ${item.action} -> ${item.readyAtRound}`;
+    case 'kill':
+      return `kill ${item.agentId}`;
     case 'info_item':
       return `info_item ${item.item.id}`;
     case 'knowledge':

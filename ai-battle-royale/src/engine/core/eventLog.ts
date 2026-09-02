@@ -107,6 +107,7 @@ export function isEventType(value: string): value is EventType {
     value === 'food_consumed' ||
     value === 'agent_attacked' ||
     value === 'agent_killed' ||
+    value === 'attack_aborted' ||
     value === 'attribute_grown' ||
     value === 'agent_eliminated' ||
     value === 'action_rejected' ||

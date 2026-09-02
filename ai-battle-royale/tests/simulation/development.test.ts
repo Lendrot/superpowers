@@ -41,9 +41,16 @@ describe('Entwicklung der Faehigkeiten', () => {
     }
   });
 
-  it('faechert die Kraft ueber den Lauf deutlich auf', () => {
-    const spread = Math.max(...values('strength')) - Math.min(...values('strength'));
-    expect(spread).toBeGreaterThan(20);
+  it('faechert mindestens zwei Faehigkeiten deutlich auf', () => {
+    // Bewusst nicht je Achse festgenagelt: welche Faehigkeit am staerksten
+    // streut, haengt daran, welche Taetigkeiten in diesem Lauf haeufig sind —
+    // und das ist Kalibrierung (T43), nicht Vertrag. Der Vertrag ist, dass
+    // ueberhaupt Spezialisierung entsteht.
+    const spreads = ATTRIBUTE_TRACKS.map(
+      (track) => Math.max(...values(track)) - Math.min(...values(track)),
+    ).sort((a, b) => b - a);
+    expect(spreads[0]).toBeGreaterThan(20);
+    expect(spreads[1]).toBeGreaterThan(10);
   });
 
   it('trennt die Faehigkeiten voneinander', () => {

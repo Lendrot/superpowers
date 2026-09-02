@@ -67,6 +67,7 @@ export const worldEventSchema = z.object({
     'food_consumed',
     'agent_attacked',
     'agent_killed',
+    'attack_aborted',
     'attribute_grown',
     'agent_eliminated',
     'action_rejected',

@@ -50,9 +50,14 @@ export const DEFAULT_INFO = {
  * Taetigkeit abbildet statt nur ihre Existenz: wer 80 % seiner Runden erntet,
  * landet bei Kraft ~80; wer sich auf drei Taetigkeiten verteilt, bei je ~33.
  *
- * Jede Faehigkeit hat genau eine Hauptquelle, und die Quellen konkurrieren um
+ * Jede Faehigkeit hat ihre eigenen Quellen, und die Quellen konkurrieren um
  * dieselbe knappe Ressource — die Runde:
- *   Ernten  → Kraft        Umziehen → Intuition        Ruhen → Intelligenz
+ *   Ernten → Kraft     Ruhen → Intelligenz     Umziehen und Fehlernten → Intuition
+ *
+ * Die Gewinne sind nicht gleich gross, weil die Ereignisse nicht gleich haeufig
+ * sind: pro Agent und Runde wurde 0,574-mal geerntet, 0,328-mal geruht,
+ * 0,193-mal ins Leere gegriffen und 0,008-mal umgezogen. Ein Gewinn von 4 auf
+ * allen Achsen liess Intuition deshalb auf dem Boden liegen.
  */
 export const DEFAULT_ATTRIBUTES = {
   startExperience: 500,
@@ -61,7 +66,8 @@ export const DEFAULT_ATTRIBUTES = {
   decayScale: 250,
   decayFloor: 250,
   gatherGain: 4,
-  moveGain: 4,
+  moveGain: 20,
+  gatherFailedGain: 8,
   restGain: 4,
   learnGain: 3,
   fightWinGain: 14,

@@ -23,7 +23,16 @@ entscheidet ihr Weg:
 |---|---|---|
 | **Intelligenz** | Ruhen (Nachdenken), neues Wissen | **Überlebensinstinkt** — isst und ruht früher, schätzt Risiken ernster ein |
 | **Kraft** | Ernten (körperliche Arbeit), gewonnene Kämpfe | **Machtinstinkt** — sucht Vorrang und Auseinandersetzung |
-| **Intuition** | Umziehen, verlorene Kämpfe | **Glück** — wirkt auf jeden Wurf, den der Agent macht |
+| **Intuition** | Fehlernten, Umziehen, verlorene Kämpfe | **Glück** — wirkt auf jeden Wurf, den der Agent macht |
+
+**Die Gewinne sind nicht gleich groß, weil die Ereignisse nicht gleich häufig
+sind.** Gemessen pro Agent und Runde: 0,574 Ernten, 0,328 Ruhepausen, 0,193
+Fehlernten, 0,008 Ortswechsel. Bei einem einheitlichen Gewinn von 4 lag Intuition
+deshalb bei *jedem* Agenten auf dem Grundwert — sie hing an der mit Abstand
+seltensten Handlung. Umziehen zählt jetzt fünfmal so viel, und Fehlernten sind
+eine zweite, häufige Quelle: wer oft danebengreift, lernt zu erkennen, wo sich
+das Hinsehen lohnt. Das ist bewusst eine Rückkopplung *gegen* den Erfolg — Glück
+wächst dort, wo es bisher fehlte.
 
 Gespeichert wird nicht die Fähigkeit, sondern die Erfahrung dahinter; der Wert
 ist eine Funktion davon. Was nicht benutzt wird, bildet sich zurück — der
@@ -70,8 +79,8 @@ Gemessen auf Node 22 in dieser Umgebung:
 
 | Lauf | Ergebnis |
 |---|---|
-| `--rounds 100 --agents 30 --seed 42` | Log-Hash `d9e6f96d7548c356` |
-| `--rounds 400 --agents 30 --seed 42` | Log-Hash `4a81207b75a1a77d` |
+| `--rounds 100 --agents 30 --seed 42` | Log-Hash `d3d7ed3139cc409d` |
+| `--rounds 400 --agents 30 --seed 42` | Log-Hash `d6297b72a5db157a` |
 | `pnpm test` | 23 Dateien, 281 Tests grün |
 
 Der Zielwert aus Doc 01 §1.5.7 (400 Runden × 30 Agenten headless unter 5 s) wird
@@ -259,6 +268,21 @@ Aufgabe ist (T43) und jede Änderung alle Golden-Hashes verschiebt;
 `tests/integration/elimination.test.ts` prüft das Ausscheiden deshalb unter
 `satietyDecayPerRound: 8`.
 
+## Beobachtungen aus dem Lauf mit Fähigkeiten und Kampf
+
+Seed 42, 600 Runden, 30 Agenten:
+
+| Fähigkeit | Spanne der Überlebenden | Median |
+|---|---|---|
+| Kraft | 51–65 | 62 |
+| Intuition | 25–67 | 28 |
+| Intelligenz | 33–37 | 35 |
+
+Intuition ist damit ein **Spezialistenmerkmal**: die meisten bleiben nahe der
+Grundkompetenz, einzelne entwickeln sie stark. Intelligenz streut am wenigsten,
+weil Ruhen bei allen ähnlich häufig ist — das ist der nächste
+Kalibrierungspunkt, kein Konstruktionsfehler.
+
 ## Was noch offen ist
 
 - **40 % der Ernten laufen ins Leere** (2 878 von 7 232). Kein
@@ -273,8 +297,16 @@ Aufgabe ist (T43) und jede Änderung alle Golden-Hashes verschiebt;
 - **Nur `stock_at_location` und `event_occurred` werden je erzeugt.** Die
   übrigen fünf `InfoTopic`-Werte existieren als Typ; ihre Systeme (Allianzen,
   Pledges, Absichtserklärungen) kommen ab T20.
-- **Die Ökonomiezahlen sind ungemessen.** Sämtliche Werte in `core/config.ts`,
-  `world/locations.ts` und `decision/policyProvider.ts` sind **[ANNAHME]**.
+- **Intelligenz streut kaum** (33–37), weil Ruhen bei allen ähnlich häufig ist.
+  Anders als bei Intuition ist die Quelle nicht zu selten, sondern zu
+  gleichverteilt — es fehlt eine Handlung, bei der sich Agenten im Denken
+  unterscheiden. Kandidat: `investigate` (T35).
+- **Die Ökonomie- und Gewichtungszahlen sind Kalibrierungsmaße, keine
+  Messwerte.** Sämtliche Werte in `core/config.ts`, `world/locations.ts` und
+  `decision/policyProvider.ts` sind **[ANNAHME]** und gehören in den Sweep (T43).
+  Beim Einbau der Fähigkeiten habe ich mehrfach zwischen Gewichten oszilliert,
+  die sich gegenseitig aufhoben; der jetzige Stand ist ein funktionierender,
+  kein ausbalancierter.
 
 ## Nächster Schritt
 

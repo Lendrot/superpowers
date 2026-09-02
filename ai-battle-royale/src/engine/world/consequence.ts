@@ -7,10 +7,11 @@
  *
  * Zwei Dinge entwickeln sich:
  *
- * 1. **Faehigkeiten.** Wer koerperlich arbeitet, wird staerker; wer umherzieht,
- *    schaerft sein Gespuer; wer Neues erfaehrt, wird klueger. Was nicht benutzt
- *    wird, bildet sich zurueck (`decayPerRound`). Alle Agenten starten gleich —
- *    die Unterschiede am Ende sind gelaufene Wege, keine Wuerfe.
+ * 1. **Faehigkeiten.** Wer koerperlich arbeitet, wird staerker; wer ruht und
+ *    nachdenkt, klueger; wer umherzieht und ins Leere greift, schaerft sein
+ *    Gespuer. Was nicht benutzt wird, bildet sich zurueck — proportional zum
+ *    Niveau, bis auf eine Grundkompetenz. Alle Agenten starten gleich; die
+ *    Unterschiede am Ende sind gelaufene Wege, keine Wuerfe.
  *
  * 2. **Veranlagung.** Doc 03 §3.2.1 nennt die Persoenlichkeit konstant. Auf
  *    Ansage driftet sie jetzt, aber nur in engen Grenzen: hoechstens ±1 pro
@@ -91,6 +92,10 @@ export function consequence(
         break;
       case 'agent_moved':
         addGain(actor, 'intuition', config.moveGain);
+        break;
+      case 'gather_failed':
+        // Wer danebengreift, lernt zu erkennen, wo sich das Hinsehen lohnt.
+        addGain(actor, 'intuition', config.gatherFailedGain);
         break;
       case 'agent_rested':
         // Ruhe ist die Taetigkeit, bei der ein Agent nachdenkt.

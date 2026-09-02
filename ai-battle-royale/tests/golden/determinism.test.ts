@@ -16,7 +16,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben mit der Erweiterung um Faehigkeiten, Macht und Kampf.
+ * Zuletzt neu geschrieben, als Intuition eine zweite Quelle bekam
+ * (Fehlernten) und `moveGain` an die Seltenheit von Ortswechseln angepasst
+ * wurde. Davor lag Intuition bei jedem Agenten auf dem Boden.
+ *
+ * Davor: mit der Erweiterung um Faehigkeiten, Macht und Kampf.
  * Die Aenderung war beabsichtigt und gross: Agenten entwickeln Attribute,
  * greifen einander an und koennen getoetet werden, ihre Veranlagung driftet,
  * Glueck wirkt auf jeden Wurf, und die Saettigung faellt jetzt um 4 statt 1 pro
@@ -24,11 +28,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'd9e6f96d7548c356',
+  seed42x100: 'd3d7ed3139cc409d',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '4a81207b75a1a77d',
+  seed42x400: 'd6297b72a5db157a',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: 'c967f10a741f89ac',
+  seed7x100: '4bd1cb6901ea884e',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {
@@ -131,10 +135,17 @@ describe('Golden — der Lauf ist nicht entartet', () => {
   });
 
   it('entwickelt unterschiedliche Faehigkeiten', () => {
-    const strengths = result.leaderboard
-      .filter((entry) => entry.alive)
-      .map((entry) => entry.attributes.strength);
-    expect(Math.max(...strengths) - Math.min(...strengths)).toBeGreaterThan(10);
+    const alive = result.leaderboard.filter((entry) => entry.alive);
+    const spread = (pick: (e: (typeof alive)[number]) => number): number =>
+      Math.max(...alive.map(pick)) - Math.min(...alive.map(pick));
+
+    expect(
+      Math.max(
+        spread((e) => e.attributes.strength),
+        spread((e) => e.attributes.intuition),
+        spread((e) => e.attributes.intelligence),
+      ),
+    ).toBeGreaterThan(20);
   });
 
   it('erzeugt Wissen', () => {

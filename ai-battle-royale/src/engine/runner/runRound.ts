@@ -48,6 +48,11 @@ export interface RoundResult {
   decisions: number;
   /** Wieviele Wissenseintraege Phase 2 geschrieben hat. */
   perceived: number;
+  /**
+   * Aktionen, die waehrend der Aufloesung ins Leere liefen, weil ihr Ziel in
+   * derselben Runde gefallen ist. Kein Validierungsfehler — siehe unten.
+   */
+  aborted: number;
   /** Wieviele Agenten in Phase 8 Erfahrung gewonnen oder verloren haben. */
   developed: number;
   /** Wer in dieser Runde ausgeschieden ist. */
@@ -63,6 +68,7 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   const round = state.round;
   const rejects = emptyRejectCounts();
   const actionCounts: Record<string, number> = {};
+  let aborted = 0;
   const events: WorldEvent[] = [];
 
   const emit = (draft: Parameters<EventLog['append']>[0]): void => {
@@ -143,13 +149,19 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     const target = action.params['target'];
     const targetGone = typeof target === 'string' && projection.isEliminated(target as AgentId);
     if (projection.isEliminated(action.actorId) || targetGone) {
-      rejects.target_invalid += 1;
+      // Kein Validierungsfehler: die Kette hat die Aktion zu Recht
+      // durchgelassen, das Ziel lebte zu dem Zeitpunkt noch. Es faellt erst
+      // waehrend der Aufloesung. Wuerde das als Reject zaehlen, waere die
+      // Kennzahl aus Doc 08 §8.1 ("ueber 2 % ist ein Bug") nicht mehr
+      // aussagekraeftig — dieselbe Trennung wie zwischen `gather_failed` und
+      // `action_rejected`.
+      aborted += 1;
       emit({
         round,
-        type: 'action_rejected',
+        type: 'attack_aborted',
         actorId: action.actorId,
         locationId: state.agents[action.actorId]?.location ?? null,
-        payload: { action: action.type, reason: 'target_invalid', detail: 'in dieser Runde bereits gefallen' },
+        payload: { action: action.type, reason: 'target_already_down' },
         visibility: { scope: 'private', agentIds: [action.actorId] },
         infoRefs: [],
       });
@@ -222,6 +234,7 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     actionCounts,
     decisions: chosen.length,
     perceived: perception.written,
+    aborted,
     developed: consequences.changed,
     eliminated: upkeepResult.events.flatMap((e) => (e.actorId ? [e.actorId] : [])),
     // Nicht `state.status` lesen: der Typ ist an dieser Stelle bereits auf

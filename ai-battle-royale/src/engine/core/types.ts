@@ -312,6 +312,8 @@ export type EventType =
   | 'food_consumed'
   | 'agent_attacked'
   | 'agent_killed'
+  /** Angriff lief ins Leere, weil das Ziel in dieser Runde schon gefallen war. */
+  | 'attack_aborted'
   | 'attribute_grown'
   | 'agent_eliminated'
   | 'action_rejected'
@@ -481,8 +483,24 @@ export interface AttributeConfig {
   decayFloor: number;
   /** Kraft durch koerperliche Arbeit (Ernte) */
   gatherGain: number;
-  /** Intuition durch Ortswechsel */
+  /**
+   * Intuition durch Ortswechsel. Deutlich groesser als die uebrigen Gewinne,
+   * weil Umziehen rund 70-mal seltener ist als Ernten (gemessen: 0,008 gegen
+   * 0,574 Ereignisse pro Agent und Runde). Bei gleichem Gewinn koennte
+   * Intuition das Gleichgewicht der anderen Faehigkeiten nie erreichen — sie
+   * lag bei jedem Agenten auf dem Boden.
+   */
   moveGain: number;
+  /**
+   * Intuition durch eine ins Leere gelaufene Ernte.
+   *
+   * Wer oft danebengreift, lernt zu erkennen, wo sich das Hinsehen lohnt. Das
+   * ist die zweite, haeufige Quelle, ohne die Intuition an einer seltenen
+   * Aktion haengt — und es ist bewusst eine Rueckkopplung gegen den Erfolg:
+   * Glueck waechst dort, wo es bisher fehlte. Wer stets zuerst am Bestand ist,
+   * braucht kein Gespuer.
+   */
+  gatherFailedGain: number;
   /** Intelligenz durch Ruhe — Nachdenken ist die Taetigkeit, die klug macht */
   restGain: number;
   /** Intelligenz je neu erworbenem Wissenseintrag, zusaetzlich */

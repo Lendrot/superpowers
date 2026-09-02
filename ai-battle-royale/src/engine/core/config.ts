@@ -84,6 +84,29 @@ export const DEFAULT_COMBAT = {
   damageScale: 60,
 } as const;
 
+/**
+ * Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3).
+ *
+ * Ohne feste Grenzen ist "irrefuehrende Teilwahrheit" nicht entscheidbar: dass
+ * "fast kein Geld" bei 100 Muenzen eine Luege ist, laesst sich nur sagen, wenn
+ * feststeht, ab wann 100 als `much` gilt. Die Tabelle ist deshalb Teil der
+ * Config und in `truthValidator.test.ts` festgenagelt.
+ *
+ * Der Schluessel ist `<topic>` oder `<topic>:<detail>`; die genauere Angabe
+ * gewinnt. Die Muenzgrenzen stammen woertlich aus Doc 08 §8.2.2.
+ */
+export const DEFAULT_BUCKETS = {
+  stock_at_location: { some: 1, much: 20 },
+  agent_resource: { some: 1, much: 20 },
+  'agent_resource:coins': { some: 6, much: 50 },
+  agent_attribute: { some: 26, much: 66 },
+  agent_alliance: { some: 1, much: 2 },
+  agent_secret_goal: { some: 1, much: 2 },
+  pledge_state: { some: 1, much: 2 },
+  event_occurred: { some: 1, much: 2 },
+  agent_intent_declared: { some: 1, much: 2 },
+} as const;
+
 export const DEFAULT_CONFIG: MatchConfig = {
   agentCount: 30,
   maxRounds: 100,
@@ -94,6 +117,7 @@ export const DEFAULT_CONFIG: MatchConfig = {
   info: { ...DEFAULT_INFO },
   attributes: { ...DEFAULT_ATTRIBUTES },
   combat: { ...DEFAULT_COMBAT },
+  buckets: { ...DEFAULT_BUCKETS },
   strictInvariants: true,
 };
 
@@ -107,6 +131,7 @@ export interface MatchConfigInput {
   info?: Partial<MatchConfig['info']>;
   attributes?: Partial<MatchConfig['attributes']>;
   combat?: Partial<MatchConfig['combat']>;
+  buckets?: MatchConfig['buckets'];
   strictInvariants?: boolean;
 }
 
@@ -123,6 +148,7 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
     info: { ...DEFAULT_INFO, ...stripUndefined(input.info ?? {}) },
     attributes: { ...DEFAULT_ATTRIBUTES, ...stripUndefined(input.attributes ?? {}) },
     combat: { ...DEFAULT_COMBAT, ...stripUndefined(input.combat ?? {}) },
+    buckets: { ...DEFAULT_BUCKETS, ...(input.buckets ?? {}) },
   };
 
   requireInteger('agentCount', config.agentCount, 2, 40);
@@ -156,6 +182,15 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
   for (const key of ['killMargin', 'lootShare'] as const) {
     if (!Number.isFinite(config.combat[key]) || config.combat[key] < 0 || config.combat[key] > 1) {
       throw new RangeError(`config.combat.${key} muss in [0, 1] liegen, war ${config.combat[key]}`);
+    }
+  }
+
+  for (const [key, thresholds] of Object.entries(config.buckets)) {
+    if (!Number.isFinite(thresholds.some) || !Number.isFinite(thresholds.much)) {
+      throw new RangeError(`config.buckets.${key}: Grenzen muessen endlich sein`);
+    }
+    if (thresholds.some > thresholds.much) {
+      throw new RangeError(`config.buckets.${key}: 'some' liegt ueber 'much'`);
     }
   }
 

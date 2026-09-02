@@ -212,6 +212,16 @@ function applyOne(state: WorldState, item: Effect): void {
       return;
     }
 
+    case 'statement': {
+      // Der Wahrheitsvertrag braucht ein Gedaechtnis: ohne Aufzeichnung der
+      // letzten Aussage kann R7 (Selbstwiderspruch) nichts vergleichen.
+      getAgent(state, item.agentId);
+      const perAgent = state.statementLog[item.agentId] ?? {};
+      perAgent[item.record.infoId] = { ...item.record };
+      state.statementLog[item.agentId] = perAgent;
+      return;
+    }
+
     case 'info_item': {
       const existing = state.infoRegistry[item.item.id];
       if (existing) {

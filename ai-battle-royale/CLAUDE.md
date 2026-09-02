@@ -25,7 +25,8 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    könnte, existieren nicht.** Welche das sind, steht in Doc 04 §4.2;
    `tests/unit/noLieActions.test.ts` durchsucht `src/` danach.
 6. **Jede Aussage ist ein `Statement`-Objekt und wird truth-validiert; Freitext
-   verändert nie State.** Ab T12/T13.
+   verändert nie State.** Umgesetzt: `validation/truthValidator.ts` hängt als
+   Stufe 7 in der Kette, das Gate ist `tests/unit/truthValidator.test.ts`.
 7. **Neue Aktion ⇒ neue Datei in `actions/defs/` + Unit-Test + Eintrag in
    `resolutionOrder`.** Ein Eintrag in `registry.ts` ist die Zusage, dass die
    Aktion funktioniert — `ActionType` kennt 14, implementiert sind fünf.
@@ -58,6 +59,27 @@ Ein `KnowledgeEntry` entsteht an **genau einer** Stelle: `world/perception.ts`
   nicht gespeichert. `entry.certainty` gilt für `entry.lastConfirmedRound`.
 - Jeder Eintrag trägt `sourceEventId`. Ohne diesen Herkunftsnachweis ist
   `no-omniscience` nicht prüfbar.
+
+## Wahrheit
+
+Geprüft wird gegen den **Wissensstand des Agenten**, nie gegen die Weltwahrheit
+(Doc 08 §8.2.1). Wer eine veraltete Überzeugung ausspricht, irrt sich; wer dem
+eigenen `KnowledgeEntry` widerspricht, lügt.
+
+- `truthValidator.ts` importiert `resolveTrueValue` **nicht** und darf es nie.
+  Es kennt die Weltwahrheit nicht einmal — das ist die Regel selbst, nicht
+  Nachlässigkeit.
+- **R7 läuft vor R3.** Ein Selbstwiderspruch ist die genauere Diagnose als eine
+  falsche Behauptung. Die Testtabelle aus §8.3 nagelt das fest.
+- Ein `suggestion` wird nicht geraten, sondern durchgerechnet: jeder Vorschlag
+  läuft selbst durch `check`. Ein Vorschlag, der wieder abgelehnt würde, wäre
+  schlimmer als keiner.
+- Neue Aktion mit `allowsStatement: true` ⇒ ihre Aussagen laufen ab dem ersten
+  Tag durch Stufe 7. Der Kandidatengenerator muss die erste Verteidigungslinie
+  halten (Doc 08 §8.2.4): steigt `falseAssertionsRejected` über 0, ist der
+  Generator kaputt, nicht der Agent verlogen.
+- Bucket-Grenzen stehen in `config.buckets`, nicht im Code. Ohne feste Grenzen
+  ist „irreführende Teilwahrheit" nicht entscheidbar.
 
 ## Entscheidungsgewichte
 
@@ -103,10 +125,17 @@ dieses Repos gelten trotzdem weiter:
 ## Golden-Hashes
 
 `tests/golden/determinism.test.ts` nagelt drei Log-Hashes fest. Bricht einer,
-ist eine Verhaltensänderung eingetreten. War sie beabsichtigt, wird der Wert neu
-geschrieben **und die Commit-Nachricht benennt, welches Verhalten sich geändert
-hat** (Doc 10 §E). Ein stillschweigend aktualisierter Golden-Hash macht den Test
-wertlos.
+ist eine Verhaltensänderung eingetreten — oder die `MatchConfig` hat ein Feld
+bekommen: die `MatchId` hängt am Seed **und** an der Konfiguration und steht in
+jedem Event. Beides sieht am Hash gleich aus, ist es aber nicht. Nachrechnen
+statt raten: die Events ohne ihr `matchId`-Feld durch `canonicalJson` schicken
+und mit dem Stand davor vergleichen. Sind sie gleich, hat sich nur der Name der
+Welt geändert.
+
+In beiden Fällen wird der Wert neu geschrieben **und die Commit-Nachricht
+benennt, was sich geändert hat** (Doc 10 §E) — im ersten Fall das Verhalten, im
+zweiten die Identität der Welt. Ein stillschweigend aktualisierter Golden-Hash
+macht den Test wertlos.
 
 ## Kommandos
 

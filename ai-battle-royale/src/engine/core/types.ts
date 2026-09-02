@@ -281,6 +281,99 @@ export interface KnowledgeEntry {
   isSecret: boolean;
 }
 
+// ── 3.4.3 Statement — jede sprachliche Aeusserung, typisiert ─────────────────
+
+/**
+ * Doc 03 §3.4.3 nennt das den wichtigsten Typ des ganzen Projekts, und der
+ * Grund steht in §1.2: weil `Statement` ein geschlossener, maschinell
+ * pruefbarer Datentyp ist, wird "kein Agent darf luegen" eine
+ * **Validierungsregel mit Unit-Tests** statt einer Bitte an ein Sprachmodell.
+ *
+ * Freitext entsteht erst danach, aus dem geprueften Objekt (Verbalizer, T39),
+ * und fliesst nie in den State zurueck.
+ */
+export type Statement =
+  | { kind: 'assert_fact'; infoId: InfoId; disclosure: Disclosure }
+  /** "dort gibt es nichts" — braucht positives Wissen ueber die Abwesenheit */
+  | { kind: 'assert_absence'; infoId: InfoId }
+  | { kind: 'belief'; infoId: InfoId; hedge: 'i_think' | 'not_sure'; disclosure: Disclosure }
+  | { kind: 'hearsay'; infoId: InfoId; sourceAgent: AgentId; disclosure: Disclosure }
+  /** stets unpraezise */
+  | { kind: 'partial_disclosure'; infoId: InfoId; disclosure: Disclosure }
+  | { kind: 'refuse_to_answer'; topic: InfoTopic }
+  /** schweigen, ohne es zu benennen */
+  | { kind: 'withhold'; topic: InfoTopic }
+  | { kind: 'redirect_conversation'; toTopic: InfoTopic }
+  | { kind: 'express_uncertainty'; topic: InfoTopic }
+  /** Absichtserklaerung — keine Tatsachenbehauptung (R8, T42) */
+  | { kind: 'declare_intent'; intent: string; pledgeId?: string }
+  | { kind: 'none' };
+
+export type StatementKind = Statement['kind'];
+
+/**
+ * Wie praezise eine Aussage ist.
+ *
+ * Abweichung von Doc 03 §3.4.3, bewusst: dort steht `{ mode: 'exact' }` ohne
+ * Wert, waehrend die `entails`-Funktion in Doc 08 §8.2.2 R3 `disclosure.value`
+ * liest. Ohne Wert waere "exakt" nicht pruefbar — der Typ traegt ihn deshalb.
+ */
+export type Disclosure =
+  /** "20 Nahrung" */
+  | { mode: 'exact'; value: InfoValue }
+  /** "mindestens 10" */
+  | { mode: 'bound'; op: '>=' | '<='; value: number }
+  /** "etwas Nahrung" */
+  | { mode: 'qualitative'; bucket: Bucket }
+  /** "dort ist etwas Nuetzliches" */
+  | { mode: 'existence_only' };
+
+export type Bucket = 'none' | 'some' | 'much';
+
+/**
+ * Doc 08 §8.2.2 R3: ohne feste Buckets ist "irrefuehrende Teilwahrheit" nicht
+ * entscheidbar. `none` ist alles unter `some`, `much` alles ab `much`.
+ */
+export interface BucketThresholds {
+  some: number;
+  much: number;
+}
+
+/**
+ * Schluessel ist `InfoTopic` oder `InfoTopic:detail` (z. B. `agent_resource:coins`).
+ * Die genauere Angabe gewinnt.
+ */
+export type BucketTable = Record<string, BucketThresholds>;
+
+/** Doc 08 §8.1 Stufe 7 und §8.2.2. */
+export type TruthRejectReason =
+  | 'unknown_reference'
+  | 'false_assertion'
+  | 'unsupported_certainty'
+  | 'unattributed_hearsay'
+  | 'self_contradiction';
+
+/**
+ * Was ein Agent zuletzt ueber eine Info gesagt hat — Grundlage von R7.
+ *
+ * Entscheidend ist `believedValueAtTime`: nur wenn sich die Ueberzeugung
+ * seitdem NICHT geaendert hat, ist eine abweichende Aussage ein Widerspruch.
+ * Hat sie sich geaendert, ist die neue Aussage zulaessig — und ein Zuhoerer,
+ * der beides gehoert hat, darf misstrauisch werden. Das ist erwuenscht.
+ */
+export interface StatementRecord {
+  infoId: InfoId;
+  kind: StatementKind;
+  disclosure?: Disclosure;
+  believedValueAtTime: InfoValue;
+  round: Round;
+}
+
+export type StatementLog = Record<AgentId, Record<InfoId, StatementRecord>>;
+
+/** Welche Tatsachen es in dieser Welt gibt — Identitaeten, keine Werte. */
+export type InfoRegistry = Record<InfoId, InfoItem>;
+
 // ── 3.9 Location ─────────────────────────────────────────────────────────────
 
 export interface Location {
@@ -383,6 +476,8 @@ export type Effect =
   | { t: 'cooldown'; agentId: AgentId; action: ActionType; readyAtRound: Round }
   /** Erhoeht den Toetungszaehler — Grundlage der Macht. */
   | { t: 'kill'; agentId: AgentId }
+  /** Haelt eine gepruefte Aussage fest, damit R7 sie spaeter vergleichen kann. */
+  | { t: 'statement'; agentId: AgentId; record: StatementRecord }
   /** Registriert eine Info als existent. Traegt keinen Wahrheitswert — siehe `InfoItem`. */
   | { t: 'info_item'; item: InfoItem }
   /** Der einzige Weg, auf dem ein `KnowledgeEntry` entsteht oder sich aendert. */
@@ -422,7 +517,9 @@ export interface WorldState {
   agents: Record<AgentId, Agent>;
   locations: Record<LocationId, Location>;
   /** objektive Wahrheit; Agenten sehen das NIE (Doc 03 §3.1) */
-  infoRegistry: Record<InfoId, InfoItem>;
+  infoRegistry: InfoRegistry;
+  /** Was wer zuletzt worueber gesagt hat — Grundlage von R7 (Doc 08 §8.2.2). */
+  statementLog: StatementLog;
   status: 'running' | 'finished';
   endReason?: EndReason;
 }
@@ -453,6 +550,8 @@ export interface MatchConfig {
   info: InfoConfig;
   attributes: AttributeConfig;
   combat: CombatConfig;
+  /** Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3) */
+  buckets: BucketTable;
   /** Invarianten nach jeder Mutation pruefen. In Long-Run-Batches abschaltbar. */
   strictInvariants: boolean;
 }
@@ -571,12 +670,19 @@ export type RejectReason =
   | 'target_invalid'
   | 'precondition_failed'
   | 'insufficient_resources'
-  | 'unknown_reference'
-  | 'effect_invalid';
+  | 'effect_invalid'
+  // Stufe 7 (TRUTH). `unknown_reference` gehoert beiden Stufen: Stufe 6
+  // (Knowledge) benutzt ihn fuer Aktionsparameter, R1 fuer Aussagen.
+  | TruthRejectReason;
 
 export interface AgentAction {
   actorId: AgentId;
   type: ActionType;
   params: Record<string, JsonValue>;
+  /**
+   * Was der Agent dabei sagt. Nur soziale Aktionen erlauben das
+   * (`ActionDef.allowsStatement`); der Truth-Validator prueft es in Stufe 7.
+   */
+  statement?: Statement;
   source: 'policy' | 'llm' | 'fallback' | 'scripted';
 }

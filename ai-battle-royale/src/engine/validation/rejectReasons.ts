@@ -14,8 +14,15 @@ export const REJECT_REASONS = [
   'target_invalid',
   'precondition_failed',
   'insufficient_resources',
-  'unknown_reference',
   'effect_invalid',
+  // Stufe 7 — der Truth-Validator. Diese fuenf zaehlen mit: `falseAssertionsRejected`
+  // soll im Normalbetrieb 0 sein (Doc 08 §8.2.4), jeder Ausschlag zeigt einen
+  // Bug im Kandidatengenerator, nicht einen luegenden Agenten.
+  'unknown_reference',
+  'false_assertion',
+  'unsupported_certainty',
+  'unattributed_hearsay',
+  'self_contradiction',
 ] as const satisfies readonly RejectReason[];
 
 export type RejectCounts = Record<RejectReason, number>;

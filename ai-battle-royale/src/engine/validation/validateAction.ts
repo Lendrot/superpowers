@@ -9,8 +9,8 @@
  *   3 Target             —  keine zielgerichtete Aktion in Schritt 1
  *   4 Precondition       ✔  (`ActionDef.precondition`)
  *   5 Resource           ✔  soweit anwendbar: ueber die `EffectProjection`
- *   6 Knowledge          —  T10/T13
- *   7 TRUTH              —  T13, der eigentliche Kern des Projekts
+ *   6 Knowledge          ✔  (`allowsStatement` + R1 im Truth-Validator)
+ *   7 TRUTH              ✔  (`truthValidator.ts`, R1–R7 + R9)
  *   8 Parameter clamp    —  keine numerischen Parameter in Schritt 1
  *   9 Effect sanity      ✔  (`EffectProjection`)
  *
@@ -30,6 +30,7 @@ import type {
   ResourceKind,
   WorldState,
 } from '../core/types.js';
+import { validateStatement } from './truthValidator.js';
 
 export type ValidationResult =
   | { ok: true }
@@ -73,6 +74,31 @@ export function validateAction(action: AgentAction, ctx: ActionContext): Validat
   const pre = def.precondition(action, ctx);
   if (!pre.ok) {
     return { ok: false, reason: pre.reason, detail: pre.detail };
+  }
+
+  // Stufe 6 — Knowledge. Darf diese Aktion ueberhaupt etwas sagen?
+  // Doc 04 §4.0: nur soziale Aktionen tragen ein Statement. Eine Ernte mit
+  // angehaengter Behauptung ist kein Wahrheitsproblem, sondern eine Aktion, die
+  // es so nicht gibt.
+  if (action.statement && !def.allowsStatement) {
+    return {
+      ok: false,
+      reason: 'precondition_failed',
+      detail: `${action.type} erlaubt kein Statement`,
+    };
+  }
+
+  // Stufe 7 — TRUTH. Der eigentliche Kern des Projekts (Doc 08 §8.2).
+  if (action.statement) {
+    const truth = validateStatement(action.statement, agent, {
+      round: ctx.round,
+      config: ctx.state.config,
+      statementLog: ctx.state.statementLog,
+      infoRegistry: ctx.state.infoRegistry,
+    });
+    if (!truth.ok) {
+      return { ok: false, reason: truth.reason, detail: truth.detail };
+    }
   }
 
   return { ok: true };

@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { restAction } from '@/engine/actions/defs/rest.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
+import { stockInfoId } from '@/engine/information/infoRegistry.js';
 import { effect } from '@/engine/mutation/effects.js';
 import { EffectProjection, validateAction } from '@/engine/validation/validateAction.js';
 import { emptyRejectCounts, totalRejects } from '@/engine/validation/rejectReasons.js';
@@ -118,6 +120,118 @@ describe('Stufe 9 — Effect Sanity', () => {
     expect(projection.check([effect.locationStock('commons', { food: -11 }, 'transfer')])).toMatchObject({
       ok: false,
       reason: 'effect_invalid',
+    });
+  });
+});
+
+describe('Stufe 6 und 7 — Wissen und Wahrheit', () => {
+  const infoId = stockInfoId('commons', 'food');
+
+  function teachAgent(believedValue: number, certainty = 1): void {
+    state.agents[A]!.knowledge[infoId] = {
+      infoId,
+      believedValue,
+      certainty,
+      source: 'observed',
+      acquiredRound: state.round,
+      lastConfirmedRound: state.round,
+      sharedWith: [],
+      isSecret: false,
+    };
+  }
+
+  /**
+   * Bis T18 (`share_information`) traegt keine implementierte Aktion ein
+   * Statement — `allowsStatement` ist ueberall `false`. Damit die Stufen 6 und 7
+   * nicht bis dahin ungetestet in der Kette haengen, dreht dieser Helfer die
+   * Erlaubnis fuer die Dauer eines Falls um. Genau dafuer steht das Flag: die
+   * Kette selbst kennt keine Aktionsnamen.
+   */
+  function withStatementsAllowed(run: () => void): void {
+    const flag = restAction as { allowsStatement: boolean };
+    const original = flag.allowsStatement;
+    flag.allowsStatement = true;
+    try {
+      run();
+    } finally {
+      flag.allowsStatement = original;
+    }
+  }
+
+  it('Stufe 6 — eine Aktion ohne Redeerlaubnis traegt kein Statement', () => {
+    teachAgent(10);
+    const verdict = validateAction(
+      action({ statement: { kind: 'assert_fact', infoId, disclosure: { mode: 'existence_only' } } }),
+      ctx,
+    );
+    expect(verdict).toMatchObject({ ok: false, reason: 'precondition_failed' });
+  });
+
+  it('Stufe 1 — ein formal kaputtes Statement faellt schon am Schema', () => {
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        // `partial_disclosure` ist laut Doc 03 §3.4.3 stets unpraezise.
+        action({
+          statement: { kind: 'partial_disclosure', infoId, disclosure: { mode: 'exact', value: 10 } },
+        }),
+        ctx,
+      );
+      expect(verdict).toMatchObject({ ok: false, reason: 'schema_invalid' });
+    });
+  });
+
+  it('Stufe 7 — eine wahre Aussage geht durch', () => {
+    teachAgent(10);
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        action({ statement: { kind: 'assert_fact', infoId, disclosure: { mode: 'existence_only' } } }),
+        ctx,
+      );
+      expect(verdict).toEqual({ ok: true });
+    });
+  });
+
+  it('Stufe 7 — eine Luege wird mit ihrem Wahrheitsgrund abgelehnt', () => {
+    teachAgent(10);
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        action({ statement: { kind: 'assert_fact', infoId, disclosure: { mode: 'exact', value: 99 } } }),
+        ctx,
+      );
+      expect(verdict).toMatchObject({ ok: false, reason: 'false_assertion' });
+    });
+  });
+
+  it('Stufe 7 — Reden ueber Unbekanntes ist unknown_reference, keine Luege', () => {
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        action({ statement: { kind: 'assert_absence', infoId } }),
+        ctx,
+      );
+      expect(verdict).toMatchObject({ ok: false, reason: 'unknown_reference' });
+    });
+  });
+
+  it('Stufe 7 — Verweigerung geht auch ohne jedes Wissen durch (R9)', () => {
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        action({ statement: { kind: 'refuse_to_answer', topic: 'stock_at_location' } }),
+        ctx,
+      );
+      expect(verdict).toEqual({ ok: true });
+    });
+  });
+
+  it('die Reihenfolge haelt: Stufe 2 schlaegt Stufe 7', () => {
+    // Ein ausgeschiedener Agent mit einer Luege im Mund wird als Toter
+    // abgelehnt, nicht als Luegner. Der erste Fehler bricht ab (Doc 08 §8.1).
+    state.agents[A]!.alive = false;
+    withStatementsAllowed(() => {
+      const verdict = validateAction(
+        action({ statement: { kind: 'assert_fact', infoId, disclosure: { mode: 'exact', value: 99 } } }),
+        ctx,
+      );
+      expect(verdict).toMatchObject({ ok: false, reason: 'actor_invalid' });
     });
   });
 });

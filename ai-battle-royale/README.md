@@ -1,12 +1,15 @@
-# AI Battle Royale — deterministischer Kern + Wahrnehmung
+# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit
 
-Stand: **Tag 1 und Tag 2** aus `12-build-order.md`.
+Stand: **Tag 1 bis Tag 3** aus `12-build-order.md`.
 
 - **Tag 1** (T01, T02 reduziert, T03–T07, Kern von T09): Welt aus Seed, Runden
   laufen headless, Event-Log-Hash reproduzierbar.
 - **Tag 2** (T08, T10, T11, T16): Agenten essen, ziehen um und scheiden aus.
   Wissen entsteht ausschließlich in Phase 2 und veraltet. Entscheidungen fallen
   nur noch auf Basis einer `AgentView`.
+- **Tag 3** (T12–T15): jede Äußerung ist ein `Statement`-Objekt und läuft durch
+  den Truth-Validator. Die Regel „kein Agent darf lügen" ist ab hier keine Bitte
+  an ein Sprachmodell mehr, sondern eine Funktion mit einer Testtabelle.
 - **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
   sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
   Kampfsystem, in dem Agenten einander töten können. Siehe unten.
@@ -79,9 +82,16 @@ Gemessen auf Node 22 in dieser Umgebung:
 
 | Lauf | Ergebnis |
 |---|---|
-| `--rounds 100 --agents 30 --seed 42` | Log-Hash `d3d7ed3139cc409d` |
-| `--rounds 400 --agents 30 --seed 42` | Log-Hash `d6297b72a5db157a` |
-| `pnpm test` | 23 Dateien, 281 Tests grün |
+| `--rounds 100 --agents 30 --seed 42` | Log-Hash `e15088a943e93825` |
+| `--rounds 400 --agents 30 --seed 42` | Log-Hash `78d0b84f03cd5a1b` |
+| `pnpm test` | 26 Dateien, 336 Tests grün |
+
+Die drei Golden-Hashes wurden mit Tag 3 neu geschrieben. Die **Ereignisfolge ist
+dabei unverändert** — nachgerechnet über das kanonische JSON aller Events ohne
+ihr `matchId`-Feld, vor und nach der Änderung derselbe Wert. Verschoben hat sich
+nur die `MatchId`: sie hängt am Seed **und an der Konfiguration**, und die
+`MatchConfig` trägt seit Tag 3 die Bucket-Tabelle. Die Welt heißt anders, sie
+verhält sich nicht anders.
 
 Der Zielwert aus Doc 01 §1.5.7 (400 Runden × 30 Agenten headless unter 5 s) wird
 mit ~0,6 s eingehalten — ohne Memory, Lernen und Sozialsystem. Die Zahl ist mit
@@ -97,6 +107,7 @@ jeder weiteren Phase neu zu messen.
 | `tests/unit/eslintBoundary.test.ts` | Die Engine kann React, Next, DB und `Math.random` nicht importieren |
 | `tests/unit/noLieActions.test.ts` | Die vier verbotenen Aktionen existieren im Quelltext nicht |
 | `tests/simulation/movement.test.ts` | Die Welt friert nicht ein — Bewegung bleibt über den ganzen Lauf möglich |
+| `tests/unit/truthValidator.test.ts` | **Die Tabelle aus Doc 08 §8.3, vollständig** — der wichtigste Test des Projekts |
 
 Der `no-omniscience`-Test prüft **nicht** gegen die Perception-Funktion — das
 wäre ein Vergleich mit sich selbst. Er rekonstruiert die Aufenthaltsorte
@@ -119,6 +130,9 @@ prüft jeden Wissenseintrag gegen diese Rekonstruktion.
 | `world/scoring.ts` | Phase 11: Score, Leaderboard, Endbedingung |
 | `information/infoRegistry.ts` | InfoItem-Identität, `resolveTrueValue` |
 | `information/knowledge.ts` | `KnowledgeEntry`, Verfall der Sicherheit, Assert-Schwelle |
+| `information/statements.ts` | `Disclosure`, Bucket-Tabelle, `entails`, Widerspruchsrechnung für R7 |
+| `information/statementLog.ts` | was ein Agent zuletzt behauptet hat — das Gedächtnis hinter R7 |
+| `validation/truthValidator.ts` | R1–R7 + R9 gegen den **Wissensstand**, nie gegen die Weltwahrheit |
 | `agents/agentView.ts` | die abgeschottete Sicht eines Agenten (Doc 05 §5.1) |
 | `mutation/stateMutator.ts` | die einzige Schreibstelle, inkl. Erhaltungsprüfung |
 | `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack` |
@@ -126,7 +140,7 @@ prüft jeden Wissenseintrag gegen diese Rekonstruktion.
 | `world/consequence.ts` | Phase 8: Erfahrungsgewinn und -verfall, Drift der Veranlagung |
 | `actions/resolutionOrder.ts` | Klassenreihenfolge + Initiative (Doc 04 §4.3) |
 | `decision/policyProvider.ts` | deterministische Utility-Policy auf `AgentView` (Vorstufe von T23) |
-| `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 9 |
+| `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 6, 7, 9 |
 | `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 11 |
 | `cli/sim.ts` | headless, JSON-Report |
 
@@ -186,7 +200,37 @@ Jede davon ist eine Entscheidung, keine Auslassung.
    ist aus Doc 03 §3.2.4 übernommen, wo sie für die Strategiegewichte gilt und
    mit oszillierenden Agenten begründet wird.
 
-10. **`generate` liest den `WorldState`, `decide` nur die `AgentView`.** Doc 04
+10. **`Disclosure` im Modus `exact` trägt einen Wert.** Doc 03 §3.4.3 schreibt
+   `{ mode: 'exact' }` ohne Feld, während die `entails`-Funktion in Doc 08
+   §8.2.2 R3 `disclosure.value` liest. Ohne Wert wäre „exakt" nicht prüfbar.
+
+11. **R7 wird vor R3 ausgewertet.** Die Testtabelle in §8.3 erwartet für
+   „sagte gestern `much`, Wissen unverändert, sagt heute `none`" den Grund
+   `self_contradiction` — obwohl R3 denselben Fall als `false_assertion` fängt.
+   §8.2.2 nummeriert die Regeln nur; eine Auswertungsreihenfolge legt §8.1 fest,
+   und zwar für die *Stufen* der Kette, nicht für die Regeln darin. Der
+   Selbstwiderspruch ist die genauere Diagnose: er benennt, dass zwei Aussagen
+   nicht zusammenpassen, statt nur, dass eine falsch ist.
+
+12. **Der `TruthContext` trägt zusätzlich das `infoRegistry`.** Die Signatur aus
+   §8.2.3 kann R2 und R3 gar nicht ausrechnen: ohne das `InfoItem` gibt es weder
+   Volatilität (also keinen Sicherheitsverfall) noch Thema (also keine
+   Bucket-Grenzen).
+
+13. **`partial_disclosure` mit `mode: 'exact'` fällt in Stufe 1, nicht in
+   Stufe 7.** Doc 03 §3.4.3 nennt diese Form „stets unpräzise". Ein exakter Wert
+   darin ist keine unwahre Aussage, sondern gar kein `partial_disclosure` — also
+   `schema_invalid`, nicht `false_assertion`.
+
+14. **Zwei Zeilen der Testtabelle §8.3 sind angepasst,** beides notwendig und im
+   Test begründet: die Tabelle spricht von `tools`, einer Ressource, die Doc 03
+   §3.2.2 in `materials` hat aufgehen lassen; und die beiden R7-Zeilen laufen
+   über `coins`. Letzteres ist das Einzige, was die Zeile „Wissen hat sich auf 2
+   geändert → heute `none` ✅" widerspruchsfrei macht: bei den Münzgrenzen aus
+   §8.2.2 (`none: 0–5`) ist 2 tatsächlich `none`, bei einem Ortsbestand (`some`
+   ab 1) wäre es `some` und die Aussage schon an R3 gescheitert.
+
+15. **`generate` liest den `WorldState`, `decide` nur die `AgentView`.** Doc 04
    §4.0 und Doc 05 §5.1 widersprechen sich hier. Aufgelöst nach Zweck: der
    Generator muss gegen die Weltwahrheit prüfen, sonst kann er keine Legalität
    garantieren (Doc 08 §8.2.4, erste Verteidigungslinie) — und was dabei zählt,
@@ -308,14 +352,27 @@ Kalibrierungspunkt, kein Konstruktionsfehler.
   die sich gegenseitig aufhoben; der jetzige Stand ist ein funktionierender,
   kein ausbalancierter.
 
+## Der Truth-Validator läuft — aber noch niemand redet
+
+Das ist der ehrliche Stand nach Tag 3. Die Kette prüft Stufe 7 bei jeder Aktion,
+die ein `Statement` trägt; nur trägt bis T18 keine implementierte Aktion eines,
+weil `share_information` noch fehlt. `allowsStatement` ist überall `false`.
+
+Die Stufen 6 und 7 hängen deshalb nicht ungetestet in der Kette: der Test
+`validateAction.test.ts` dreht die Erlaubnis für die Dauer eines Falls um und
+prüft beide Richtungen durch die echte Kette. Genau dafür ist das Flag da — die
+Kette selbst kennt keine Aktionsnamen. Der Validator selbst ist unabhängig davon
+vollständig getestet (Tabelle §8.3 plus Randfälle von `entails`, den
+Bucket-Grenzen und der Widerspruchsrechnung).
+
+Was das heißt: die Regel ist **bewiesen**, aber im laufenden Match noch nicht
+**belastet**. Die Kennzahl `falseAssertionsRejected` aus Doc 08 §8.2.4 ist
+aktuell trivial 0, weil niemand spricht. Erst mit T18 wird sie aussagekräftig.
+
 ## Nächster Schritt
 
-Tag 3 (`12-build-order.md`): **T12, T13, T14, T15** — `Statement`-Typen mit
-`Disclosure` und Bucket-Tabelle, der **Truth-Validator R1–R7 + R9**, die
-vollständige Validierungskette und das Aktionsregister mit
-`resolutionOrder`.
-
-Gate: die Testtabelle aus Doc 08 §8.3 vollständig grün. Ab da ist die
-Truthfulness-Regel bewiesen statt behauptet — und die Vorarbeit dafür steht
-bereits: `KnowledgeEntry` trennt Glauben, Sicherheit und Quelle, und
-`canAssertAsFact` setzt R2 und R6 schon um.
+Tag 4 (`12-build-order.md`): **T17, T18, T19** — `trade`, `share_information`
+und `request_information`, dazu das Beziehungssystem. Damit bekommt der
+Truth-Validator zum ersten Mal echte Arbeit: Wissen wandert von Agent zu Agent,
+`told_by` entsteht im Spiel statt nur im Test, und die Hörensagen-Kette A→B→C
+wird prüfbar.

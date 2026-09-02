@@ -21,6 +21,7 @@ import type {
   Personality,
   Resources,
   Round,
+  StatementRecord,
   StockChangeReason,
 } from '../core/types.js';
 
@@ -54,6 +55,9 @@ export const effect = {
   },
   kill(agentId: AgentId): Effect {
     return { t: 'kill', agentId };
+  },
+  statement(agentId: AgentId, record: StatementRecord): Effect {
+    return { t: 'statement', agentId, record };
   },
   infoItem(item: InfoItem): Effect {
     return { t: 'info_item', item };
@@ -110,6 +114,8 @@ export function describeEffect(item: Effect): string {
       return `cooldown ${item.agentId} ${item.action} -> ${item.readyAtRound}`;
     case 'kill':
       return `kill ${item.agentId}`;
+    case 'statement':
+      return `statement ${item.agentId} ${item.record.kind} ueber ${item.record.infoId}`;
     case 'info_item':
       return `info_item ${item.item.id}`;
     case 'knowledge':

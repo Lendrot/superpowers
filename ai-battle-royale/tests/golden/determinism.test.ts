@@ -16,7 +16,16 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben, als Intuition eine zweite Quelle bekam
+ * Zuletzt neu geschrieben mit der Bucket-Tabelle (Doc 08 §8.2.2), die als
+ * `config.buckets` in die `MatchConfig` kam. Die Ereignisfolge selbst ist
+ * dadurch **unveraendert** — nachgerechnet ueber `canonicalJson` der Events
+ * ohne ihr `matchId`-Feld, vorher wie nachher derselbe Wert. Verschoben hat
+ * sich nur die `MatchId`: sie haengt laut `core/ids.ts` am Seed UND an der
+ * Konfiguration, und eine Config mit einem Feld mehr ist eine andere Config.
+ * Der Hash bewegt sich also, weil die Welt anders heisst, nicht weil sie sich
+ * anders verhaelt.
+ *
+ * Davor: als Intuition eine zweite Quelle bekam
  * (Fehlernten) und `moveGain` an die Seltenheit von Ortswechseln angepasst
  * wurde. Davor lag Intuition bei jedem Agenten auf dem Boden.
  *
@@ -28,11 +37,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'd3d7ed3139cc409d',
+  seed42x100: 'e15088a943e93825',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: 'd6297b72a5db157a',
+  seed42x400: '78d0b84f03cd5a1b',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: '4bd1cb6901ea884e',
+  seed7x100: 'a7dc4b05b7c9845e',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {

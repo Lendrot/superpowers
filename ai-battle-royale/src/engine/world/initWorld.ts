@@ -64,6 +64,8 @@ export function initWorld(config: MatchConfig): InitWorldResult {
     agents,
     locations,
     infoRegistry,
+    // Leer: bis zur ersten Aussage hat niemand etwas gesagt, das ihn binden koennte.
+    statementLog: {},
     status: 'running',
   };
 

@@ -157,6 +157,39 @@ function applyOne(state: WorldState, item: Effect): void {
       return;
     }
 
+    case 'info_item': {
+      const existing = state.infoRegistry[item.item.id];
+      if (existing) {
+        // Eine Info ist eine Identitaet, kein Wert. Sie zweimal zu registrieren
+        // waere entweder ein Duplikat oder eine stille Umdefinition.
+        if (existing.topic !== item.item.topic) {
+          throw new InvariantError(
+            `${describeEffect(item)}: Info existiert bereits mit Thema ${existing.topic}`,
+          );
+        }
+        return;
+      }
+      state.infoRegistry[item.item.id] = { ...item.item, subject: { ...item.item.subject } };
+      return;
+    }
+
+    case 'knowledge': {
+      const agent = getAgent(state, item.agentId);
+      requireAlive(state, item);
+      if (!state.infoRegistry[item.entry.infoId]) {
+        throw new InvariantError(
+          `${describeEffect(item)}: Info ist nicht registriert (Doc 03 §3.1)`,
+        );
+      }
+      if (item.entry.source === 'told_by' && !item.entry.sourceAgent) {
+        // Doc 03 §3.4.2: bei 'told_by' ist sourceAgent Pflicht. Ohne Quelle ist
+        // spaeter R5 (Hoerensagen muss attribuiert sein) nicht pruefbar.
+        throw new InvariantError(`${describeEffect(item)}: 'told_by' ohne sourceAgent`);
+      }
+      agent.knowledge[item.entry.infoId] = { ...item.entry, sharedWith: [...item.entry.sharedWith] };
+      return;
+    }
+
     case 'round_advance': {
       state.round += 1;
       return;

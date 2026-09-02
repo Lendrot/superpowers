@@ -16,6 +16,17 @@ export const DEFAULT_ECONOMY = {
   restEnergyGain: 18,
   restSatietyCost: 1,
   foodPerRound: 1,
+  satietyPerFood: 25,
+  moveEnergyCost: 5,
+  starvationRounds: 3,
+  exhaustionRounds: 3,
+} as const;
+
+/** Doc 03 §3.10: Schwelle 0.80, decayFast 0.05, decaySlow 0.01. */
+export const DEFAULT_INFO = {
+  assertCertaintyThreshold: 0.8,
+  decayFast: 0.05,
+  decaySlow: 0.01,
 } as const;
 
 export const DEFAULT_CONFIG: MatchConfig = {
@@ -25,6 +36,7 @@ export const DEFAULT_CONFIG: MatchConfig = {
   seed: 42,
   llmMode: 'off',
   economy: { ...DEFAULT_ECONOMY },
+  info: { ...DEFAULT_INFO },
   strictInvariants: true,
 };
 
@@ -35,6 +47,7 @@ export interface MatchConfigInput {
   seed?: number;
   llmMode?: MatchConfig['llmMode'];
   economy?: Partial<MatchConfig['economy']>;
+  info?: Partial<MatchConfig['info']>;
   strictInvariants?: boolean;
 }
 
@@ -48,6 +61,7 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
     ...DEFAULT_CONFIG,
     ...stripUndefined(input),
     economy: { ...DEFAULT_ECONOMY, ...stripUndefined(input.economy ?? {}) },
+    info: { ...DEFAULT_INFO, ...stripUndefined(input.info ?? {}) },
   };
 
   requireInteger('agentCount', config.agentCount, 2, 40);
@@ -58,6 +72,18 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
   for (const [key, value] of Object.entries(config.economy)) {
     if (!Number.isFinite(value) || value < 0) {
       throw new RangeError(`config.economy.${key} muss >= 0 und endlich sein, war ${value}`);
+    }
+  }
+
+  for (const [key, value] of Object.entries(config.info)) {
+    if (!Number.isFinite(value) || value < 0 || value > 1) {
+      throw new RangeError(`config.info.${key} muss in [0, 1] liegen, war ${value}`);
+    }
+  }
+
+  for (const key of ['starvationRounds', 'exhaustionRounds'] as const) {
+    if (!Number.isInteger(config.economy[key]) || config.economy[key] < 1) {
+      throw new RangeError(`config.economy.${key} muss eine ganze Zahl >= 1 sein, war ${config.economy[key]}`);
     }
   }
 

@@ -59,6 +59,9 @@ export function createAgent({ index, rng, locations }: CreateAgentOptions): Agen
       exhaustionStreak: 0,
       exiledFrom: [],
     },
+    // Fresh Match (Doc 06 §6.4): niemand weiss zu Beginn irgendetwas. Auch die
+    // Bestaende am eigenen Startort muessen erst beobachtet werden.
+    knowledge: {},
     cooldowns: {},
     allianceId: null,
   };

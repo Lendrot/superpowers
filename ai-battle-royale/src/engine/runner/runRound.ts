@@ -1,10 +1,9 @@
 /**
  * T07 — Rundenskelett.
  *
- * Implementiert sind die Phasen 1, 3, 4, 5, 6, 7 und 11 aus Doc 02 §2.3. Die
+ * Implementiert sind die Phasen 1, 2, 3, 4, 5, 6, 7 und 11 aus Doc 02 §2.3. Die
  * uebrigen fehlen NICHT aus Versehen:
  *
- *   Phase 2  Perception   → T11 (einzige Stelle, an der Wissen entsteht)
  *   Phase 8  Consequence  → T19 (Beziehungsdeltas)
  *   Phase 9  Memory       → T22
  *   Phase 10 Reflection   → T24/T34
@@ -20,18 +19,20 @@ import { createStockLedger } from '../actions/stockLedger.js';
 import { orderActions } from '../actions/resolutionOrder.js';
 import { requireAction } from '../actions/registry.js';
 import type { ActionContext } from '../actions/types.js';
-import { aliveAgents, locationIds } from '../core/access.js';
+import { buildAgentView } from '../agents/agentView.js';
+import { aliveAgents } from '../core/access.js';
 import type { EventLog } from '../core/eventLog.js';
 import type { RngBundle } from '../core/rng.js';
-import type { AgentAction, Effect, LocationId, WorldEvent, WorldState } from '../core/types.js';
+import type { AgentAction, Effect, WorldEvent, WorldState } from '../core/types.js';
 import { generateCandidates } from '../decision/candidates.js';
 import type { DecisionProvider } from '../decision/provider.js';
 import { applyEffects } from '../mutation/stateMutator.js';
 import { EffectProjection, validateAction } from '../validation/validateAction.js';
 import type { RejectCounts } from '../validation/rejectReasons.js';
 import { emptyRejectCounts } from '../validation/rejectReasons.js';
+import { perceptionEffects } from '../world/perception.js';
 import { scoringEffects } from '../world/scoring.js';
-import { upkeepEffects } from '../world/upkeep.js';
+import { upkeep } from '../world/upkeep.js';
 
 export interface RoundDeps {
   rng: RngBundle;
@@ -46,15 +47,11 @@ export interface RoundResult {
   /** Wie oft welche Aktion tatsaechlich aufgeloest wurde. */
   actionCounts: Record<string, number>;
   decisions: number;
+  /** Wieviele Wissenseintraege Phase 2 geschrieben hat. */
+  perceived: number;
+  /** Wer in dieser Runde ausgeschieden ist. */
+  eliminated: AgentAction['actorId'][];
   finished: boolean;
-}
-
-/** Einmal pro Runde statt einmal pro Kandidat — sonst ist es O(Agenten²). */
-function countOccupants(state: Readonly<WorldState>): Record<LocationId, number> {
-  const counts = {} as Record<LocationId, number>;
-  for (const id of locationIds(state)) counts[id] = 0;
-  for (const agent of aliveAgents(state)) counts[agent.location] = (counts[agent.location] ?? 0) + 1;
-  return counts;
 }
 
 export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
@@ -81,19 +78,31 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   });
 
   // ── Phase 1 — Upkeep ───────────────────────────────────────────────────────
-  applyEffects(state, upkeepEffects(state));
+  const upkeepResult = upkeep(state);
+  for (const eliminated of upkeepResult.events) emit(eliminated);
+  applyEffects(state, upkeepResult.effects);
+
+  // ── Phase 2 — Perception ──────────────────────────────────────────────────
+  // Verarbeitet die Events der Vorrunde. In Runde 1 gibt es keine — dann
+  // beginnt das Match mit Agenten, die nichts wissen, und das ist richtig so.
+  const perception = perceptionEffects(state, deps.log.byRound(round - 1), round);
+  applyEffects(state, perception.effects);
 
   // ── Phase 3 — Kandidaten & Phase 4 — Entscheidung ─────────────────────────
   // Ein Ledger fuer die ganze Runde: Kandidaten und Auflösung sehen denselben
   // Bestand, und was in Phase 6 vergeben wird, ist danach vergeben.
   const ledger = createStockLedger(state);
   const ctx: ActionContext = { state, round, rng: deps.rng, ledger };
-  const occupancy = countOccupants(state);
 
   const chosen: AgentAction[] = [];
   for (const agent of aliveAgents(state)) {
+    // `generate` liest den State, weil nur er beantworten kann, was wirklich
+    // legal ist (Doc 08 §8.2.4, erste Verteidigungslinie) — und weil alles, was
+    // dabei zaehlt, ohnehin am eigenen Ort sichtbar ist. `decide` bekommt
+    // dagegen nur die AgentView: bewerten darf der Agent nur, was er weiss.
     const candidates = generateCandidates(agent, ctx);
-    const decision = deps.provider.decide(agent, candidates, { state, round, rng: deps.rng, occupancy });
+    const view = buildAgentView(state, agent.id);
+    const decision = deps.provider.decide(view, candidates, { round, rng: deps.rng });
 
     // ── Phase 5 — Validierung ───────────────────────────────────────────────
     const verdict = validateAction(decision.action, ctx);
@@ -183,6 +192,8 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     rejects,
     actionCounts,
     decisions: chosen.length,
+    perceived: perception.written,
+    eliminated: upkeepResult.events.flatMap((e) => (e.actorId ? [e.actorId] : [])),
     // Nicht `state.status` lesen: der Typ ist an dieser Stelle bereits auf
     // 'running' verengt, weil TypeScript die Mutation im Mutator nicht sieht.
     finished: scoring.endReason !== null,

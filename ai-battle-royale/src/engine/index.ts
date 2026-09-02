@@ -37,8 +37,28 @@ export type { RejectCounts } from './validation/rejectReasons.js';
 
 export { initWorld } from './world/initWorld.js';
 export { LOCATION_IDS, createLocations } from './world/locations.js';
-export { upkeepEffects } from './world/upkeep.js';
+export { upkeep } from './world/upkeep.js';
+export { perceptionEffects, resolveObservers } from './world/perception.js';
 export { leaderboard, scoreOfAgent, scoringEffects } from './world/scoring.js';
+
+export { buildAgentView, believedStock } from './agents/agentView.js';
+export type { AgentView, BeliefView, PublicAgent, VisibleLocation } from './agents/agentView.js';
+export {
+  agentResourceInfoId,
+  agentResourceInfoItem,
+  eventInfoId,
+  eventInfoItem,
+  resolveTrueValue,
+  stockInfoId,
+  stockInfoItem,
+} from './information/infoRegistry.js';
+export {
+  OBSERVED_CERTAINTY,
+  canAssertAsFact,
+  decayPerRound,
+  effectiveCertainty,
+  observedEntry,
+} from './information/knowledge.js';
 
 export { runRound } from './runner/runRound.js';
 export type { RoundDeps, RoundResult } from './runner/runRound.js';

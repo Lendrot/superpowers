@@ -128,6 +128,9 @@ export interface Agent {
   resources: Resources;
   status: StatusFlags;
 
+  /** was DIESER Agent glaubt — entsteht ausschliesslich in Phase 2 (Doc 02 §2.3) */
+  knowledge: Record<InfoId, KnowledgeEntry>;
+
   /** frueheste naechste Runde je Aktionstyp; fehlender Eintrag = kein Cooldown */
   cooldowns: Partial<Record<ActionType, Round>>;
   allianceId: AllianceId | null;
@@ -139,6 +142,78 @@ export type ArchetypeId =
   | 'opportunist'
   | 'recluse'
   | 'connector';
+
+// ── 3.4 Informationssystem ───────────────────────────────────────────────────
+
+export type InfoId = `info_${string}`;
+
+export type InfoTopic =
+  /** wieviel Food/Materials an Ort X liegen */
+  | 'stock_at_location'
+  /** wieviel Y Agent Z besitzt */
+  | 'agent_resource'
+  /** in welcher Allianz Z ist */
+  | 'agent_alliance'
+  /** Z's geheimes Ziel */
+  | 'agent_secret_goal'
+  /** ob Zusage P erfuellt/gebrochen wurde */
+  | 'pledge_state'
+  /** Ereignis E ist passiert */
+  | 'event_occurred'
+  /** Z hat oeffentlich Absicht I erklaert */
+  | 'agent_intent_declared';
+
+export type InfoValue = number | boolean | string;
+
+/**
+ * Doc 03 §3.4.1 — die objektive Wahrheit im Registry.
+ *
+ * Abweichung, bewusst: Doc fuehrt hier ein Feld `trueValue`. Das waere eine
+ * zweite Kopie derselben Wahrheit (der Bestand steht bereits in
+ * `Location.stock`), die bei jeder Mutation mitgepflegt werden muesste und
+ * zwangslaeufig auseinanderlaeuft — genau die Begruendung, mit der Doc 06 §6.1
+ * den dritten Speicher gestrichen hat. Stattdessen loest
+ * `information/infoRegistry.ts#resolveTrueValue` den Wahrheitswert bei Bedarf
+ * aus dem WorldState auf. Nebeneffekt: "kein Agent liest je `trueValue`" ist
+ * dadurch kein Vorsatz mehr, sondern eine Funktion, die im Agentenpfad
+ * schlicht nicht aufrufbar ist.
+ */
+export interface InfoItem {
+  id: InfoId;
+  topic: InfoTopic;
+  subject: { kind: 'agent' | 'location' | 'alliance' | 'world'; ref: string };
+  valueType: 'quantity' | 'boolean' | 'categorical' | 'event_ref';
+  createdRound: Round;
+  /** steuert, wie schnell Wissen darueber veraltet */
+  volatility: 'static' | 'slow' | 'fast';
+}
+
+/** Doc 03 §3.4.2 — was ein Agent *glaubt*. Kann von der Weltwahrheit abweichen. */
+export interface KnowledgeEntry {
+  infoId: InfoId;
+  believedValue: InfoValue;
+  /**
+   * Sicherheit zum Zeitpunkt `lastConfirmedRound`. Der wirksame Wert sinkt mit
+   * der Zeit und wird von `knowledge.ts#effectiveCertainty` berechnet, nicht
+   * gespeichert — sonst braeuchte jede Runde einen Effekt pro Wissenseintrag
+   * pro Agent, nur damit eine Zahl kleiner wird.
+   */
+  certainty: Score01;
+  source: 'observed' | 'participated' | 'told_by' | 'inferred';
+  /** Pflicht bei 'told_by' */
+  sourceAgent?: AgentId;
+  /**
+   * Erweiterung gegenueber Doc 03 §3.4.2: das Event, aus dem dieses Wissen
+   * entstanden ist. Ohne diesen Herkunftsnachweis ist `no-omniscience`
+   * (Doc 08 §8.4) nicht pruefbar, sondern nur behauptbar.
+   */
+  sourceEventId?: EventId;
+  acquiredRound: Round;
+  lastConfirmedRound: Round;
+  /** wem habe ich das schon gegeben — ab T18 */
+  sharedWith: AgentId[];
+  isSecret: boolean;
+}
 
 // ── 3.9 Location ─────────────────────────────────────────────────────────────
 
@@ -167,6 +242,9 @@ export type EventType =
   | 'resource_gathered'
   /** Ernte lief ins Leere, weil ein frueher aufgeloester Agent den Bestand hatte. */
   | 'gather_failed'
+  | 'agent_moved'
+  | 'food_consumed'
+  | 'agent_eliminated'
   | 'action_rejected'
   | 'round_ended'
   | 'match_ended';
@@ -190,8 +268,12 @@ export interface WorldEvent {
   locationId: LocationId | null;
   payload: Record<string, JsonValue>;
   visibility: Visibility;
-  /** welche Infos dieses Event erzeugt/beruehrt — leer bis T10 */
-  infoRefs: string[];
+  /**
+   * Welche Infos dieses Event erzeugt oder beruehrt. Phase 2 macht daraus
+   * Wissen — und nur daraus. Ein Event ohne `infoRefs` erzeugt kein Wissen,
+   * auch wenn es beobachtet wurde.
+   */
+  infoRefs: InfoId[];
 }
 
 export type JsonValue =
@@ -222,6 +304,10 @@ export type Effect =
   | { t: 'status'; agentId: AgentId; patch: Partial<Pick<StatusFlags, 'hungerStreak' | 'exhaustionStreak'>> }
   | { t: 'move'; agentId: AgentId; to: LocationId }
   | { t: 'eliminate'; agentId: AgentId; cause: EliminationCause }
+  /** Registriert eine Info als existent. Traegt keinen Wahrheitswert — siehe `InfoItem`. */
+  | { t: 'info_item'; item: InfoItem }
+  /** Der einzige Weg, auf dem ein `KnowledgeEntry` entsteht oder sich aendert. */
+  | { t: 'knowledge'; agentId: AgentId; entry: KnowledgeEntry }
   | { t: 'round_advance' }
   | { t: 'match_end'; reason: EndReason };
 
@@ -256,6 +342,8 @@ export interface WorldState {
   rngState: RngStateBundle;
   agents: Record<AgentId, Agent>;
   locations: Record<LocationId, Location>;
+  /** objektive Wahrheit; Agenten sehen das NIE (Doc 03 §3.1) */
+  infoRegistry: Record<InfoId, InfoItem>;
   status: 'running' | 'finished';
   endReason?: EndReason;
 }
@@ -283,8 +371,19 @@ export interface MatchConfig {
   seed: number;
   llmMode: 'off' | 'mock' | 'live';
   economy: EconomyConfig;
+  info: InfoConfig;
   /** Invarianten nach jeder Mutation pruefen. In Long-Run-Batches abschaltbar. */
   strictInvariants: boolean;
+}
+
+/** Doc 03 §3.10, Abschnitt `info`. */
+export interface InfoConfig {
+  /** Ab dieser Sicherheit darf eine Aussage als Tatsache gelten (Doc 08 §8.2.2 R2). */
+  assertCertaintyThreshold: Score01;
+  /** Sicherheitsverlust pro Runde bei `volatility: 'fast'` */
+  decayFast: number;
+  /** dito bei `volatility: 'slow'`; `'static'` verfaellt nie */
+  decaySlow: number;
 }
 
 export interface EconomyConfig {
@@ -300,8 +399,16 @@ export interface EconomyConfig {
   restEnergyGain: number;
   /** Satiety-Kosten von `rest` (Doc 04: "kleiner satiety-Verlust") */
   restSatietyCost: number;
-  /** Nahrung, die ein Agent pro Runde braucht — wird ab T08/T16 (`consume`) gelesen */
+  /** Nahrung, die ein `consume` verbraucht */
   foodPerRound: number;
+  /** Saettigung, die ein `consume` bringt */
+  satietyPerFood: number;
+  /** Energiekosten eines Ortswechsels */
+  moveEnergyCost: number;
+  /** Runden mit satiety === 0 bis zum Verhungern */
+  starvationRounds: number;
+  /** Runden mit energy === 0 bis zur Erschoepfung */
+  exhaustionRounds: number;
 }
 
 // ── Rundenergebnis (kein State — der Runner akkumuliert, nicht der WorldState) ─

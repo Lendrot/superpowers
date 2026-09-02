@@ -12,6 +12,8 @@ import type {
   Effect,
   EliminationCause,
   EndReason,
+  InfoItem,
+  KnowledgeEntry,
   LocationId,
   Needs,
   Resources,
@@ -36,6 +38,12 @@ export const effect = {
   },
   eliminate(agentId: AgentId, cause: EliminationCause): Effect {
     return { t: 'eliminate', agentId, cause };
+  },
+  infoItem(item: InfoItem): Effect {
+    return { t: 'info_item', item };
+  },
+  knowledge(agentId: AgentId, entry: KnowledgeEntry): Effect {
+    return { t: 'knowledge', agentId, entry };
   },
   roundAdvance(): Effect {
     return { t: 'round_advance' };
@@ -78,6 +86,10 @@ export function describeEffect(item: Effect): string {
       return `move ${item.agentId} -> ${item.to}`;
     case 'eliminate':
       return `eliminate ${item.agentId} (${item.cause})`;
+    case 'info_item':
+      return `info_item ${item.item.id}`;
+    case 'knowledge':
+      return `knowledge ${item.agentId} <- ${item.entry.infoId}`;
     case 'round_advance':
       return 'round_advance';
     case 'match_end':

@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { resolveConfig } from '@/engine/core/config.js';
 import { createEventLog } from '@/engine/core/eventLog.js';
 import { assertInvariants, totalResources } from '@/engine/core/invariants.js';
-import type { Agent, AgentAction, WorldState } from '@/engine/core/types.js';
+import type { AgentAction, WorldState } from '@/engine/core/types.js';
+import type { AgentView } from '@/engine/agents/agentView.js';
 import { policyProvider } from '@/engine/decision/policyProvider.js';
 import type { DecisionProvider } from '@/engine/decision/provider.js';
 import { runRound } from '@/engine/runner/runRound.js';
@@ -19,10 +20,10 @@ function setup(overrides: Parameters<typeof resolveConfig>[0] = {}) {
 }
 
 /** Provider, der immer dieselbe Aktion liefert — auch eine unzulaessige. */
-function scripted(build: (agent: Readonly<Agent>) => AgentAction): DecisionProvider {
+function scripted(build: (view: Readonly<AgentView>) => AgentAction): DecisionProvider {
   return {
     name: 'scripted',
-    decide: (agent) => ({ action: build(agent), scored: [] }),
+    decide: (view) => ({ action: build(view), scored: [] }),
   };
 }
 
@@ -82,8 +83,8 @@ describe('runRound — Validierung und Fallback', () => {
     const result = runRound(state, {
       rng,
       log,
-      provider: scripted((agent) => ({
-        actorId: agent.id,
+      provider: scripted((view) => ({
+        actorId: view.self.id,
         type: 'gather_resource',
         params: { resource: 'food' },
         source: 'scripted',
@@ -100,8 +101,8 @@ describe('runRound — Validierung und Fallback', () => {
     const result = runRound(state, {
       rng,
       log,
-      provider: scripted((agent) => ({
-        actorId: agent.id,
+      provider: scripted((view) => ({
+        actorId: view.self.id,
         type: 'nonsense' as AgentAction['type'],
         params: {},
         source: 'scripted',

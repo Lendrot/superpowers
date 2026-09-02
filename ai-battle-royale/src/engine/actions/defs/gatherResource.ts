@@ -12,6 +12,7 @@
 import { getAgent, getLocation } from '../../core/access.js';
 import { RESOURCE_KINDS } from '../../core/resources.js';
 import type { JsonValue, ResourceKind } from '../../core/types.js';
+import { stockInfoId } from '../../information/infoRegistry.js';
 import { effect } from '../../mutation/effects.js';
 import type { ActionContext, ActionDef, ActionCandidate } from '../types.js';
 import { OK, reject } from '../types.js';
@@ -86,7 +87,9 @@ export const gatherResourceAction: ActionDef = {
             payload: { resource: kind, reason: 'stock_depleted', energyCost },
             // Am Ort sichtbar: die Anwesenden sehen jemanden leer zurueckkommen.
             visibility: { scope: 'location', locationId: location.id },
-            infoRefs: [],
+            // Ein Fehlversuch sagt ueber den Bestand genauso viel aus wie eine
+            // Ernte — naemlich, dass nichts mehr da ist.
+            infoRefs: [stockInfoId(location.id, kind)],
           },
         ],
       };
@@ -108,10 +111,10 @@ export const gatherResourceAction: ActionDef = {
           actorId: agent.id,
           locationId: location.id,
           payload: { resource: kind, amount, energyCost },
-          // Ernten ist am Ort sichtbar — daraus entsteht ab T11 das Wissen
+          // Ernten ist am Ort sichtbar — daraus entsteht in Phase 2 das Wissen
           // `stock_at_location` fuer die Anwesenden.
           visibility: { scope: 'location', locationId: location.id },
-          infoRefs: [],
+          infoRefs: [stockInfoId(location.id, kind)],
         },
       ],
     };

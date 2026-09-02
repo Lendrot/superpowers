@@ -1,26 +1,38 @@
 /**
  * Phase 1 — Upkeep. Vollstaendig deterministisch, kein RNG.
  *
- * Umfang in Schritt 1: Ortsregeneration, Satiety-Verfall, passive
- * Energie-Regeneration, Hunger-/Erschoepfungszaehler.
+ * Ortsregeneration, Saettigungsverfall, passive Energie-Regeneration,
+ * Hunger-/Erschoepfungszaehler und Ausscheiden (T08).
  *
- * NICHT enthalten: Ausscheiden durch Verhungern oder Erschoepfung. Das ist T08
- * und braucht `consume` (T16), sonst verhungert in Runde N garantiert das ganze
- * Feld — eine Simulation, die nur beweist, dass die Uhr laeuft.
+ * Die Reihenfolge innerhalb der Phase ist festgelegt: erst Regeneration, dann
+ * Beduerfnisse, dann Ausscheiden. Wer in dieser Runde verhungert, hat vorher
+ * noch regeneriert — sonst haenge das Ergebnis daran, in welcher Reihenfolge
+ * die Effekte zufaellig im Batch stehen.
  */
 
 import { aliveAgents, locationIds } from '../core/access.js';
 import { RESOURCE_KINDS } from '../core/resources.js';
-import type { Effect, WorldState } from '../core/types.js';
+import type { EventDraft } from '../core/eventLog.js';
+import type { Effect, EliminationCause, WorldState } from '../core/types.js';
+import { eventInfoId, eventInfoItem } from '../information/infoRegistry.js';
 import { effect } from '../mutation/effects.js';
 
-export function upkeepEffects(state: Readonly<WorldState>): Effect[] {
-  const effects: Effect[] = [];
-  const { satietyDecayPerRound, energyRegenPerRound } = state.config.economy;
+export interface UpkeepResult {
+  effects: Effect[];
+  /** Ausscheiden ist ein Ereignis, das alle erfahren — anders als Hunger. */
+  events: EventDraft[];
+}
 
-  // Orte regenerieren, aber nie ueber ihre Kapazitaet. Das Kappen gehoert
-  // hierher, nicht in den Mutator: nur wer den Effekt erzeugt, kann ihn so
-  // formulieren, dass erwartete und tatsaechliche Aenderung uebereinstimmen.
+export function upkeep(state: Readonly<WorldState>): UpkeepResult {
+  const effects: Effect[] = [];
+  const events: EventDraft[] = [];
+  const { satietyDecayPerRound, energyRegenPerRound, starvationRounds, exhaustionRounds } =
+    state.config.economy;
+
+  // ── Orte regenerieren ─────────────────────────────────────────────────────
+  // Das Kappen an der Kapazitaet gehoert hierher, nicht in den Mutator: nur wer
+  // den Effekt erzeugt, kann ihn so formulieren, dass erwartete und
+  // tatsaechliche Aenderung uebereinstimmen.
   for (const id of locationIds(state)) {
     const location = state.locations[id];
     if (!location) continue;
@@ -40,6 +52,7 @@ export function upkeepEffects(state: Readonly<WorldState>): Effect[] {
     if (any) effects.push(effect.locationStock(location.id, delta, 'regen'));
   }
 
+  // ── Beduerfnisse und Ausscheiden ──────────────────────────────────────────
   for (const agent of aliveAgents(state)) {
     const satietyLoss = Math.min(satietyDecayPerRound, agent.needs.satiety);
     const energyGain = Math.min(energyRegenPerRound, 100 - agent.needs.energy);
@@ -56,7 +69,34 @@ export function upkeepEffects(state: Readonly<WorldState>): Effect[] {
     if (hungerStreak !== agent.status.hungerStreak || exhaustionStreak !== agent.status.exhaustionStreak) {
       effects.push(effect.status(agent.id, { hungerStreak, exhaustionStreak }));
     }
+
+    // Hunger vor Erschoepfung: bei gleichzeitigem Erreichen beider Schwellen
+    // braucht die Ursache eine feste Rangfolge, sonst haengt sie an der
+    // Auswertungsreihenfolge.
+    const cause: EliminationCause | null =
+      hungerStreak >= starvationRounds
+        ? 'starvation'
+        : exhaustionStreak >= exhaustionRounds
+          ? 'exhaustion'
+          : null;
+
+    if (cause) {
+      effects.push(effect.eliminate(agent.id, cause));
+
+      const key = `eliminated_${agent.id}`;
+      effects.push(effect.infoItem(eventInfoItem(key, state.round)));
+      events.push({
+        round: state.round,
+        type: 'agent_eliminated',
+        actorId: agent.id,
+        locationId: agent.location,
+        payload: { cause, round: state.round },
+        // Dass jemand nicht mehr da ist, faellt allen auf.
+        visibility: { scope: 'public' },
+        infoRefs: [eventInfoId(key)],
+      });
+    }
   }
 
-  return effects;
+  return { effects, events };
 }

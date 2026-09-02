@@ -16,9 +16,11 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    Auch `Date.now()` ist in der Engine verboten. Ein Streamschlüssel enthält
    alles, was den Aufruf eindeutig macht: `rng.derive('gather', round, agentId)`.
 4. **Agenten erhalten ausschließlich `AgentView`, nie `WorldState`.**
-   Noch nicht gebaut (T23). Bis dahin gilt: die Policy liest nur, was ein Agent
-   an seinem eigenen Ort sehen könnte. Wer diese Regel dehnt, macht die spätere
-   Isolation unmöglich.
+   Erzwungen über die Signatur von `DecisionProvider.decide`, geprüft in
+   `tests/unit/agentViewIsolation.test.ts` an der Serialisierung.
+   Ausnahme mit Grund: `ActionDef.generate` liest den State, weil nur er
+   Legalität garantieren kann (Doc 08 §8.2.4) — bewertet wird trotzdem nur auf
+   der Sicht.
 5. **Die vier Aktionen, mit denen ein Agent bewusst falsche Aussagen erzeugen
    könnte, existieren nicht.** Welche das sind, steht in Doc 04 §4.2;
    `tests/unit/noLieActions.test.ts` durchsucht `src/` danach.
@@ -26,7 +28,7 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    verändert nie State.** Ab T12/T13.
 7. **Neue Aktion ⇒ neue Datei in `actions/defs/` + Unit-Test + Eintrag in
    `resolutionOrder`.** Ein Eintrag in `registry.ts` ist die Zusage, dass die
-   Aktion funktioniert — `ActionType` kennt alle 13, implementiert sind zwei.
+   Aktion funktioniert — `ActionType` kennt alle 13, implementiert sind vier.
 8. **Jede Lesson braucht `supportingEpisodeIds` aus dem eigenen Speicher des
    Agenten.** Ab T24.
 9. **Vor jedem Commit: `pnpm test` inklusive `determinism.test.ts` grün.**
@@ -42,6 +44,20 @@ verboten:
 - `Set`/`Map`-Iteration als Grundlage einer Reihenfolgeentscheidung
 - Gleitkommazahlen in `Effect`-Deltas — Ressourcen und Stats sind ganzzahlig
 - `NaN` oder `Infinity` in einem Event-Payload (`canonicalJson` wirft dann)
+
+## Wissen
+
+Ein `KnowledgeEntry` entsteht an **genau einer** Stelle: `world/perception.ts`
+(Phase 2). Ab T18 kommt eine zweite dazu — das Auflösen von
+`share_information`. Sonst nirgends, auch nicht „nur kurz für einen Test".
+
+- `resolveTrueValue` ist die einzige Funktion, die die Weltwahrheit einer Info
+  liest. Sie gehört Phase 2. Wer sie anderswo aufruft, gibt einem Agenten
+  Wissen, das er nicht erworben hat.
+- Der Verfall der Sicherheit wird beim Lesen gerechnet (`effectiveCertainty`),
+  nicht gespeichert. `entry.certainty` gilt für `entry.lastConfirmedRound`.
+- Jeder Eintrag trägt `sourceEventId`. Ohne diesen Herkunftsnachweis ist
+  `no-omniscience` nicht prüfbar.
 
 ## Golden-Hashes
 

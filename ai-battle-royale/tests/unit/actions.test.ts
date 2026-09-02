@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createStockLedger } from '@/engine/actions/stockLedger.js';
+import { consumeAction } from '@/engine/actions/defs/consume.js';
 import { gatherResourceAction } from '@/engine/actions/defs/gatherResource.js';
+import { moveAction } from '@/engine/actions/defs/move.js';
 import { restAction } from '@/engine/actions/defs/rest.js';
 import { IMPLEMENTED_ACTIONS, findAction, requireAction } from '@/engine/actions/registry.js';
 import type { ActionContext } from '@/engine/actions/types.js';
@@ -38,7 +40,12 @@ const action = (type: AgentAction['type'], params: AgentAction['params'] = {}): 
 
 describe('registry', () => {
   it('kennt genau die implementierten Aktionen', () => {
-    expect(IMPLEMENTED_ACTIONS.map((d) => d.type).sort()).toEqual(['gather_resource', 'rest']);
+    expect(IMPLEMENTED_ACTIONS.map((d) => d.type).sort()).toEqual([
+      'consume',
+      'gather_resource',
+      'move',
+      'rest',
+    ]);
   });
 
   it('meldet nicht implementierte Aktionen als solche', () => {
@@ -137,6 +144,87 @@ describe('gather_resource', () => {
     const first = gatherResourceAction.resolve(action('gather_resource', { resource: 'food' }), makeCtx(state));
     const second = gatherResourceAction.resolve(action('gather_resource', { resource: 'food' }), makeCtx(state));
     expect(first.effects).toEqual(second.effects);
+  });
+});
+
+describe('move', () => {
+  it('bietet genau die Nachbarorte an', () => {
+    const labels = moveAction.generate(state.agents[A]!, ctx).map((c) => c.label);
+    expect(labels).toEqual(['move:fields', 'move:warehouse', 'move:well']);
+  });
+
+  it('bietet nichts an, wenn die Energie nicht reicht', () => {
+    state.agents[A]!.needs.energy = 4;
+    expect(moveAction.generate(state.agents[A]!, ctx)).toEqual([]);
+  });
+
+  it('lehnt einen Ort ab, der kein Nachbar ist', () => {
+    const verdict = moveAction.precondition(action('move', { to: 'outskirts' }), ctx);
+    expect(verdict).toMatchObject({ ok: false, reason: 'precondition_failed' });
+  });
+
+  it('lehnt einen unbekannten Ort ab', () => {
+    const verdict = moveAction.precondition(action('move', { to: 'atlantis' }), ctx);
+    expect(verdict).toMatchObject({ ok: false, reason: 'schema_invalid' });
+  });
+
+  it('wechselt den Ort und kostet Energie', () => {
+    const { effects, events } = moveAction.resolve(action('move', { to: 'fields' }), ctx);
+    expect(effects).toEqual([
+      { t: 'move', agentId: A, to: 'fields' },
+      { t: 'need', agentId: A, delta: { energy: -5 } },
+    ]);
+    expect(events[0]?.payload).toMatchObject({ from: 'commons', to: 'fields' });
+  });
+
+  it('ist am Zielort sichtbar', () => {
+    const { events } = moveAction.resolve(action('move', { to: 'fields' }), ctx);
+    expect(events[0]?.visibility).toEqual({ scope: 'location', locationId: 'fields' });
+  });
+});
+
+describe('consume', () => {
+  it('bietet Essen an, wenn Vorrat da und der Magen nicht voll ist', () => {
+    state.agents[A]!.resources.food = 2;
+    state.agents[A]!.needs.satiety = 40;
+    expect(consumeAction.generate(state.agents[A]!, ctx)).toHaveLength(1);
+  });
+
+  it('bietet nichts an ohne Vorrat', () => {
+    state.agents[A]!.resources.food = 0;
+    expect(consumeAction.generate(state.agents[A]!, ctx)).toEqual([]);
+  });
+
+  it('bietet nichts an bei voller Saettigung', () => {
+    state.agents[A]!.resources.food = 5;
+    state.agents[A]!.needs.satiety = 100;
+    expect(consumeAction.generate(state.agents[A]!, ctx)).toEqual([]);
+  });
+
+  it('lehnt ohne Vorrat ab', () => {
+    state.agents[A]!.resources.food = 0;
+    expect(consumeAction.precondition(action('consume'), ctx)).toMatchObject({
+      ok: false,
+      reason: 'insufficient_resources',
+    });
+  });
+
+  it('tauscht Nahrung gegen Saettigung', () => {
+    state.agents[A]!.resources.food = 3;
+    state.agents[A]!.needs.satiety = 40;
+    const { effects } = consumeAction.resolve(action('consume'), ctx);
+    expect(effects).toEqual([
+      { t: 'resource', agentId: A, delta: { food: -1 } },
+      { t: 'need', agentId: A, delta: { satiety: 25 } },
+    ]);
+  });
+
+  it('meldet nur den tatsaechlichen Gewinn nahe der Obergrenze', () => {
+    state.agents[A]!.resources.food = 3;
+    state.agents[A]!.needs.satiety = 90;
+    const { effects, events } = consumeAction.resolve(action('consume'), ctx);
+    expect(effects[1]).toMatchObject({ delta: { satiety: 10 } });
+    expect(events[0]?.payload).toEqual({ food: 1, satietyGain: 10 });
   });
 });
 

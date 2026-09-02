@@ -15,13 +15,19 @@ import { initWorld } from '@/engine/world/initWorld.js';
  * geschrieben — und die Commit-Nachricht muss das benennen (Doc 10 §E).
  */
 
+/**
+ * Zuletzt neu geschrieben in Tag 2 (T08, T10, T11, T16). Die Aenderung war
+ * beabsichtigt: Perception schreibt Wissen, Agenten ziehen um, essen und
+ * scheiden aus, und die Utility-Policy bewertet Ernten multiplikativ statt
+ * additiv. Jede dieser Aenderungen verschiebt das Verhalten — und damit den Hash.
+ */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: '81c32a17c816f6b4',
+  seed42x100: 'a2df957087c04137',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '2b7b1d6c002d2e7b',
+  seed42x400: '45c6a5bf3317d008',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: 'a251d5a14167f65a',
+  seed7x100: '1897c8432d0c93eb',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {
@@ -95,13 +101,30 @@ describe('Golden — der Lauf ist nicht entartet', () => {
     expect(result.endReason).toBe('round_limit');
   });
 
-  it('trifft in jeder Runde fuer jeden Agenten eine Entscheidung', () => {
-    expect(result.decisions).toBe(400 * 30);
+  it('trifft fuer jeden lebenden Agenten in jeder Runde eine Entscheidung', () => {
+    // Weniger als Runden × Agenten, weil Ausgeschiedene nicht mehr handeln —
+    // aber nicht beliebig viel weniger.
+    expect(result.decisions).toBeLessThanOrEqual(400 * 30);
+    expect(result.decisions).toBeGreaterThan(400 * 20);
   });
 
-  it('nutzt beide implementierten Aktionen', () => {
-    expect(result.actionCounts['rest']).toBeGreaterThan(100);
-    expect(result.actionCounts['gather_resource']).toBeGreaterThan(100);
+  it('nutzt alle vier implementierten Aktionen', () => {
+    for (const type of ['rest', 'gather_resource', 'move', 'consume']) {
+      expect(result.actionCounts[type], `${type} wurde nie gewaehlt`).toBeGreaterThan(50);
+    }
+  });
+
+  it('laesst Agenten ausscheiden, aber nicht alle', () => {
+    const alive = result.leaderboard.filter((entry) => entry.alive).length;
+    expect(alive).toBeLessThan(30);
+    expect(alive).toBeGreaterThan(10);
+  });
+
+  it('erzeugt Wissen', () => {
+    const knowing = Object.values(result.state.agents).filter(
+      (agent) => agent && Object.keys(agent.knowledge).length > 0,
+    );
+    expect(knowing.length).toBeGreaterThan(15);
   });
 
   it('haelt die Reject-Rate bei null', () => {

@@ -91,6 +91,28 @@ describe('no-omniscience', () => {
         const event = byId.get(entry.sourceEventId!);
         if (!event) continue;
 
+        // T18: Hoerensagen laeuft NICHT ueber `infoRefs` — absichtlich, siehe
+        // `shareInformation.ts`. Waere die InfoId dort eingetragen, wuerde
+        // Phase 2 die Weltwahrheit an ALLE Anwesenden verteilen statt nur an
+        // den tatsaechlichen Empfaenger. Die Legitimation prueft hier deshalb
+        // anders: das Ereignis muss ein echtes `information_shared` sein, DAS
+        // AGENT ALS ZIEL traegt, fuer genau diese Info, von genau der
+        // behaupteten Quelle.
+        if (entry.source === 'told_by') {
+          if (event.type !== 'information_shared') {
+            violations.push(`${agent.id}: ${entry.infoId} told_by aus ${event.id} (${event.type}), kein information_shared`);
+          } else if (event.targetId !== agent.id) {
+            violations.push(`${agent.id}: ${entry.infoId} aus ${event.id}, war aber nicht dessen Ziel`);
+          } else if (event.payload['infoId'] !== entry.infoId) {
+            violations.push(`${agent.id}: ${entry.infoId} aus ${event.id}, das eine andere Info betraf`);
+          } else if (event.actorId !== entry.sourceAgent) {
+            violations.push(
+              `${agent.id}: ${entry.infoId} nennt Quelle ${entry.sourceAgent}, Event ${event.id} sagt ${event.actorId}`,
+            );
+          }
+          continue;
+        }
+
         // Das Ereignis muss die Info ueberhaupt betreffen.
         if (!event.infoRefs.includes(entry.infoId)) {
           violations.push(`${agent.id}: ${entry.infoId} aus ${event.id}, das sie nicht beruehrt`);
@@ -148,6 +170,10 @@ describe('no-omniscience', () => {
     for (const agent of Object.values(result.state.agents)) {
       if (!agent) continue;
       for (const entry of Object.values(agent.knowledge)) {
+        // T18: das Hoerensagen-Versprechen ist genau die Ausnahme von dieser
+        // Regel — wissen, ohne dort gewesen zu sein, aber ueber eine echte
+        // Kette. Die vorige Pruefung deckt diese Kette bereits ab.
+        if (entry.source === 'told_by') continue;
         const item = result.state.infoRegistry[entry.infoId];
         if (item?.topic !== 'stock_at_location') continue;
         expect(

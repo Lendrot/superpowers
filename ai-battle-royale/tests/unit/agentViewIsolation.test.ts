@@ -30,6 +30,8 @@ const SENTINEL_FOREIGN_COINS = 917_331;
 const SENTINEL_FOREIGN_FOOD = 917_332;
 const SENTINEL_REMOTE_STOCK = 917_333;
 const SENTINEL_FOREIGN_BELIEF = 917_334;
+const SENTINEL_FOREIGN_DEBT = 917_335;
+const SENTINEL_OWN_DEBT = 917_336;
 
 let state: WorldState;
 
@@ -60,6 +62,11 @@ beforeEach(() => {
         sourceEventId: 'event_0001_00000',
       }),
     ),
+    // OTHER_HEREs Sicht auf einen DRITTEN — das ist OTHER_HEREs eigene
+    // Beziehung, nicht SELFs. Und SELFs eigene Sicht auf OTHER_HERE, die
+    // durchaus in der View stehen darf.
+    effect.relationship(OTHER_HERE, OTHER_ELSEWHERE, { debt: SENTINEL_FOREIGN_DEBT }, 'trade_accepted'),
+    effect.relationship(SELF, OTHER_HERE, { debt: SENTINEL_OWN_DEBT }, 'trade_accepted'),
   ]);
 });
 
@@ -80,6 +87,14 @@ describe('AgentView — Isolation', () => {
     expect(serialized).not.toContain(String(SENTINEL_FOREIGN_BELIEF));
   });
 
+  it('enthaelt keine fremde Beziehung — nur die eigene, gerichtete Sicht', () => {
+    // OTHER_HEREs Beziehung zu OTHER_ELSEWHERE ist Fremdwissen; SELFs eigene
+    // Beziehung zu OTHER_HERE ist es nicht und muss ankommen.
+    const serialized = canonicalJson(buildAgentView(state, SELF));
+    expect(serialized).not.toContain(String(SENTINEL_FOREIGN_DEBT));
+    expect(serialized).toContain(String(SENTINEL_OWN_DEBT));
+  });
+
   it('enthaelt das infoRegistry nicht', () => {
     const view = buildAgentView(state, SELF);
     expect(view).not.toHaveProperty('infoRegistry');
@@ -93,6 +108,7 @@ describe('AgentView — Isolation', () => {
         'believedStrength',
         'id',
         'name',
+        'relationship',
         'strengthCertainty',
       ]);
     }

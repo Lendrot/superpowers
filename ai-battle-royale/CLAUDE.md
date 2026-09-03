@@ -29,7 +29,7 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    Stufe 7 in der Kette, das Gate ist `tests/unit/truthValidator.test.ts`.
 7. **Neue Aktion ⇒ neue Datei in `actions/defs/` + Unit-Test + Eintrag in
    `resolutionOrder`.** Ein Eintrag in `registry.ts` ist die Zusage, dass die
-   Aktion funktioniert — `ActionType` kennt 14, implementiert sind fünf.
+   Aktion funktioniert — `ActionType` kennt 14, implementiert sind acht.
 8. **Jede Lesson braucht `supportingEpisodeIds` aus dem eigenen Speicher des
    Agenten.** Ab T24.
 9. **Vor jedem Commit: `pnpm test` inklusive `determinism.test.ts` grün.**
@@ -48,17 +48,28 @@ verboten:
 
 ## Wissen
 
-Ein `KnowledgeEntry` entsteht an **genau einer** Stelle: `world/perception.ts`
-(Phase 2). Ab T18 kommt eine zweite dazu — das Auflösen von
-`share_information`. Sonst nirgends, auch nicht „nur kurz für einen Test".
+Ein `KnowledgeEntry` entsteht an **zwei** Stellen, nicht mehr nur einer:
+`world/perception.ts` (Phase 2, `source: 'observed'/'participated'`) und das
+Auflösen von `share_information`/`request_information`
+(`information/disclosurePolicy.ts#deriveToldEntry`, `source: 'told_by'`).
+Sonst nirgends, auch nicht „nur kurz für einen Test".
 
 - `resolveTrueValue` ist die einzige Funktion, die die Weltwahrheit einer Info
   liest. Sie gehört Phase 2. Wer sie anderswo aufruft, gibt einem Agenten
-  Wissen, das er nicht erworben hat.
+  Wissen, das er nicht erworben hat. `deriveToldEntry` ruft sie **nicht** auf —
+  es baut den neuen Eintrag aus dem, was der Erzähler selbst glaubt, nie aus
+  der Weltwahrheit. Ein Agent kann dadurch falsches Wissen weitergeben, ohne
+  zu lügen (Irrtum ≠ Lüge, §8.2.1) — das ist der Punkt.
 - Der Verfall der Sicherheit wird beim Lesen gerechnet (`effectiveCertainty`),
   nicht gespeichert. `entry.certainty` gilt für `entry.lastConfirmedRound`.
 - Jeder Eintrag trägt `sourceEventId`. Ohne diesen Herkunftsnachweis ist
-  `no-omniscience` nicht prüfbar.
+  `no-omniscience` nicht prüfbar — auch ein `told_by`-Eintrag, dessen
+  `sourceEventId` auf ein `information_shared`-Event zeigt, das den Agenten
+  als Ziel trägt.
+- Der `told_by`-Wissenstransfer läuft **nie** über `infoRefs`. Ein Event, das
+  eine geteilte `InfoId` dort einträgt, würde Phase 2 sie beim nächsten
+  Durchlauf per `resolveTrueValue` an ALLE Anwesenden verteilen, nicht nur an
+  den tatsächlichen Empfänger — Hörensagen würde zu perfekter Beobachtung.
 
 ## Wahrheit
 
@@ -94,6 +105,17 @@ Fallen, die dort schon zweimal zugeschnappt haben:
 2. **Ertragsterme multiplizieren, nicht addieren.** Wer einen Bonus fürs bloße
    Können addiert (Energie haben, Vorrat haben), gewinnt auch dort, wo nichts zu
    holen ist. Alle Ertragsterme hängen deshalb am erwarteten Anteil.
+3. **Kostenlose Aktionen dürfen bezahlte nicht verdrängen.** `share_information`
+   und `request_information` kosten keine Energie, `move` und `gather_resource`
+   schon. Bei vergleichbarer Größenordnung gewinnt das Kostenlose immer, sobald
+   ein Nachbar da ist — Tag 4 fror `move` dadurch ein zweites Mal ein (0
+   Ortswechsel nach Runde 300, dieselbe Beobachtung wie bei Falle 1, ein
+   anderer Mechanismus). Deshalb bleiben die Gewichte für kostenlose soziale
+   Aktionen bewusst unter dem, was `rest` ohnehin bietet — mit dem
+   dokumentierten Nebeneffekt, dass sie im laufenden Match praktisch nie
+   gewinnen (README, „Was noch offen ist"). Ein echter Ausweg braucht mehr als
+   eine weitere Zahl: entweder echte Kosten fürs Reden, oder eine Policy, die
+   nicht rein per Argmax entscheidet (T23).
 
 Und: Vergleiche sind Vergleiche. Eine Erinnerung an einen anderen Ort zählt
 gegen den eigenen Standort, nicht absolut.
@@ -121,6 +143,27 @@ dieses Repos gelten trotzdem weiter:
 - **Wer in Phase 6 fällt, handelt nicht mehr und wird nicht mehr angegriffen.**
   Der Tod steht erst nach Phase 7 im State, ist aber vorher beschlossen — die
   `EffectProjection` führt ihn mit.
+
+## Beziehungen
+
+`Relationship` ist gerichtet: `agent.relationships[b]` ist AGENTS Sicht auf
+`b`, nicht umgekehrt, und existiert erst ab der ersten Interaktion.
+
+- Beziehungswerte ändern sich **ausschließlich** über
+  `RELATIONSHIP_DELTA_TABLE[eventType]` in `world/relationships.ts`, angewandt
+  in Phase 8, moduliert durch die Persönlichkeit des Wahrnehmenden. Keine
+  direkte Zuweisung irgendwo sonst im Code.
+- Nur vier Dimensionen (`trust`, `friendship`, `respect`, `attraction`) sind
+  „Wärme" und werden von Empathie verstärkt, wenn sie steigen. `fear` und
+  `rivalry` sind numerisch positiv, aber keine Wärme, sondern Bedrohung — ein
+  ängstlicher Ausschlag wird nicht dadurch kleiner, dass das Opfer mitfühlend
+  ist. `suspicion`-Anstiege dämpft stattdessen Loyalität (Doc 03 §3.3,
+  wörtliches Beispiel). `debt` ist eine Tatsache, keine Empfindung, und bleibt
+  in jedem Fall unmoduliert.
+- Die Buchhaltungsfelder (`interactions`, `lastInteractionRound`,
+  `lastEventTypes`) gehören **nicht** ins `delta` eines `relationship`-Effekts
+  — der `StateMutator` leitet sie selbst her. Ein Effekt, der sie im `delta`
+  trüge, wäre eine Verschiebung, die sie nicht sind.
 
 ## Golden-Hashes
 

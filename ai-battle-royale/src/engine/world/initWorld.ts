@@ -15,7 +15,7 @@ import type { RngBundle } from '../core/rng.js';
 import { RESOURCE_KINDS } from '../core/resources.js';
 import { ATTRIBUTE_TRACKS } from '../core/types.js';
 import type { AgentId, MatchConfig, WorldState } from '../core/types.js';
-import { attributeInfoItem, stockInfoItem } from '../information/infoRegistry.js';
+import { agentResourceInfoItem, attributeInfoItem, stockInfoItem } from '../information/infoRegistry.js';
 import { LOCATION_IDS, createLocations } from './locations.js';
 
 export interface InitWorldResult {
@@ -48,9 +48,18 @@ export function initWorld(config: MatchConfig): InitWorldResult {
   // Dass jeder Agent drei Faehigkeiten hat, ist ebenfalls eine Tatsache der
   // Welt. Ihre Werte sind es auch — aber niemand kennt sie ausser den eigenen,
   // bis er jemanden handeln sieht.
+  //
+  // Dasselbe gilt fuer die eigenen Vorraete jedes Agenten (T18): ohne diese
+  // Zeile gaebe es keine `InfoId`, ueber die `share_information` oder
+  // `request_information` reden koennten — `resolveObservers`/Phase 2 wuerfen
+  // beim ersten Versuch, weil die referenzierte Info nicht existiert.
   for (const agentId of Object.keys(agents) as AgentId[]) {
     for (const track of ATTRIBUTE_TRACKS) {
       const item = attributeInfoItem(agentId, track, 1);
+      infoRegistry[item.id] = item;
+    }
+    for (const kind of RESOURCE_KINDS) {
+      const item = agentResourceInfoItem(agentId, kind, 1);
       infoRegistry[item.id] = item;
     }
   }

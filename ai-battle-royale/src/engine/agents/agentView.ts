@@ -18,6 +18,7 @@
  */
 
 import { getAgent, getLocation, occupantsOf } from '../core/access.js';
+import { defaultRelationship } from '../core/relationship.js';
 import type {
   Agent,
   AgentId,
@@ -30,6 +31,7 @@ import type {
   LocationId,
   MatchConfig,
   Personality,
+  Relationship,
   Round,
   Score01,
   WorldState,
@@ -52,6 +54,13 @@ export interface PublicAgent {
   believedStrength: Stat;
   /** 0 = reine Annahme aus dem Startwert, 1 = gerade selbst gesehen */
   strengthCertainty: Score01;
+  /**
+   * Die eigene, gerichtete Sicht auf diesen Anderen (Doc 03 §3.3). Kein
+   * Fremdwissen — es ist der eigene Eintrag `self.relationships[other.id]`,
+   * nur unter einem anderen Namen serialisiert. Fehlt er, gilt der neutrale
+   * Ausgangswert: man kennt sich noch nicht.
+   */
+  relationship: Readonly<Relationship>;
 }
 
 /** Was ein Agent von seinem eigenen Ort sieht. */
@@ -168,6 +177,7 @@ export function buildAgentView(state: Readonly<WorldState>, agentId: AgentId): A
         const believed = belief && typeof belief.entry.believedValue === 'number'
           ? belief.entry.believedValue
           : null;
+        const relationship = agent.relationships[other.id] ?? defaultRelationship();
         return {
           id: other.id,
           name: other.name,
@@ -175,6 +185,7 @@ export function buildAgentView(state: Readonly<WorldState>, agentId: AgentId): A
           // alle gleich stark.
           believedStrength: believed ?? startingAttribute,
           strengthCertainty: believed === null ? 0 : belief!.certainty,
+          relationship: { ...relationship, lastEventTypes: [...relationship.lastEventTypes] },
         };
       }),
     beliefs,

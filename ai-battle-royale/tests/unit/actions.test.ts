@@ -7,6 +7,7 @@ import { restAction } from '@/engine/actions/defs/rest.js';
 import { IMPLEMENTED_ACTIONS, findAction, requireAction } from '@/engine/actions/registry.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
+import { createEventLog } from '@/engine/core/eventLog.js';
 import { EffectProjection } from '@/engine/validation/validateAction.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
@@ -20,7 +21,13 @@ let state: WorldState;
 let ctx: ActionContext;
 
 function makeCtx(current: WorldState): ActionContext {
-  return { state: current, round: current.round, rng: createRngBundle(1), projection: new EffectProjection(current) };
+  return {
+    state: current,
+    round: current.round,
+    rng: createRngBundle(1),
+    projection: new EffectProjection(current),
+    log: createEventLog(current.matchId),
+  };
 }
 
 beforeEach(() => {
@@ -46,13 +53,16 @@ describe('registry', () => {
       'consume',
       'gather_resource',
       'move',
+      'request_information',
       'rest',
+      'share_information',
+      'trade',
     ]);
   });
 
   it('meldet nicht implementierte Aktionen als solche', () => {
-    expect(findAction('trade')).toBeUndefined();
-    expect(() => requireAction('trade')).toThrow(/nicht implementiert/);
+    expect(findAction('offer_alliance')).toBeUndefined();
+    expect(() => requireAction('offer_alliance')).toThrow(/nicht implementiert/);
   });
 });
 

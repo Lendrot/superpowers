@@ -72,6 +72,54 @@ export function entails(
   }
 }
 
+/**
+ * T18 — Umkehrung von `entails`: welchen Wert nimmt an, wer eine Disclosure
+ * hoert und daraus einen eigenen `KnowledgeEntry` macht (`share_information`,
+ * `request_information`)?
+ *
+ * Es gibt keine einzige richtige Antwort — eine Disclosure laesst absichtlich
+ * einen Bereich offen ("etwas Nahrung" kann 6 oder 19 sein). Die Regel hier ist
+ * die **konservativste** Zahl, die die Aussage noch erfuellt: fuer `bound`/
+ * `exact` der genannte Wert selbst, fuer `qualitative` die UNTERE Grenze des
+ * Buckets, fuer `existence_only` die kleinste positive Zahl. Wer daraus spaeter
+ * selbst `hearsay` aeussert, behauptet damit nie mehr, als er gehoert hat — per
+ * Konstruktion gilt `entails(disclosure, impliedValue(disclosure, ...), ...)`.
+ *
+ * `valueType` entscheidet nur bei `existence_only`, wo die Disclosure selbst
+ * keine Zahl enthaelt: bei allem ausser `'quantity'` ist "es gibt etwas"
+ * schlicht `true`.
+ */
+export function impliedValue(
+  disclosure: Readonly<Disclosure>,
+  thresholds: Readonly<BucketThresholds>,
+  valueType: InfoItem['valueType'],
+): InfoValue {
+  switch (disclosure.mode) {
+    case 'exact':
+      return disclosure.value;
+
+    case 'bound':
+      return disclosure.value;
+
+    case 'qualitative':
+      switch (disclosure.bucket) {
+        case 'none':
+          // Voraussetzt, dass der Wertebereich bei 0 beginnt (Doc 03 §3.2.2:
+          // Resources sind Integer >= 0) — fuer jedes bisher konfigurierte
+          // Thema der Fall.
+          return 0;
+        case 'some':
+          return thresholds.some;
+        case 'much':
+          return thresholds.much;
+      }
+      break;
+
+    case 'existence_only':
+      return valueType === 'quantity' ? 1 : true;
+  }
+}
+
 /** "Es gibt etwas" — die schwaechste positive Aussage. */
 export function meansPresence(value: InfoValue): boolean {
   if (typeof value === 'number') return value > 0;

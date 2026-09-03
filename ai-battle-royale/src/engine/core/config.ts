@@ -30,11 +30,20 @@ export const DEFAULT_ECONOMY = {
   exhaustionRounds: 3,
 } as const;
 
-/** Doc 03 §3.10: Schwelle 0.80, decayFast 0.05, decaySlow 0.01. */
+/**
+ * Doc 03 §3.10: Schwelle 0.80, decayFast 0.05, decaySlow 0.01.
+ *
+ * `hearsayRetention` steht nicht in der Spec — sie sagt nur "reduzierte
+ * certainty" (Doc 04 §4.1 Nr. 6), ohne Zahl. Bei jedem Weitererzaehlen
+ * multipliziert sich die Sicherheit mit diesem Faktor: A (Sicherheit 1.0) →
+ * B (told_by, 0.7) → C (told_by von B, 0.49). Eine Fluesterpost-Kette, deren
+ * Verlust mit jeder Station waechst — testbar, weil die Zahl feststeht.
+ */
 export const DEFAULT_INFO = {
   assertCertaintyThreshold: 0.8,
   decayFast: 0.05,
   decaySlow: 0.01,
+  hearsayRetention: 0.7,
 } as const;
 
 /**

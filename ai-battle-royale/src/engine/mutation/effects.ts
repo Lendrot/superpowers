@@ -13,12 +13,14 @@ import type {
   Effect,
   EliminationCause,
   EndReason,
+  EventType,
   Experience,
   InfoItem,
   KnowledgeEntry,
   LocationId,
   Needs,
   Personality,
+  RelationshipStats,
   Resources,
   Round,
   StatementRecord,
@@ -55,6 +57,14 @@ export const effect = {
   },
   kill(agentId: AgentId): Effect {
     return { t: 'kill', agentId };
+  },
+  relationship(
+    from: AgentId,
+    to: AgentId,
+    delta: Partial<RelationshipStats>,
+    eventType: EventType,
+  ): Effect {
+    return { t: 'relationship', from, to, delta, eventType };
   },
   statement(agentId: AgentId, record: StatementRecord): Effect {
     return { t: 'statement', agentId, record };
@@ -114,6 +124,8 @@ export function describeEffect(item: Effect): string {
       return `cooldown ${item.agentId} ${item.action} -> ${item.readyAtRound}`;
     case 'kill':
       return `kill ${item.agentId}`;
+    case 'relationship':
+      return `relationship ${item.from} -> ${item.to} ${JSON.stringify(item.delta)} (${item.eventType})`;
     case 'statement':
       return `statement ${item.agentId} ${item.record.kind} ueber ${item.record.infoId}`;
     case 'info_item':

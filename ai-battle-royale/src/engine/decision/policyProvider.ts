@@ -68,6 +68,7 @@ export const policyProvider: DecisionProvider = {
       actorId: view.self.id,
       type: best.candidate.type,
       params: best.candidate.params,
+      ...(best.candidate.statement ? { statement: best.candidate.statement } : {}),
       source: 'policy',
     };
 
@@ -87,6 +88,12 @@ function scoreOf(view: Readonly<AgentView>, candidate: ActionCandidate): Record<
       return scoreGather(view, candidate.params['resource'] as ResourceKind);
     case 'attack':
       return scoreAttack(view, candidate.params['target'] as AgentId);
+    case 'share_information':
+      return scoreShareInformation(view, candidate.params['target'] as AgentId);
+    case 'request_information':
+      return scoreRequestInformation(view, candidate.params['target'] as AgentId);
+    case 'trade':
+      return scoreTrade(view, candidate.params['target'] as AgentId);
     default:
       // Ein Kandidat ohne Bewertung waere ein stiller Nulltreffer. Lieber laut.
       throw new Error(`policyProvider kennt die Aktion ${candidate.type} nicht`);
@@ -320,4 +327,78 @@ function scoreGather(view: Readonly<AgentView>, kind: ResourceKind): Record<stri
 function expectedShareOf(view: Readonly<AgentView>, kind: ResourceKind): number {
   const competitors = view.coLocated.length + 1;
   return Math.min(1, view.here.stock[kind] / (competitors * EXPECTED_YIELD));
+}
+
+/**
+ * `share_information` — die Offenlegungsneigung aus Doc 03 §3.2.1: `honesty`
+ * ist hier nicht mehr die Frage OB gelogen wird (das ist unmoeglich), sondern
+ * WIE bereitwillig offengelegt wird.
+ *
+ * Groessenordnung bewusst klein gehalten (vgl. `scoreMove`s Erkundungsterm):
+ * Reden kostet keine Energie, `move` und `gather_resource` schon. Bei
+ * gleicher Groessenordnung gewinnt das Kostenlose immer, sobald ein Nachbar
+ * da ist — gemessen fror die Bewegung dadurch ein zweites Mal ein, diesmal
+ * durch Schwatzen statt durch Stillstand. Der Deckel haelt beide Aktionen
+ * unter dem, was `rest` ohnehin schon bietet — sie fuellen die Luecke, wenn
+ * nichts Dringenderes ansteht, statt sie zu verdraengen.
+ */
+function scoreShareInformation(view: Readonly<AgentView>, targetId: AgentId): Record<string, number> {
+  const target = view.coLocated.find((other) => other.id === targetId);
+  if (!target) return { unknown: -10 };
+
+  const honesty = view.self.personality.honesty / 100;
+  const sociability = view.self.personality.sociability / 100;
+  const manipulation = view.self.personality.manipulation / 100;
+
+  return {
+    // Wer ehrlich UND gesellig ist, erzaehlt am ehesten von sich aus.
+    disclosure: 0.35 * honesty * sociability,
+    // Wissen als Handelsware (Doc 03 §3.2.1): hohe Manipulation bremst das
+    // FREIWILLIGE Teilen — sie behaelt Wissen lieber fuer einen Tausch.
+    withholding: -0.2 * manipulation,
+    // Vertrauen vertieft man eher mit bereits Vertrauten als mit Fremden.
+    rapport: 0.1 * (target.relationship.trust / 100),
+    base: 0.05,
+  };
+}
+
+/**
+ * `trade` — anders als bei `share_information`/`request_information` steht
+ * hier ein echter Ressourcenverlust auf dem Spiel, den `resolve` selbst schon
+ * gegenrechnet (das Ziel akzeptiert nur, was sich fuer es lohnt). Der Score
+ * muss deshalb nicht ebenso streng gedeckelt werden wie bei den kostenlosen
+ * Aktionen — ein misslungenes Angebot kostet ohnehin nur die Runde, kein
+ * Vermoegen.
+ */
+function scoreTrade(view: Readonly<AgentView>, targetId: AgentId): Record<string, number> {
+  const target = view.coLocated.find((other) => other.id === targetId);
+  if (!target) return { unknown: -10 };
+
+  const ambition = view.self.personality.ambition / 100;
+  const sociability = view.self.personality.sociability / 100;
+
+  return {
+    dealmaking: 0.5 * ambition * sociability,
+    trustBonus: 0.15 * (target.relationship.trust / 100),
+    base: 0.1,
+  };
+}
+
+/**
+ * `request_information` — Neugier, gedaempft durch dieselbe Nahbarkeit.
+ * Dieselbe Groessenordnungsgrenze wie `scoreShareInformation`, aus demselben
+ * Grund: kostenlose Neugier darf `move`s Erkundung nicht verdraengen.
+ */
+function scoreRequestInformation(view: Readonly<AgentView>, targetId: AgentId): Record<string, number> {
+  const target = view.coLocated.find((other) => other.id === targetId);
+  if (!target) return { unknown: -10 };
+
+  const sociability = view.self.personality.sociability / 100;
+
+  return {
+    curiosity: 0.3 * sociability,
+    // Man fragt eher jemanden, dem man schon traut.
+    trustBonus: 0.1 * (target.relationship.trust / 100),
+    base: 0.05,
+  };
 }

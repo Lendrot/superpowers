@@ -34,6 +34,7 @@ function decide(): { type: string; params: Record<string, unknown>; view: AgentV
     round: state.round,
     rng: createRngBundle(1),
     projection: new EffectProjection(state),
+    log: createEventLog(state.matchId),
   };
   const view = buildAgentView(state, A);
   const candidates = generateCandidates(state.agents[A]!, ctx);
@@ -200,6 +201,7 @@ describe('Policy — Form der Bewertung', () => {
       round: state.round,
       rng: createRngBundle(1),
       projection: new EffectProjection(state),
+      log: createEventLog(state.matchId),
     };
     const view = buildAgentView(state, A);
     const decision = policyProvider.decide(view, generateCandidates(state.agents[A]!, ctx), {
@@ -226,6 +228,7 @@ describe('Policy — Form der Bewertung', () => {
       round: state.round,
       rng: createRngBundle(1),
       projection: new EffectProjection(state),
+      log: createEventLog(state.matchId),
     };
     const decision = policyProvider.decide(
       buildAgentView(state, A),

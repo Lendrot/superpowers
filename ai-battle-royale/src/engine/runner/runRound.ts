@@ -24,12 +24,16 @@ import type { RngBundle } from '../core/rng.js';
 import type { AgentAction, AgentId, Effect, WorldEvent, WorldState } from '../core/types.js';
 import { generateCandidates } from '../decision/candidates.js';
 import type { DecisionProvider } from '../decision/provider.js';
+import { statementInfoId } from '../information/statements.js';
+import { statementRecordFor } from '../information/statementLog.js';
+import { effect } from '../mutation/effects.js';
 import { applyEffects } from '../mutation/stateMutator.js';
 import { EffectProjection, validateAction } from '../validation/validateAction.js';
 import type { RejectCounts } from '../validation/rejectReasons.js';
 import { emptyRejectCounts } from '../validation/rejectReasons.js';
 import { consequence } from '../world/consequence.js';
 import { perceptionEffects } from '../world/perception.js';
+import { relationshipEffectsFor } from '../world/relationships.js';
 import { scoringEffects } from '../world/scoring.js';
 import { upkeep } from '../world/upkeep.js';
 
@@ -101,7 +105,7 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   // Eine Buchhaltung fuer die ganze Runde: sie beantwortet den Aktionen, was
   // noch da ist, und prueft zugleich Stufe 9 der Validierungskette.
   const projection = new EffectProjection(state);
-  const ctx: ActionContext = { state, round, rng: deps.rng, projection };
+  const ctx: ActionContext = { state, round, rng: deps.rng, projection, log: deps.log };
 
   const chosen: AgentAction[] = [];
   for (const agent of aliveAgents(state)) {
@@ -170,6 +174,18 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     const def = requireAction(action.type);
     const resolved = def.resolve(action, ctx);
 
+    // Zentrales R7-Gedaechtnis: JEDE Aktion mit einem eigenen `statement`
+    // bekommt es automatisch, ohne dass die Aktion selbst daran denken muss.
+    // Nur das eigene Statement der obersten Aktion — eine Inline-Antwort
+    // (`request_information`) traegt ihres selbst (siehe dort), weil sie nicht
+    // dem Akteur, sondern dem Ziel gehoert.
+    if (action.statement) {
+      const infoId = statementInfoId(action.statement);
+      const entry = infoId ? state.agents[action.actorId]?.knowledge[infoId] : undefined;
+      const record = statementRecordFor(action.statement, entry, round);
+      if (record) resolved.effects.push(effect.statement(action.actorId, record));
+    }
+
     // Stufe 9 der Validierungskette: erst pruefen, dann in die Runde uebernehmen.
     const sanity = projection.check(resolved.effects);
     if (!sanity.ok) {
@@ -198,9 +214,10 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   // ── Phase 8 — Consequence ─────────────────────────────────────────────────
   // Faehigkeiten und Veranlagung folgen aus dem, was gerade geschehen ist.
   // Anders als Perception laeuft das NICHT eine Runde nach: wer eben gekaempft
-  // hat, ist danach staerker.
+  // hat, ist danach staerker. Dieselbe Regel gilt fuer Beziehungen (Doc 03
+  // §3.3): wer gerade betrogen wurde, misstraut sofort, nicht naechste Runde.
   const consequences = consequence(state, events, perception.newKnowledgePerAgent);
-  applyEffects(state, consequences.effects);
+  applyEffects(state, [...consequences.effects, ...relationshipEffectsFor(state, events)]);
 
   // ── Phase 11 — Scoring ────────────────────────────────────────────────────
   const scoring = scoringEffects(state);

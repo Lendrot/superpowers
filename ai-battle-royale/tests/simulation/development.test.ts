@@ -46,11 +46,19 @@ describe('Entwicklung der Faehigkeiten', () => {
     // streut, haengt daran, welche Taetigkeiten in diesem Lauf haeufig sind —
     // und das ist Kalibrierung (T43), nicht Vertrag. Der Vertrag ist, dass
     // ueberhaupt Spezialisierung entsteht.
+    //
+    // Schwelle mit Tag 4 von 10 auf 8 gesenkt (gemessen: 9): zwei weitere
+    // Aktionstypen konkurrieren jetzt um jede Runde. Das verdraengt nicht nur
+    // Ernte/Ruhe leicht, sondern verschiebt auch den Tie-Break-Wurf in
+    // `policyProvider.ts` — er wird je Kandidat aus demselben Stream gezogen,
+    // und mehr (auch verlierende) Kandidaten in der Liste heissen mehr Zuege
+    // vor jedem spaeteren Kandidaten. Determinismus bleibt gewahrt (derselbe
+    // Seed liefert weiter denselben Lauf), nur die genaue Verteilung wandert.
     const spreads = ATTRIBUTE_TRACKS.map(
       (track) => Math.max(...values(track)) - Math.min(...values(track)),
     ).sort((a, b) => b - a);
     expect(spreads[0]).toBeGreaterThan(20);
-    expect(spreads[1]).toBeGreaterThan(10);
+    expect(spreads[1]).toBeGreaterThan(8);
   });
 
   it('trennt die Faehigkeiten voneinander', () => {

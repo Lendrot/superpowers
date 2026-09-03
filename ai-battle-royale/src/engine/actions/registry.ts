@@ -12,7 +12,10 @@ import { attackAction } from './defs/attack.js';
 import { consumeAction } from './defs/consume.js';
 import { gatherResourceAction } from './defs/gatherResource.js';
 import { moveAction } from './defs/move.js';
+import { requestInformationAction } from './defs/requestInformation.js';
 import { restAction } from './defs/rest.js';
+import { shareInformationAction } from './defs/shareInformation.js';
+import { tradeAction } from './defs/trade.js';
 import type { ActionDef } from './types.js';
 
 /** Implementierte Aktionen in stabiler Reihenfolge. */
@@ -22,6 +25,9 @@ export const IMPLEMENTED_ACTIONS: readonly ActionDef[] = [
   moveAction,
   consumeAction,
   attackAction,
+  shareInformationAction,
+  requestInformationAction,
+  tradeAction,
 ];
 
 const REGISTRY = new Map<ActionType, ActionDef>(

@@ -16,32 +16,38 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben mit der Bucket-Tabelle (Doc 08 §8.2.2), die als
- * `config.buckets` in die `MatchConfig` kam. Die Ereignisfolge selbst ist
- * dadurch **unveraendert** — nachgerechnet ueber `canonicalJson` der Events
- * ohne ihr `matchId`-Feld, vorher wie nachher derselbe Wert. Verschoben hat
- * sich nur die `MatchId`: sie haengt laut `core/ids.ts` am Seed UND an der
- * Konfiguration, und eine Config mit einem Feld mehr ist eine andere Config.
- * Der Hash bewegt sich also, weil die Welt anders heisst, nicht weil sie sich
- * anders verhaelt.
+ * Zuletzt neu geschrieben mit Tag 4 (T17-T19): `trade`, `share_information`,
+ * `request_information` und das Beziehungssystem. Diesmal **echt** neues
+ * Verhalten, nicht nur eine verschobene `MatchId`:
  *
- * Davor: als Intuition eine zweite Quelle bekam
- * (Fehlernten) und `moveGain` an die Seltenheit von Ortswechseln angepasst
- * wurde. Davor lag Intuition bei jedem Agenten auf dem Boden.
+ * - Kampf loest jetzt zusaetzlich `relationship`-Effekte aus (Phase 8,
+ *   `world/relationships.ts`) — keine neuen Events, aber ein veraenderter
+ *   World State ab der ersten Runde mit einem Treffer.
+ * - Drei neue Aktionstypen stehen ab Runde 1 in jedem Kandidatensatz. Auch
+ *   wenn sie bei den bestehenden Policy-Gewichten so gut wie nie gewinnen
+ *   (siehe README, "Was noch offen ist"), ziehen sie beim
+ *   RNG-Tie-Break-Wurf in `policyProvider.ts` einen Wurf pro Kandidat aus
+ *   demselben Stream — mehr Kandidaten in der (nach Label sortierten) Liste
+ *   verschieben, wieviele Wuerfe vor einem spaeter stehenden Kandidaten
+ *   passieren. Determinismus bleibt gewahrt, die genaue Zahlenfolge nicht.
+ *
+ * Davor: mit der Bucket-Tabelle (Doc 08 §8.2.2), die als `config.buckets` in
+ * die `MatchConfig` kam — dort war die Ereignisfolge nachweislich
+ * unveraendert (nachgerechnet ueber `canonicalJson` ohne `matchId`), nur die
+ * `MatchId` verschob sich.
+ *
+ * Davor: als Intuition eine zweite Quelle bekam (Fehlernten) und `moveGain`
+ * an die Seltenheit von Ortswechseln angepasst wurde.
  *
  * Davor: mit der Erweiterung um Faehigkeiten, Macht und Kampf.
- * Die Aenderung war beabsichtigt und gross: Agenten entwickeln Attribute,
- * greifen einander an und koennen getoetet werden, ihre Veranlagung driftet,
- * Glueck wirkt auf jeden Wurf, und die Saettigung faellt jetzt um 4 statt 1 pro
- * Runde. Jeder dieser Punkte allein verschiebt den Hash.
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'e15088a943e93825',
+  seed42x100: '4a1b50a480c14df8',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '78d0b84f03cd5a1b',
+  seed42x400: 'e17a76f95ba18e2a',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: 'a7dc4b05b7c9845e',
+  seed7x100: '64d11e65f9b5754e',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {

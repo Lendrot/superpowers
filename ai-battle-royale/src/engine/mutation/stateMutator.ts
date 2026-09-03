@@ -12,6 +12,7 @@
 
 import { getAgent, getLocation } from '../core/access.js';
 import { InvariantError, assertInvariants, totalResources } from '../core/invariants.js';
+import { defaultRelationship } from '../core/relationship.js';
 import { RESOURCE_KINDS } from '../core/resources.js';
 import { ATTRIBUTE_TRACKS, PERSONALITY_TRAITS } from '../core/types.js';
 import type { Effect, Resources, WorldState } from '../core/types.js';
@@ -209,6 +210,29 @@ function applyOne(state: WorldState, item: Effect): void {
     case 'kill': {
       const agent = getAgent(state, item.agentId);
       agent.kills += 1;
+      return;
+    }
+
+    case 'relationship': {
+      // `to` braucht keinen eigenen Zustand hier — nur die Existenz beider
+      // Agenten ist Pflicht (eine Beziehung zu jemandem, den es nicht gibt,
+      // waere ein stiller Fehler in der aufrufenden Phase).
+      const from = getAgent(state, item.from);
+      getAgent(state, item.to);
+
+      const current = from.relationships[item.to] ?? defaultRelationship();
+      const next = { ...current };
+      for (const [stat, delta] of Object.entries(item.delta) as [keyof typeof item.delta, number][]) {
+        if (delta === undefined || delta === 0) continue;
+        requireInteger(item, stat, delta);
+        next[stat] = stat === 'debt' ? current.debt + delta : clampStat(current[stat] + delta);
+      }
+      next.interactions = current.interactions + 1;
+      next.lastInteractionRound = state.round;
+      // Ringpuffer, max 5, aeltestes zuerst verdraengt.
+      next.lastEventTypes = [...current.lastEventTypes, item.eventType].slice(-5);
+
+      from.relationships[item.to] = next;
       return;
     }
 

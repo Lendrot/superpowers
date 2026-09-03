@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { attackAction } from '@/engine/actions/defs/attack.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
+import { createEventLog } from '@/engine/core/eventLog.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
 import { canonicalJson } from '@/engine/core/hash.js';
@@ -23,6 +24,7 @@ function makeCtx(current: WorldState): ActionContext {
     round: current.round,
     rng: createRngBundle(7),
     projection: new EffectProjection(current),
+    log: createEventLog(current.matchId),
   };
 }
 

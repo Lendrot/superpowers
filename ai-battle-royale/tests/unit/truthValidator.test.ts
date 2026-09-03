@@ -96,6 +96,7 @@ function speaker(...entries: KnowledgeEntry[]): Agent {
     resources: { food: 5, coins: 100, materials: 1 },
     status: { hungerStreak: 0, exhaustionStreak: 0, exiledFrom: [] },
     knowledge,
+    relationships: {},
     cooldowns: {},
     allianceId: null,
   };

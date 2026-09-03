@@ -1,6 +1,6 @@
-# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit
+# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem
 
-Stand: **Tag 1 bis Tag 3** aus `12-build-order.md`.
+Stand: **Tag 1 bis Tag 4** aus `12-build-order.md` (T21 ausgenommen, siehe unten).
 
 - **Tag 1** (T01, T02 reduziert, T03–T07, Kern von T09): Welt aus Seed, Runden
   laufen headless, Event-Log-Hash reproduzierbar.
@@ -10,11 +10,16 @@ Stand: **Tag 1 bis Tag 3** aus `12-build-order.md`.
 - **Tag 3** (T12–T15): jede Äußerung ist ein `Statement`-Objekt und läuft durch
   den Truth-Validator. Die Regel „kein Agent darf lügen" ist ab hier keine Bitte
   an ein Sprachmodell mehr, sondern eine Funktion mit einer Testtabelle.
+- **Tag 4** (T17–T19; T21 fehlt noch, siehe „Was noch offen ist"): `trade` mit
+  Gegenangebot, `share_information`/`request_information` mit echtem
+  Wissenstransfer, ein Beziehungssystem mit acht Dimensionen. Der
+  Truth-Validator prüft jetzt echte Aussagen statt nur seiner eigenen
+  Testtabelle — die Hörensagen-Kette A→B→C ist beweisbar, nicht nur behauptet.
 - **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
   sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
   Kampfsystem, in dem Agenten einander töten können. Siehe unten.
 
-Kein UI, kein LLM, keine Allianzen, kein Handel, kein Lernsystem.
+Kein UI, kein LLM, keine Allianzen, keine Zusagen, kein Lernsystem.
 
 ## Fähigkeiten, Instinkte, Macht, Gewalt
 
@@ -70,6 +75,52 @@ nur beobachtbar, wer einen Kampf gesehen hat (`agent_attribute`-Info,
 Volatilität `slow`). Ohne eigene Beobachtung bleibt der Startwert — er kann sich
 also irren, und das ist der Punkt.
 
+## Sozialsystem: Handel, Wissenstransfer, Beziehungen
+
+**`trade` (T17).** Ein Angebot ist `{ give, want }`, je eine Ressourcenart. Das
+Ziel bewertet es sofort — kein Wurf, eine Rechnung: `wert(empfangen) /
+wert(hergegeben)` gegen eine Schwelle, die von Gier (Ehrgeiz, Manipulation),
+Großzügigkeit (Empathie) und bestehendem Vertrauen abhängt. Liegt das Angebot
+deutlich darunter: Ablehnung. In der Verhandlungszone: ein Gegenangebot, das
+für das Ziel selbst gerade noch fair wäre — der ursprüngliche Anbieter bewertet
+das sofort mit derselben Rechnung, ohne zweite Runde. `RESOURCE_VALUE` (Food
+1,2, Materials 1,5, Coins 0,4) ist **[ANNAHME]**, aber nicht frei gegriffen:
+abgeleitet aus den bereits vorhandenen Bucket-Grenzen und Startbeständen (siehe
+Code-Kommentar in `trade.ts`).
+
+**`share_information` / `request_information` (T18).** `share_information`
+trägt ein **Pflicht-Statement** — die einzige Aktion, bei der das gilt.
+`generate` wählt die zuletzt bestätigte Überzeugung des Senders und baut daraus
+die präziseste legale Aussage (`information/disclosurePolicy.ts`); Stufe 7
+prüft trotzdem nach. `request_information` behauptet selbst nichts
+(`allowsStatement: false`) — die eigentliche Aussage entsteht **inline** beim
+Befragten, während `resolve` läuft, und verbraucht dessen Rundenzug nicht (Doc
+04 §4.1). Wie offen geantwortet wird, hängt von `honesty` ab (Doc 03 §3.2.1):
+hohe Werte bevorzugen `assert_fact` mit hoher Präzision, niedrige `withhold`.
+Ob überhaupt geantwortet wird, ist ein Wurf — eine Charakterfrage, kein
+Kalkül, anders als bei `trade`.
+
+Der Wissenstransfer selbst läuft **nie** über `infoRefs`/Phase 2: Der neue
+`told_by`-Eintrag entsteht direkt als Effekt, mit `believedValue` aus
+`impliedValue()` (der konservativsten Zahl, die die Disclosure noch erfüllt)
+und `certainty × hearsayRetention` (**[ANNAHME]** 0,7). Träge die geteilte
+`InfoId` stattdessen in `infoRefs`, würde Phase 2 beim nächsten Durchlauf die
+**Weltwahrheit** an alle Anwesenden verteilen, nicht nur die Aussage an den
+Empfänger — Hörensagen würde zu perfekter Beobachtung. Jede Weitergabe verliert
+Sicherheit: A (beobachtet, 1.0) → B (`told_by`, ~0,7) → C (`told_by` von B,
+~0,49) — eine Flüsterpost-Kette, geprüft in
+`tests/integration/hearsayChain.test.ts`.
+
+**Beziehungen (T19).** `Relationship` ist gerichtet (`agents[a].relationships[b]`
+ist *as Sicht*, nicht `b`s) und entsteht erst bei der ersten Interaktion.
+`RELATIONSHIP_DELTA_TABLE` (`world/relationships.ts`) bildet jeden
+zweiseitigen Event-Typ auf zwei Deltas ab — Akteur→Ziel und Ziel→Akteur, meist
+unterschiedlich. Moduliert wird nach Doc 03 §3.3, wörtlich: Empathie verstärkt
+einen Anstieg von Vertrauen/Freundschaft/Respekt/Anziehung, Loyalität dämpft
+einen Anstieg von Argwohn. `debt` bleibt unmoduliert — eine Tatsache, keine
+Empfindung. Auch Kampf löst jetzt Beziehungsfolgen aus: Angst und
+Vertrauensverlust beim Opfer, Rivalität bei beiden.
+
 ## Abnahme
 
 ```bash
@@ -82,16 +133,19 @@ Gemessen auf Node 22 in dieser Umgebung:
 
 | Lauf | Ergebnis |
 |---|---|
-| `--rounds 100 --agents 30 --seed 42` | Log-Hash `e15088a943e93825` |
-| `--rounds 400 --agents 30 --seed 42` | Log-Hash `78d0b84f03cd5a1b` |
-| `pnpm test` | 26 Dateien, 336 Tests grün |
+| `--rounds 100 --agents 30 --seed 42` | Log-Hash `4a1b50a480c14df8` |
+| `--rounds 400 --agents 30 --seed 42` | Log-Hash `e17a76f95ba18e2a` |
+| `pnpm test` | 31 Dateien, 416 Tests grün |
 
-Die drei Golden-Hashes wurden mit Tag 3 neu geschrieben. Die **Ereignisfolge ist
-dabei unverändert** — nachgerechnet über das kanonische JSON aller Events ohne
-ihr `matchId`-Feld, vor und nach der Änderung derselbe Wert. Verschoben hat sich
-nur die `MatchId`: sie hängt am Seed **und an der Konfiguration**, und die
-`MatchConfig` trägt seit Tag 3 die Bucket-Tabelle. Die Welt heißt anders, sie
-verhält sich nicht anders.
+Die drei Golden-Hashes wurden mit Tag 4 neu geschrieben — diesmal **mit**
+Verhaltensänderung, nicht nur verschobener `MatchId`: Kampf löst zusätzliche
+`relationship`-Effekte aus, und drei neue Aktionstypen stehen ab Runde 1 in
+jedem Kandidatensatz. Auch wenn sie beim aktuellen Policy-Gewicht so gut wie
+nie gewinnen (siehe „Was noch offen ist"), verschieben mehr Kandidaten in der
+Liste, wie viele Tie-Break-Würfe vor einem später stehenden Kandidaten aus
+demselben RNG-Stream gezogen werden (`policyProvider.ts#decide`). Determinismus
+bleibt gewahrt — derselbe Seed liefert weiterhin denselben Lauf —, nur die
+genaue Zahlenfolge wandert.
 
 Der Zielwert aus Doc 01 §1.5.7 (400 Runden × 30 Agenten headless unter 5 s) wird
 mit ~0,6 s eingehalten — ohne Memory, Lernen und Sozialsystem. Die Zahl ist mit
@@ -108,6 +162,8 @@ jeder weiteren Phase neu zu messen.
 | `tests/unit/noLieActions.test.ts` | Die vier verbotenen Aktionen existieren im Quelltext nicht |
 | `tests/simulation/movement.test.ts` | Die Welt friert nicht ein — Bewegung bleibt über den ganzen Lauf möglich |
 | `tests/unit/truthValidator.test.ts` | **Die Tabelle aus Doc 08 §8.3, vollständig** — der wichtigste Test des Projekts |
+| `tests/integration/hearsayChain.test.ts` | Hörensagen-Kette A→B→C: korrekte Attribution, `hearsay` statt `assert_fact`, Sicherheitsverlust pro Station |
+| `tests/unit/relationships.test.ts` | Jeder Eintrag der Delta-Tabelle liefert etwas; Modulation, Ringpuffer, Clamping |
 
 Der `no-omniscience`-Test prüft **nicht** gegen die Perception-Funktion — das
 wäre ein Vergleich mit sich selbst. Er rekonstruiert die Aufenthaltsorte
@@ -133,15 +189,17 @@ prüft jeden Wissenseintrag gegen diese Rekonstruktion.
 | `information/statements.ts` | `Disclosure`, Bucket-Tabelle, `entails`, Widerspruchsrechnung für R7 |
 | `information/statementLog.ts` | was ein Agent zuletzt behauptet hat — das Gedächtnis hinter R7 |
 | `validation/truthValidator.ts` | R1–R7 + R9 gegen den **Wissensstand**, nie gegen die Weltwahrheit |
-| `agents/agentView.ts` | die abgeschottete Sicht eines Agenten (Doc 05 §5.1) |
+| `agents/agentView.ts` | die abgeschottete Sicht eines Agenten (Doc 05 §5.1), inkl. eigener Beziehungssicht |
 | `mutation/stateMutator.ts` | die einzige Schreibstelle, inkl. Erhaltungsprüfung |
-| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack` |
+| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack`, `share_information`, `request_information`, `trade` |
 | `agents/attributes.ts` | Fähigkeiten, Instinkte, Glück, Macht — alles abgeleitet |
 | `world/consequence.ts` | Phase 8: Erfahrungsgewinn und -verfall, Drift der Veranlagung |
+| `world/relationships.ts` | `RELATIONSHIP_DELTA_TABLE`, Persönlichkeits-Modulation, Phase-8-Anwendung |
+| `information/disclosurePolicy.ts` | `statementFor`/`deriveToldEntry` — ein `KnowledgeEntry` wird ein `Statement`, eine Aussage ein neuer `KnowledgeEntry` |
 | `actions/resolutionOrder.ts` | Klassenreihenfolge + Initiative (Doc 04 §4.3) |
 | `decision/policyProvider.ts` | deterministische Utility-Policy auf `AgentView` (Vorstufe von T23) |
 | `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 6, 7, 9 |
-| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 11 |
+| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 11; zentrale R7-Anbindung für jede Aktion mit `statement` |
 | `cli/sim.ts` | headless, JSON-Report |
 
 ## Bewusste Abweichungen von der Spezifikation
@@ -237,6 +295,67 @@ Jede davon ist eine Entscheidung, keine Auslassung.
    ist ohnehin am eigenen Ort sichtbar. Bewertet wird ausschließlich auf der
    Sicht.
 
+16. **`Effect` bekommt eine `relationship`-Variante, die von Doc 03 §3.8
+   abweicht.** Dort trägt der Effekt nur `delta`. Die Buchhaltungsfelder
+   (`interactions`, `lastInteractionRound`, `lastEventTypes`) fehlen dort —
+   folgerichtig: sie sind keine Verschiebung, sondern vom `StateMutator` selbst
+   hergeleitet. `eventType` ist deshalb Pflichtangabe im Effekt, kein Teil von
+   `delta`.
+
+17. **Der Wissenstransfer von `share_information`/`request_information` läuft
+   nie über `infoRefs`.** Siehe „Sozialsystem" oben — sonst würde Phase 2 die
+   Weltwahrheit an alle Anwesenden verteilen statt nur die Aussage an den
+   Empfänger. `no-omniscience` (`tests/simulation/noOmniscience.test.ts`) prüft
+   `told_by`-Einträge deshalb anders als beobachtete: nicht über `infoRefs` und
+   Anwesenheit, sondern darüber, dass ihr `sourceEventId` ein echtes
+   `information_shared`-Event ist, das den Agenten als Ziel trägt, für genau
+   diese Info, von genau der behaupteten Quelle.
+
+18. **`hearsayRetention` (Doc 04 §4.1 Nr. 6: „reduzierte certainty") ist eine
+   Zahl, keine Spezifikationsvorgabe.** **[ANNAHME]** 0,7, in `DEFAULT_INFO`.
+
+19. **`agent_resource`-InfoItems werden für alle Agenten vorregistriert,**
+   analog zu `stock_at_location`/`agent_attribute` seit Tag 1/2 — aber
+   (noch) von keiner Wahrnehmung gespeist. Ein Agent kann heute nur über
+   `agent_resource` reden, wenn er es je über `share_information`/
+   `request_information` gehört hat; niemand *beobachtet* fremde Vorräte direkt.
+   Bewusst offen gelassen statt einer Wahrnehmungsregel erfunden, die die Spec
+   nicht vorschreibt.
+
+20. **`request_information` trägt kein eigenes `Statement`** (`allowsStatement:
+   false`), obwohl Doc 04 §4.1 in der Statement-Spalte „ja" vermerkt. Der
+   Fragende behauptet nichts — nur die Antwort des Ziels ist eine
+   truth-geprüfte Aussage, konstruiert und validiert direkt in `resolve`, weil
+   sie nicht dem Akteur der `AgentAction`, sondern dem Ziel gehört. Die
+   zentrale R7-Anbindung in `runRound.ts` (die jede Aktion mit `action.statement`
+   automatisch ins Gedächtnis nimmt) deckt das nicht ab — `requestInformation.ts`
+   setzt den `statement`-Effekt deshalb selbst.
+
+21. **`ActionContext` trägt jetzt `log: EventLog`.** Eine Aktion, die einen
+   `KnowledgeEntry` direkt erzeugt (nicht über Phase 2), braucht dessen
+   `sourceEventId`, bevor das eigene Event überhaupt existiert.
+   `eventId(round, log.nextSeq)` sagt vorher, welche Id das erste von `resolve`
+   zurückgegebene Event bekommen wird — sicher, weil `resolve` und das
+   nachfolgende `emit()` synchron und ohne fremden Zwischenschritt
+   aufeinanderfolgen (`runRound.ts`). Keine neue epistemische Ausnahme:
+   `resolve` liest ohnehin den vollen `WorldState`.
+
+22. **`trade` verhandelt in genau einer Runde, ohne Würfel.** Doc 04 §4.1
+   nennt „accept/counter/decline", ohne Umläufe zu zählen. Ein Gegenangebot,
+   auf das wieder ein Gegenangebot folgen könnte, bräuchte einen Mechanismus
+   für unbegrenzte Umläufe innerhalb einer einzigen Aktionsauflösung — das
+   Ziel senkt stattdessen seine Forderung genau so weit, dass der Tausch aus
+   der eigenen Sicht gerade noch fair ist, und der ursprüngliche Anbieter
+   bewertet das sofort. Kein Wurf, weil eine Kauf-Entscheidung eine Bewertung
+   ist, kein Glücksspiel — anders als Kampf (`luckyRoll`) oder die
+   Antwortbereitschaft bei `request_information` (dort ist Reden-Wollen eine
+   Charakterfrage).
+
+23. **Zwei neue `RejectReason`-unabhängige `EventType`-Marker:**
+   `trade_countered` ist kein eigener Ausgang, sondern begleitet immer
+   `trade_accepted` oder `trade_declined` — die Verhandlung selbst hat kein
+   Ergebnis, nur das, was danach kam.
+
 ## Drei Fehler, die das Messen aufgedeckt hat
 
 Alle drei waren in Tag 1 nicht sichtbar, weil es die Aktionen noch nicht gab,
@@ -329,50 +448,70 @@ Kalibrierungspunkt, kein Konstruktionsfehler.
 
 ## Was noch offen ist
 
-- **40 % der Ernten laufen ins Leere** (2 878 von 7 232). Kein
-  Validierungsfehler — die Reject-Rate ist exakt 0 —, sondern die Konkurrenz um
-  denselben Bestand: der Agent sieht beim Entscheiden, wie viel da liegt und wer
-  daneben steht, aber nicht, wer vor ihm aufgelöst wird. `trade` (T17) und
-  `share_information` (T18) fehlen noch, also gibt es keine Möglichkeit, das
-  anders als durch Weggehen aufzulösen. Eingang für den Kalibrierungs-Sweep (T43).
-- **Wissen entsteht nur durch Anwesenheit.** Der zweite Pfad —
-  `share_information` — kommt mit T18. Bis dahin ist die Informationsasymmetrie
-  vollständig, aber statisch.
-- **Nur `stock_at_location` und `event_occurred` werden je erzeugt.** Die
-  übrigen fünf `InfoTopic`-Werte existieren als Typ; ihre Systeme (Allianzen,
-  Pledges, Absichtserklärungen) kommen ab T20.
+- **`trade`, `share_information` und `request_information` gewinnen in der
+  laufenden Simulation so gut wie nie.** Das ist der ehrlichste Befund von
+  Tag 4, gemessen über sechs Seeds × 400 Runden × 30 Agenten: null
+  `information_shared`-, `trade_accepted`- und verwandte Events. Nicht, weil
+  die Aktionen kaputt sind — `generate`/`precondition`/`resolve` sind einzeln
+  vollständig getestet, die Hörensagen-Kette ist bewiesen —, sondern weil ihr
+  Policy-Gewicht bewusst klein gehalten ist. Der erste Versuch, es
+  großzügiger zu setzen (vergleichbar mit `share_information: honesty ×
+  sociability × 1.0`), ließ `move` ein zweites Mal komplett einfrieren: 0
+  Ortswechsel nach Runde 300 in einem 1200-Runden-Lauf, derselbe
+  Fehlermodus wie beim ersten Einfrieren (`CLAUDE.md`, „Entscheidungsgewichte").
+  Kostenlose Aktionen gewinnen bei gleicher Größenordnung immer gegen
+  Aktionen mit echten Kosten (Energie bei `move`/`gather_resource`), sobald
+  ein Nachbar da ist. Die aktuellen Gewichte schützen `move` — auf Kosten
+  davon, dass Reden und Handeln fast nie vorkommen. Beides gleichzeitig zu
+  lösen braucht mehr als eine weitere Zahl: entweder echte Kosten fürs Reden,
+  oder eine Policy, die nicht rein per Argmax entscheidet (T23). Eingang für
+  den Kalibrierungs-Sweep (T43) — mit den beiden gemessenen Endpunkten
+  bereits dokumentiert, nicht nur vermutet.
+- **`agent_resource` wird noch von keiner Wahrnehmung gespeist.** Ein Agent
+  kann nur über fremde Vorräte reden, wenn er es je gehört hat — niemand
+  beobachtet sie direkt. Siehe Abweichung 19.
+- **Vier der acht `InfoTopic`-Werte** (`agent_alliance`, `agent_secret_goal`,
+  `pledge_state`, `agent_intent_declared`) existieren als Typ, ohne System
+  dahinter. Kommt mit T20/T21/T23.
+- **T21 (Pledges) fehlt** — Tag 4 der Spezifikation zählt es dazu, dieser
+  Durchgang hat sich auf T17–T19 beschränkt. `declare_intent` existiert als
+  `StatementKind` (R8: keine Tatsachenbehauptung, kein Validierungsfehler bei
+  Bruch), aber ohne `Pledge`-Typ, Fälligkeitsprüfung oder Bruch-Erkennung
+  dahinter.
 - **Intelligenz streut kaum** (33–37), weil Ruhen bei allen ähnlich häufig ist.
   Anders als bei Intuition ist die Quelle nicht zu selten, sondern zu
   gleichverteilt — es fehlt eine Handlung, bei der sich Agenten im Denken
   unterscheiden. Kandidat: `investigate` (T35).
 - **Die Ökonomie- und Gewichtungszahlen sind Kalibrierungsmaße, keine
-  Messwerte.** Sämtliche Werte in `core/config.ts`, `world/locations.ts` und
-  `decision/policyProvider.ts` sind **[ANNAHME]** und gehören in den Sweep (T43).
-  Beim Einbau der Fähigkeiten habe ich mehrfach zwischen Gewichten oszilliert,
-  die sich gegenseitig aufhoben; der jetzige Stand ist ein funktionierender,
-  kein ausbalancierter.
+  Messwerte.** Sämtliche Werte in `core/config.ts`, `world/locations.ts`,
+  `decision/policyProvider.ts` und jetzt auch `actions/defs/trade.ts` sind
+  **[ANNAHME]** und gehören in den Sweep (T43).
 
-## Der Truth-Validator läuft — aber noch niemand redet
+## Der Truth-Validator arbeitet jetzt wirklich
 
-Das ist der ehrliche Stand nach Tag 3. Die Kette prüft Stufe 7 bei jeder Aktion,
-die ein `Statement` trägt; nur trägt bis T18 keine implementierte Aktion eines,
-weil `share_information` noch fehlt. `allowsStatement` ist überall `false`.
+Tag 3 endete mit einem ehrlichen Vorbehalt: die Regel war bewiesen, aber im
+laufenden Match nicht belastet — keine implementierte Aktion trug ein
+Statement. Das ist mit Tag 4 vorbei. `share_information` trägt eines
+verpflichtend, `request_information`s Inline-Antwort trägt eines konstruiert.
+Beide laufen durch Stufe 7 wie jede andere Aktion — `share_information` über
+die zentrale Anbindung in `runRound.ts`, die Inline-Antwort, weil sie einem
+anderen Agenten gehört als dem, der die `AgentAction` gestellt hat, direkt in
+`requestInformation.ts` (Abweichung 20).
 
-Die Stufen 6 und 7 hängen deshalb nicht ungetestet in der Kette: der Test
-`validateAction.test.ts` dreht die Erlaubnis für die Dauer eines Falls um und
-prüft beide Richtungen durch die echte Kette. Genau dafür ist das Flag da — die
-Kette selbst kennt keine Aktionsnamen. Der Validator selbst ist unabhängig davon
-vollständig getestet (Tabelle §8.3 plus Randfälle von `entails`, den
-Bucket-Grenzen und der Widerspruchsrechnung).
-
-Was das heißt: die Regel ist **bewiesen**, aber im laufenden Match noch nicht
-**belastet**. Die Kennzahl `falseAssertionsRejected` aus Doc 08 §8.2.4 ist
-aktuell trivial 0, weil niemand spricht. Erst mit T18 wird sie aussagekräftig.
+`falseAssertionsRejected` bleibt trotzdem nahe 0 im Normalbetrieb — aus einem
+guten Grund, nicht aus Untätigkeit: Doc 08 §8.2.4 verlangt genau das. Die
+erste Verteidigungslinie (`generate`/`statementFor`) soll gar nicht erst
+unwahre Aussagen konstruieren; die zweite (Stufe 7) ist die Nachprüfung, kein
+Regelfall. Ein Ausschlag dieser Kennzahl wäre ein Bug im Generator, nicht ein
+lügender Agent — und `truthValidator.test.ts` plus die neue
+`shareInformation`/`requestInformation`-Suite zeigen, dass der Generator hält.
 
 ## Nächster Schritt
 
-Tag 4 (`12-build-order.md`): **T17, T18, T19** — `trade`, `share_information`
-und `request_information`, dazu das Beziehungssystem. Damit bekommt der
-Truth-Validator zum ersten Mal echte Arbeit: Wissen wandert von Agent zu Agent,
-`told_by` entsteht im Spiel statt nur im Test, und die Hörensagen-Kette A→B→C
-wird prüfbar.
+Tag 5 (`12-build-order.md`): **T20, T22, T23** — Allianzen, episodisches
+Gedächtnis mit Deckel, die vollständige Utility-Policy. Davor steht noch ein
+Rest aus Tag 4: **T21** (Pledges), das `declare_intent` einen echten
+Verratsmechanismus gibt. Erst mit T22/T23 wird auch die offene Frage oben
+beantwortbar — eine Policy, die aus Erinnerung und Zielen entscheidet statt
+nur aus vier Gewichten pro Runde, hat andere Mittel, Reden gegen Handeln
+abzuwägen, als ein einzelner Score-Term.

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { restAction } from '@/engine/actions/defs/rest.js';
 import type { ActionContext } from '@/engine/actions/types.js';
 import { resolveConfig } from '@/engine/core/config.js';
+import { createEventLog } from '@/engine/core/eventLog.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
 import { stockInfoId } from '@/engine/information/infoRegistry.js';
@@ -22,7 +23,13 @@ beforeEach(() => {
   state.agents[A]!.needs = { satiety: 50, energy: 50 };
   state.agents[A]!.resources = { food: 3, coins: 0, materials: 0 };
   state.locations['commons']!.stock = { food: 10, coins: 0, materials: 4 };
-  ctx = { state, round: state.round, rng: createRngBundle(1), projection: new EffectProjection(state) };
+  ctx = {
+    state,
+    round: state.round,
+    rng: createRngBundle(1),
+    projection: new EffectProjection(state),
+    log: createEventLog(state.matchId),
+  };
 });
 
 const action = (patch: Partial<AgentAction> = {}): AgentAction => ({
@@ -56,7 +63,7 @@ describe('Validierungskette', () => {
   });
 
   it('Stufe 2 — nicht implementierte Aktion', () => {
-    const verdict = validateAction(action({ type: 'trade' }), ctx);
+    const verdict = validateAction(action({ type: 'offer_alliance' }), ctx);
     expect(verdict).toMatchObject({ ok: false, reason: 'precondition_failed' });
   });
 

@@ -195,6 +195,15 @@ export interface Agent {
   /** was DIESER Agent glaubt — entsteht ausschliesslich in Phase 2 (Doc 02 §2.3) */
   knowledge: Record<InfoId, KnowledgeEntry>;
 
+  /**
+   * Gerichtet: `relationships[b]` ist die Sicht DIESES Agenten auf `b`, nicht
+   * umgekehrt. Sparse — ein Eintrag entsteht erst bei der ersten gemeinsamen
+   * Interaktion (Doc 03 §3.3). Anders als `knowledge` entsteht dieser Eintrag
+   * NICHT in Phase 2, sondern in Phase 8 (`world/relationships.ts`) — er ist
+   * keine Tatsache ueber die Welt, sondern die eigene Reaktion darauf.
+   */
+  relationships: Record<AgentId, Relationship>;
+
   /** frueheste naechste Runde je Aktionstyp; fehlender Eintrag = kein Cooldown */
   cooldowns: Partial<Record<ActionType, Round>>;
   allianceId: AllianceId | null;
@@ -206,6 +215,43 @@ export type ArchetypeId =
   | 'opportunist'
   | 'recluse'
   | 'connector';
+
+// ── 3.3 Relationship (gerichtet: A → B) ───────────────────────────────────────
+
+/**
+ * Die acht Dimensionen aus Doc 03 §3.3. Getrennt von den Buchhaltungsfeldern
+ * (`interactions`, `lastInteractionRound`, `lastEventTypes`), weil nur diese
+ * hier durch `RELATIONSHIP_DELTA_TABLE` verschoben werden — die Buchhaltung
+ * fuehrt der `StateMutator` selbst, bei jedem `relationship`-Effekt gleich mit.
+ */
+export interface RelationshipStats {
+  trust: Stat;
+  friendship: Stat;
+  respect: Stat;
+  fear: Stat;
+  suspicion: Stat;
+  rivalry: Stat;
+  attraction: Stat;
+  /** >0: B schuldet A; <0: A schuldet B (in coins-Aequivalent). Nicht auf 0..100 begrenzt. */
+  debt: number;
+}
+
+export const RELATIONSHIP_STATS = [
+  'trust',
+  'friendship',
+  'respect',
+  'fear',
+  'suspicion',
+  'rivalry',
+  'attraction',
+] as const satisfies readonly (keyof RelationshipStats)[];
+
+export interface Relationship extends RelationshipStats {
+  interactions: number;
+  lastInteractionRound: Round;
+  /** Ringpuffer, max 5, aeltestes zuerst verdraengt — nur fuer Erklaerbarkeit. */
+  lastEventTypes: EventType[];
+}
 
 // ── 3.4 Informationssystem ───────────────────────────────────────────────────
 
@@ -410,6 +456,19 @@ export type EventType =
   | 'attribute_grown'
   | 'agent_eliminated'
   | 'action_rejected'
+  /** `share_information` oder eine offenlegende Antwort auf `request_information`. */
+  | 'information_shared'
+  /** Antwort auf `request_information`, die nichts preisgibt (R9-Formen). */
+  | 'information_refused'
+  | 'trade_accepted'
+  /**
+   * Zusatzmarkierung, kein eigenes Ergebnis: das Ziel hat verhandelt statt
+   * direkt zu antworten. Tritt IMMER zusammen mit `trade_accepted` oder
+   * `trade_declined` auf, nie allein — die Verhandlung selbst hat keinen
+   * Ausgang, nur das, was danach kam.
+   */
+  | 'trade_countered'
+  | 'trade_declined'
   | 'round_ended'
   | 'match_ended';
 
@@ -476,6 +535,15 @@ export type Effect =
   | { t: 'cooldown'; agentId: AgentId; action: ActionType; readyAtRound: Round }
   /** Erhoeht den Toetungszaehler — Grundlage der Macht. */
   | { t: 'kill'; agentId: AgentId }
+  /**
+   * Verschiebt `from`s Sicht auf `to`. Abweichung von Doc 03 §3.8: dort traegt
+   * der Effekt nur `delta`; die Buchhaltungsfelder (`interactions`,
+   * `lastInteractionRound`, `lastEventTypes`) fehlen. Sie duerften nicht als
+   * `delta` durchgereicht werden — sie sind keine Verschiebung, sondern vom
+   * `StateMutator` selbst hergeleitet (Zaehler hoch, Runde gesetzt, Ringpuffer
+   * geschoben). `eventType` ist deshalb Pflichtangabe, kein Teil von `delta`.
+   */
+  | { t: 'relationship'; from: AgentId; to: AgentId; delta: Partial<RelationshipStats>; eventType: EventType }
   /** Haelt eine gepruefte Aussage fest, damit R7 sie spaeter vergleichen kann. */
   | { t: 'statement'; agentId: AgentId; record: StatementRecord }
   /** Registriert eine Info als existent. Traegt keinen Wahrheitswert — siehe `InfoItem`. */
@@ -635,6 +703,8 @@ export interface InfoConfig {
   decayFast: number;
   /** dito bei `volatility: 'slow'`; `'static'` verfaellt nie */
   decaySlow: number;
+  /** Faktor, mit dem sich `certainty` bei jedem Weitererzaehlen multipliziert (T18). */
+  hearsayRetention: Score01;
 }
 
 export interface EconomyConfig {

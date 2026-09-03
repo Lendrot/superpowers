@@ -85,3 +85,33 @@ export function observedEntry(params: {
     isSecret: params.previous?.isSecret ?? false,
   };
 }
+
+/**
+ * T18 — der zweite Pfad, an dem ein `KnowledgeEntry` entstehen darf (Doc 02
+ * §2.3): das Aufloesen von `share_information` oder einer offenlegenden
+ * Antwort auf `request_information`. `sourceAgent` ist Pflicht — ohne
+ * Attribution waere spaeter weder R5 (Hoerensagen) noch die Fluesterpost-Kette
+ * nachvollziehbar.
+ */
+export function toldEntry(params: {
+  infoId: KnowledgeEntry['infoId'];
+  believedValue: KnowledgeEntry['believedValue'];
+  certainty: Score01;
+  round: Round;
+  sourceAgent: KnowledgeEntry['sourceAgent'];
+  sourceEventId: KnowledgeEntry['sourceEventId'];
+  previous?: Readonly<KnowledgeEntry> | undefined;
+}): KnowledgeEntry {
+  return {
+    infoId: params.infoId,
+    believedValue: params.believedValue,
+    certainty: params.certainty,
+    source: 'told_by',
+    sourceAgent: params.sourceAgent,
+    sourceEventId: params.sourceEventId,
+    acquiredRound: params.previous?.acquiredRound ?? params.round,
+    lastConfirmedRound: params.round,
+    sharedWith: params.previous ? [...params.previous.sharedWith] : [],
+    isSecret: params.previous?.isSecret ?? false,
+  };
+}

@@ -68,6 +68,9 @@ export function createAgent({ index, rng, locations, attributes }: CreateAgentOp
     // Fresh Match (Doc 06 §6.4): niemand weiss zu Beginn irgendetwas. Auch die
     // Bestaende am eigenen Startort muessen erst beobachtet werden.
     knowledge: {},
+    // Ebenso leer: eine Beziehung entsteht erst an der ersten gemeinsamen
+    // Interaktion (Phase 8), nicht am Start.
+    relationships: {},
     cooldowns: {},
     allianceId: null,
   };

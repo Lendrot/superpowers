@@ -87,6 +87,69 @@ export function assertInvariants(state: Readonly<WorldState>): void {
     if (!agent.alive && (agent.eliminatedRound === undefined || agent.eliminationCause === undefined)) {
       throw new InvariantError(`${who}: ausgeschieden ohne Runde/Ursache`);
     }
+
+    if (agent.allianceId !== null) {
+      const alliance = state.alliances[agent.allianceId];
+      if (!alliance || alliance.dissolvedRound !== undefined) {
+        throw new InvariantError(`${who}: allianceId zeigt auf unbekannte oder aufgeloeste Allianz ${agent.allianceId}`);
+      }
+      if (!alliance.members.includes(agent.id)) {
+        throw new InvariantError(`${who}: allianceId ${agent.allianceId}, aber nicht in deren Mitgliederliste`);
+      }
+    }
+    for (const allianceId of agent.status.exiledFrom) {
+      if (!state.alliances[allianceId]) {
+        throw new InvariantError(`${who}: exiledFrom verweist auf unbekannte Allianz ${allianceId}`);
+      }
+    }
+
+    // T22: keine harte Obergrenze hier — `episode_upkeep` kompaktiert erst
+    // NACH Ueberschreiten von `maxEpisodes` und schafft es nicht immer in
+    // einem Schritt zurueck darunter (siehe dort). Was immer gelten muss,
+    // ist die Form jedes einzelnen Eintrags.
+    for (const memory of agent.episodic) {
+      if (!Number.isFinite(memory.salience) || memory.salience < 0 || memory.salience > 1) {
+        throw new InvariantError(`${who}: Episode ${memory.id} hat salience ${memory.salience} ausserhalb 0..1`);
+      }
+      if (memory.valence < -1 || memory.valence > 1) {
+        throw new InvariantError(`${who}: Episode ${memory.id} hat valence ${memory.valence} ausserhalb -1..1`);
+      }
+    }
+  }
+
+  // T20: Allianzen sterben nicht mit ihren Mitgliedern — wer im Kampf oder an
+  // Hunger stirbt, verlaesst seine Allianz nicht automatisch (kein `leave`/
+  // `expel`-Effekt lief). Eine aktive Allianz kann deshalb durchaus unter
+  // zwei LEBENDE Mitglieder fallen; das ist kein Invariantenbruch, sondern
+  // eine Allianz, die niemand mehr fuehren kann, bis jemand geht. Geprueft
+  // wird nur Struktur: sortierte, eindeutige Mitgliederliste und ein Leader,
+  // der (solange aktiv) tatsaechlich Mitglied ist.
+  for (const [key, alliance] of Object.entries(state.alliances)) {
+    if (!alliance) continue;
+    const where = `Allianz ${key}`;
+
+    if (alliance.id !== key) {
+      throw new InvariantError(`${where}: Schluessel und alliance.id weichen ab (${alliance.id})`);
+    }
+    const sortedUnique = [...new Set(alliance.members)].sort();
+    if (
+      alliance.members.length !== sortedUnique.length ||
+      alliance.members.some((id, index) => id !== sortedUnique[index])
+    ) {
+      throw new InvariantError(`${where}: members ist nicht sortiert oder nicht eindeutig`);
+    }
+    if (alliance.dissolvedRound === undefined && !alliance.members.includes(alliance.leaderId)) {
+      throw new InvariantError(`${where}: leaderId ${alliance.leaderId} ist nicht Mitglied`);
+    }
+    if (alliance.dissolvedRound !== undefined && alliance.dissolvedRound < alliance.createdRound) {
+      throw new InvariantError(`${where}: dissolvedRound liegt vor createdRound`);
+    }
+    for (const kind of RESOURCE_KINDS) {
+      const value = alliance.sharedStock[kind];
+      if (!Number.isInteger(value) || value < 0) {
+        throw new InvariantError(`${where}: sharedStock.${kind} = ${value} (muss ganze Zahl >= 0 sein)`);
+      }
+    }
   }
 
   for (const [key, location] of Object.entries(state.locations)) {
@@ -121,8 +184,11 @@ export function assertInvariants(state: Readonly<WorldState>): void {
 }
 
 /**
- * Gesamtbestand einer Ressource ueber Agenten und Orte.
- * Grundlage der Erhaltungspruefung im StateMutator.
+ * Gesamtbestand einer Ressource ueber Agenten, Orte UND Allianz-Lager.
+ * Grundlage der Erhaltungspruefung im StateMutator. `sharedStock` hat in T20
+ * noch keinen Schreiber (kein `help`/Einzahl-Aktion) und bleibt deshalb immer
+ * bei null — hier trotzdem schon mitgezaehlt, damit eine spaetere Aktion, die
+ * dort einzahlt, nicht an einer vergessenen Zeile hier scheitert.
  */
 export function totalResources(state: Readonly<WorldState>): Resources {
   const total: Resources = { food: 0, coins: 0, materials: 0 };
@@ -133,6 +199,10 @@ export function totalResources(state: Readonly<WorldState>): Resources {
   for (const location of Object.values(state.locations)) {
     if (!location) continue;
     for (const kind of RESOURCE_KINDS) total[kind] += location.stock[kind];
+  }
+  for (const alliance of Object.values(state.alliances)) {
+    if (!alliance) continue;
+    for (const kind of RESOURCE_KINDS) total[kind] += alliance.sharedStock[kind];
   }
   return total;
 }

@@ -3,15 +3,20 @@
  *
  * CLAUDE.md Regel 7: neue Aktion ⇒ neue Datei in `defs/` + Unit-Test + Eintrag
  * in `resolutionOrder`. Das Register ist bewusst unvollstaendig: `ActionType`
- * kennt alle 13 Aktionen aus Doc 04, implementiert sind in Schritt 1 zwei.
- * Ein Eintrag hier ist die Zusage, dass die Aktion wirklich funktioniert.
+ * kennt 14 Aktionen (13 aus Doc 04 plus `attack`, Erweiterung auf Ansage),
+ * implementiert sind seit T20 elf — `help`, `investigate`, `confront` (T35)
+ * fehlen noch. Ein Eintrag hier ist die Zusage, dass die Aktion wirklich
+ * funktioniert.
  */
 
 import type { ActionType } from '../core/types.js';
 import { attackAction } from './defs/attack.js';
 import { consumeAction } from './defs/consume.js';
+import { expelMemberAction } from './defs/expelMember.js';
 import { gatherResourceAction } from './defs/gatherResource.js';
+import { leaveAllianceAction } from './defs/leaveAlliance.js';
 import { moveAction } from './defs/move.js';
+import { offerAllianceAction } from './defs/offerAlliance.js';
 import { requestInformationAction } from './defs/requestInformation.js';
 import { restAction } from './defs/rest.js';
 import { shareInformationAction } from './defs/shareInformation.js';
@@ -28,6 +33,9 @@ export const IMPLEMENTED_ACTIONS: readonly ActionDef[] = [
   shareInformationAction,
   requestInformationAction,
   tradeAction,
+  offerAllianceAction,
+  leaveAllianceAction,
+  expelMemberAction,
 ];
 
 const REGISTRY = new Map<ActionType, ActionDef>(

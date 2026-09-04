@@ -24,6 +24,7 @@ import { agentActionSchema } from '../core/schemas.js';
 import type {
   AgentAction,
   AgentId,
+  AllianceId,
   Effect,
   InfoId,
   KnowledgeEntry,
@@ -127,6 +128,11 @@ export class EffectProjection {
   private readonly needDelta = new Map<string, number>();
   private readonly knowledgeDelta = new Map<string, KnowledgeEntry>();
   private readonly eliminated = new Set<AgentId>();
+  /** Live-Override: `undefined` = kein Wechsel dieser Runde, sonst die neue (ggf. `null`) Allianz. */
+  private readonly allianceOfDelta = new Map<AgentId, AllianceId | null>();
+  private readonly allianceCreatedMembers = new Map<AllianceId, AgentId[]>();
+  private readonly allianceMemberAdds = new Map<AllianceId, Set<AgentId>>();
+  private readonly allianceMemberRemoves = new Map<AllianceId, Set<AgentId>>();
 
   constructor(private readonly state: Readonly<WorldState>) {}
 
@@ -189,6 +195,35 @@ export class EffectProjection {
    */
   knowledgeEntry(agentId: AgentId, infoId: InfoId): KnowledgeEntry | undefined {
     return this.knowledgeDelta.get(`${agentId}:${infoId}`) ?? this.state.agents[agentId]?.knowledge[infoId];
+  }
+
+  /**
+   * T20 — die Allianz dieses Agenten, wie sie nach allen bisher in dieser
+   * Runde uebernommenen `alliance`-Effekten aussieht.
+   *
+   * Klasse 6 (`offer_alliance`/`leave_alliance`/`expel_member`) kann mehrfach
+   * dieselbe Allianz treffen: wird jemand in dieser Runde bereits ausgeschlossen
+   * oder tritt aus, darf eine spaeter aufgeloeste Aktion nicht mehr gegen den
+   * Stand vom Rundenbeginn pruefen — sonst koennte, wer schon draussen ist,
+   * sich in derselben Runde noch einmal "geordnet" austragen, und ein zweites
+   * `expel_member` auf dasselbe Ziel liefe nicht ins Leere.
+   */
+  allianceOf(agentId: AgentId): AllianceId | null {
+    if (this.allianceOfDelta.has(agentId)) return this.allianceOfDelta.get(agentId) ?? null;
+    return this.state.agents[agentId]?.allianceId ?? null;
+  }
+
+  /**
+   * Die Mitgliederliste dieser Allianz, live — inklusive einer Gruendung
+   * innerhalb dieser Runde (dann existiert `state.alliances[id]` noch nicht).
+   * Sortiert, dieselbe Stabilitaetsregel wie bei `Alliance.members` selbst.
+   */
+  allianceMembers(allianceId: AllianceId): AgentId[] {
+    const base = this.allianceCreatedMembers.get(allianceId) ?? this.state.alliances[allianceId]?.members ?? [];
+    const members = new Set(base);
+    for (const added of this.allianceMemberAdds.get(allianceId) ?? []) members.add(added);
+    for (const removed of this.allianceMemberRemoves.get(allianceId) ?? []) members.delete(removed);
+    return [...members].sort();
   }
 
   check(effects: readonly Effect[]): ValidationResult {
@@ -267,8 +302,31 @@ export class EffectProjection {
         // Der letzte Effekt gewinnt — dieselbe Reihenfolge, in der Phase 7 sie
         // gleich anwenden wird, weil beide der Aufloesungsreihenfolge folgen.
         this.knowledgeDelta.set(`${item.agentId}:${item.entry.infoId}`, item.entry);
+      } else if (item.t === 'alliance') {
+        switch (item.op) {
+          case 'create':
+            this.allianceOfDelta.set(item.founderId, item.id);
+            this.allianceOfDelta.set(item.joinerId, item.id);
+            this.allianceCreatedMembers.set(item.id, [item.founderId, item.joinerId]);
+            break;
+          case 'join':
+            this.allianceOfDelta.set(item.agentId, item.id);
+            this.addTo(this.allianceMemberAdds, item.id, item.agentId);
+            break;
+          case 'leave':
+          case 'expel':
+            this.allianceOfDelta.set(item.agentId, null);
+            this.addTo(this.allianceMemberRemoves, item.id, item.agentId);
+            break;
+        }
       }
     }
+  }
+
+  private addTo<K>(map: Map<K, Set<AgentId>>, key: K, agentId: AgentId): void {
+    const set = map.get(key) ?? new Set<AgentId>();
+    set.add(agentId);
+    map.set(key, set);
   }
 
   private agentAmount(agentId: AgentId, kind: ResourceKind): number {

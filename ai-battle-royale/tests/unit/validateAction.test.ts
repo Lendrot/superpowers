@@ -63,7 +63,7 @@ describe('Validierungskette', () => {
   });
 
   it('Stufe 2 — nicht implementierte Aktion', () => {
-    const verdict = validateAction(action({ type: 'offer_alliance' }), ctx);
+    const verdict = validateAction(action({ type: 'investigate' }), ctx);
     expect(verdict).toMatchObject({ ok: false, reason: 'precondition_failed' });
   });
 

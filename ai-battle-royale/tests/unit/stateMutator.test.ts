@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { resolveConfig } from '@/engine/core/config.js';
 import { InvariantError, assertInvariants } from '@/engine/core/invariants.js';
-import type { AgentId, WorldState } from '@/engine/core/types.js';
+import type { AgentId, EpisodicMemory, EventId, WorldState } from '@/engine/core/types.js';
 import { effect } from '@/engine/mutation/effects.js';
 import { applyEffects } from '@/engine/mutation/stateMutator.js';
 import { initWorld } from '@/engine/world/initWorld.js';
@@ -84,6 +84,56 @@ describe('stateMutator — Effekttypen', () => {
     applyEffects(state, [effect.matchEnd('round_limit')]);
     expect(state.status).toBe('finished');
     expect(state.endReason).toBe('round_limit');
+  });
+});
+
+describe('stateMutator — Episoden (T22)', () => {
+  function episode(id: string, salience: number): EpisodicMemory {
+    return {
+      id: id as EventId,
+      round: 1,
+      eventType: 'trade_accepted',
+      participants: [A],
+      role: 'actor',
+      valence: 0.2,
+      salience,
+      summaryKey: `trade_accepted:${id}`,
+    };
+  }
+
+  it('episode_add haengt an, episode_upkeep laesst die Salience verfallen', () => {
+    applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.5))]);
+    expect(state.agents[A]!.episodic).toHaveLength(1);
+
+    applyEffects(state, [effect.episodeUpkeep(A)]);
+    expect(state.agents[A]!.episodic[0]!.salience).toBeCloseTo(0.5 * (1 - state.config.memory.salienceDecay));
+  });
+
+  it('kompaktiert die untersten 20 % nach Salience, sobald maxEpisodes ueberschritten ist', () => {
+    const withCap = initWorld(
+      resolveConfig({ seed: 1, agentCount: 4, memory: { maxEpisodes: 10, compactionThreshold: 0.2 } }),
+    ).state;
+    const adds = Array.from({ length: 11 }, (_, i) =>
+      effect.episodeAdd(A, episode(`event_0001_${String(i).padStart(5, '0')}`, i / 10)),
+    );
+    applyEffects(withCap, adds);
+    expect(withCap.agents[A]!.episodic).toHaveLength(11);
+
+    applyEffects(withCap, [effect.episodeUpkeep(A)]);
+    // 11 Episoden, Schwelle 20 % -> round(11*0.2) = 2 entfernt, 9 bleiben.
+    expect(withCap.agents[A]!.episodic).toHaveLength(9);
+    // Die niedrigsten Salience-Werte (0.0, 0.1 vor Verfall) sind weg — die
+    // verbleibenden sind alle hoeher als die zwei entfernten waren.
+    const remainingIds = withCap.agents[A]!.episodic.map((e) => e.id).sort();
+    expect(remainingIds).not.toContain('event_0001_00000');
+    expect(remainingIds).not.toContain('event_0001_00001');
+  });
+
+  it('lehnt episode_add fuer eine unbekannte doppelte EventId ab', () => {
+    applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.3))]);
+    expect(() => applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.9))])).toThrow(
+      InvariantError,
+    );
   });
 });
 

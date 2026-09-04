@@ -13,9 +13,9 @@
 import { getAgent, getLocation } from '../core/access.js';
 import { InvariantError, assertInvariants, totalResources } from '../core/invariants.js';
 import { defaultRelationship } from '../core/relationship.js';
-import { RESOURCE_KINDS } from '../core/resources.js';
+import { emptyResources, RESOURCE_KINDS } from '../core/resources.js';
 import { ATTRIBUTE_TRACKS, PERSONALITY_TRAITS } from '../core/types.js';
-import type { Effect, Resources, WorldState } from '../core/types.js';
+import type { Alliance, AllianceId, Effect, Resources, WorldState } from '../core/types.js';
 import { describeEffect, expectedResourceDelta } from './effects.js';
 
 /**
@@ -279,6 +279,40 @@ function applyOne(state: WorldState, item: Effect): void {
       return;
     }
 
+    case 'alliance': {
+      applyAllianceEffect(state, item);
+      return;
+    }
+
+    case 'episode_add': {
+      const agent = getAgent(state, item.agentId);
+      if (agent.episodic.some((existing) => existing.id === item.episode.id)) {
+        throw new InvariantError(`${describeEffect(item)}: Episode existiert bereits (Doc 08 §8.4)`);
+      }
+      agent.episodic.push({ ...item.episode, participants: [...item.episode.participants] });
+      return;
+    }
+
+    case 'episode_upkeep': {
+      const agent = getAgent(state, item.agentId);
+      const { salienceDecay, maxEpisodes, compactionThreshold } = state.config.memory;
+      const decayed = 1 - salienceDecay;
+      for (const episode of agent.episodic) {
+        episode.salience *= decayed;
+      }
+      if (agent.episodic.length > maxEpisodes) {
+        // Kompaktierung statt Loeschen (Doc 03 §6.2): die Erkenntnis steckt
+        // bereits in den Relationship-Deltas, die dieselbe Runde ueber Phase 8
+        // gesetzt hat — hier verschwindet nur das Detail. Sortiert nach
+        // Salience aufsteigend, `id` (= `EventId`, zeitlich geordnet) als
+        // deterministischer Tie-Break.
+        agent.episodic.sort((a, b) => a.salience - b.salience || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        const removeCount = Math.max(1, Math.round(agent.episodic.length * compactionThreshold));
+        agent.episodic.splice(0, removeCount);
+      }
+      return;
+    }
+
     case 'round_advance': {
       state.round += 1;
       return;
@@ -289,6 +323,118 @@ function applyOne(state: WorldState, item: Effect): void {
       state.endReason = item.reason;
       return;
     }
+  }
+}
+
+/**
+ * T20 — die vier Allianz-Ops. Eigene Funktion statt ein weiterer Case-Zweig,
+ * weil hier mehr als eine Feldaenderung haengt: Mitgliederlisten bleiben
+ * sortiert (dieselbe Stabilitaetsregel wie ueberall), und Fuehrungswechsel wie
+ * Aufloesung sind — wie `Relationship.interactions` — vom Mutator selbst
+ * hergeleitete Buchhaltung, keine Angabe im Effect.
+ */
+function applyAllianceEffect(state: WorldState, item: Extract<Effect, { t: 'alliance' }>): void {
+  switch (item.op) {
+    case 'create': {
+      if (state.alliances[item.id]) {
+        throw new InvariantError(`${describeEffect(item)}: Allianz-Id existiert bereits`);
+      }
+      const founder = getAgent(state, item.founderId);
+      const joiner = getAgent(state, item.joinerId);
+      if (!founder.alive || !joiner.alive) {
+        throw new InvariantError(`${describeEffect(item)}: Gruendung mit ausgeschiedenem Agenten`);
+      }
+      if (founder.allianceId !== null || joiner.allianceId !== null) {
+        throw new InvariantError(`${describeEffect(item)}: mindestens einer ist bereits in einer Allianz`);
+      }
+      const alliance: Alliance = {
+        id: item.id,
+        name: item.name,
+        founderId: item.founderId,
+        members: [founder.id, joiner.id].sort(),
+        leaderId: item.founderId,
+        sharedStock: emptyResources(),
+        createdRound: state.round,
+      };
+      state.alliances[item.id] = alliance;
+      founder.allianceId = item.id;
+      joiner.allianceId = item.id;
+      return;
+    }
+
+    case 'join': {
+      const alliance = requireAlliance(state, item.id, item);
+      const agent = getAgent(state, item.agentId);
+      if (!agent.alive) throw new InvariantError(`${describeEffect(item)}: Agent ist ausgeschieden`);
+      if (agent.allianceId !== null) {
+        throw new InvariantError(`${describeEffect(item)}: ${agent.id} ist bereits in einer Allianz`);
+      }
+      const aliveMembers = alliance.members.filter((id) => state.agents[id]?.alive).length;
+      if (aliveMembers >= state.config.alliance.maxSize) {
+        throw new InvariantError(`${describeEffect(item)}: Allianz ${alliance.id} ist voll (${aliveMembers})`);
+      }
+      alliance.members = [...alliance.members, agent.id].sort();
+      agent.allianceId = alliance.id;
+      return;
+    }
+
+    case 'leave': {
+      const alliance = requireAlliance(state, item.id, item);
+      const agent = getAgent(state, item.agentId);
+      if (agent.allianceId !== alliance.id || !alliance.members.includes(agent.id)) {
+        throw new InvariantError(`${describeEffect(item)}: ${agent.id} ist nicht Mitglied von ${alliance.id}`);
+      }
+      alliance.members = alliance.members.filter((id) => id !== agent.id);
+      agent.allianceId = null;
+      settleMembershipChange(state, alliance);
+      return;
+    }
+
+    case 'expel': {
+      const alliance = requireAlliance(state, item.id, item);
+      const agent = getAgent(state, item.agentId);
+      if (agent.id === alliance.leaderId) {
+        throw new InvariantError(`${describeEffect(item)}: der Leader kann sich nicht selbst ausschliessen`);
+      }
+      if (agent.allianceId !== alliance.id || !alliance.members.includes(agent.id)) {
+        throw new InvariantError(`${describeEffect(item)}: ${agent.id} ist nicht Mitglied von ${alliance.id}`);
+      }
+      alliance.members = alliance.members.filter((id) => id !== agent.id);
+      agent.allianceId = null;
+      agent.status.exiledFrom = [...agent.status.exiledFrom, alliance.id];
+      settleMembershipChange(state, alliance);
+      return;
+    }
+  }
+}
+
+function requireAlliance(state: WorldState, id: AllianceId, item: Effect): Alliance {
+  const alliance = state.alliances[id];
+  if (!alliance || alliance.dissolvedRound !== undefined) {
+    throw new InvariantError(`${describeEffect(item)}: Allianz ${id} existiert nicht oder ist aufgeloest`);
+  }
+  return alliance;
+}
+
+/**
+ * Nach jedem Abgang: faellt die Zahl LEBENDER Mitglieder unter zwei, loest die
+ * Allianz auf — eine Allianz aus einer Person ist keine. Verliert sie dabei
+ * ihren Leader, uebernimmt das lebende Mitglied mit der kleinsten AgentId
+ * (`members` ist immer sortiert) — derselbe deterministische Tie-Break wie
+ * bei der Aufloesungsreihenfolge (Doc 04 §4.3).
+ */
+function settleMembershipChange(state: WorldState, alliance: Alliance): void {
+  const aliveMembers = alliance.members.filter((id) => state.agents[id]?.alive);
+  if (aliveMembers.length < 2) {
+    alliance.dissolvedRound = state.round;
+    for (const id of alliance.members) {
+      const member = state.agents[id];
+      if (member && member.allianceId === alliance.id) member.allianceId = null;
+    }
+    return;
+  }
+  if (!aliveMembers.includes(alliance.leaderId)) {
+    alliance.leaderId = aliveMembers[0]!;
   }
 }
 

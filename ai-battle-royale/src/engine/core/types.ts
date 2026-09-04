@@ -204,6 +204,15 @@ export interface Agent {
    */
   relationships: Record<AgentId, Relationship>;
 
+  /**
+   * Konkret erlebte Ereignisse (Doc 03 §6.1) — entsteht ausschliesslich in
+   * Phase 9 (`memory/episodes.ts`), fuer genau die Events, in deren
+   * Beobachterset dieser Agent stand (Doc 03 §6.2, dieselbe Epistemik-Schranke
+   * wie bei `knowledge`). Gedeckelt auf `config.memory.maxEpisodes`; darueber
+   * hinaus wird kompaktiert, nicht einfach abgeschnitten (siehe dort).
+   */
+  episodic: EpisodicMemory[];
+
   /** frueheste naechste Runde je Aktionstyp; fehlender Eintrag = kein Cooldown */
   cooldowns: Partial<Record<ActionType, Round>>;
   allianceId: AllianceId | null;
@@ -251,6 +260,64 @@ export interface Relationship extends RelationshipStats {
   lastInteractionRound: Round;
   /** Ringpuffer, max 5, aeltestes zuerst verdraengt — nur fuer Erklaerbarkeit. */
   lastEventTypes: EventType[];
+}
+
+// ── 3.6 Alliance ─────────────────────────────────────────────────────────────
+
+/**
+ * Doc 03 §3.6, reduziert auf das, was T20 tatsaechlich baut (dieselbe Regel
+ * wie am Kopf dieser Datei): `charter`, `contributions` und `secretPacts`
+ * fehlen, weil keine der drei Aktionen dieses Tages (`offer_alliance`,
+ * `leave_alliance`, `expel_member`) eine Kriegskasse befuellt oder eine
+ * Satzung verhandelt — sie kommen mit den Aktionen, die sie brauchen
+ * (`help`/T35, geheime Absprachen/P2). `cohesion` ist aus demselben Grund wie
+ * bei den Attributen keine gespeicherte Zahl, sondern eine abgeleitete
+ * Funktion (`world/alliances.ts#cohesionOf`) — zwei Zahlen fuer dieselbe Sache
+ * duerften sonst auseinanderlaufen.
+ */
+export interface Alliance {
+  id: AllianceId;
+  name: string;
+  founderId: AgentId;
+  /** sortiert (agentId asc) — dieselbe Stabilitaetsregel wie ueberall sonst. */
+  members: AgentId[];
+  leaderId: AgentId;
+  /** Noch von niemandem befuellt (kein `help`/Einzahl-Aktion in T20) — startet leer. */
+  sharedStock: Resources;
+  createdRound: Round;
+  /** Gesetzt, sobald die Mitgliederzahl unter zwei faellt (Austritt/Ausschluss). */
+  dissolvedRound?: Round;
+}
+
+// ── 3.7 Memory ───────────────────────────────────────────────────────────────
+
+/**
+ * Doc 03 §3.7, reduziert (T22): kein `pinned`/Floor-Feld — das schuetzt laut
+ * Spec Episoden, die eine `Lesson` stuetzen, und `Lesson` existiert erst ab
+ * T24. Ohne einen Schreiber waere das Feld eine Behauptung ueber
+ * Funktionalitaet, die es nicht gibt (Kopf dieser Datei).
+ *
+ * Abweichung von Doc 03 §3.7: dort tragen `id` UND `eventId` getrennte Werte.
+ * Ein Agent beobachtet dasselbe Event nie zweimal (Doc 08 §8.4), also ist die
+ * `EventId` des zugrundeliegenden Events innerhalb SEINES EIGENEN
+ * `episodic`-Arrays bereits ein stabiler, eindeutiger Schluessel — eine
+ * zweite, eigens vergebene Id waere eine zweite Zahl fuer dieselbe Sache.
+ */
+export interface EpisodicMemory {
+  /** = die `EventId` des zugrundeliegenden Events, siehe oben. */
+  id: EventId;
+  round: Round;
+  eventType: EventType;
+  participants: AgentId[];
+  role: 'actor' | 'target' | 'witness' | 'told';
+  /** -1..1, aus Sicht des Besitzers. */
+  valence: number;
+  /** 0..1, verfaellt pro Runde (`memory.salienceDecay`). */
+  salience: Score01;
+  /** Kanonischer Schluessel fuer spaetere Aggregation (T24) — kein Freitext. */
+  summaryKey: string;
+  /** Optionaler Anzeigetext fuer eine spaetere UI — nie entscheidungsrelevant, in T22 nie befuellt. */
+  detail?: string;
 }
 
 // ── 3.4 Informationssystem ───────────────────────────────────────────────────
@@ -474,6 +541,12 @@ export const EVENT_TYPES = [
    */
   'trade_countered',
   'trade_declined',
+  /** `offer_alliance` angenommen — deckt sowohl Neugruendung als auch Beitritt zu einer bestehenden Allianz ab. */
+  'alliance_offer_accepted',
+  'alliance_offer_declined',
+  /** Ein Event pro verbleibendem Mitglied (Doc 04 §4.1 Nr. 9: "harte Trust-Deltas bei Ex-Mitgliedern"). */
+  'alliance_left',
+  'alliance_expelled',
   'round_ended',
   'match_ended',
 ] as const;
@@ -558,6 +631,31 @@ export type Effect =
   | { t: 'info_item'; item: InfoItem }
   /** Der einzige Weg, auf dem ein `KnowledgeEntry` entsteht oder sich aendert. */
   | { t: 'knowledge'; agentId: AgentId; entry: KnowledgeEntry }
+  /**
+   * Gruendung: `founderId` UND `joinerId` treten gleichzeitig bei — es
+   * gibt keinen Zwischenzustand mit nur einem Mitglied. Abweichung von Doc 03
+   * §3.8, das `create` und `join` als unabhaengige Ops fuehrt: `join` bleibt
+   * fuer den Beitritt zu einer bereits bestehenden Allianz reserviert, ein
+   * eigener `leader`-Op entfaellt in T20 mangels Aktion, die ihn braeuchte —
+   * Fuehrungswechsel geschieht ausschliesslich als Nebenfolge von `leave`.
+   */
+  | { t: 'alliance'; op: 'create'; id: AllianceId; name: string; founderId: AgentId; joinerId: AgentId }
+  | { t: 'alliance'; op: 'join'; id: AllianceId; agentId: AgentId }
+  /** Faellt die Mitgliederzahl unter zwei, loest der Mutator selbst auf — dieselbe Buchhaltungsregel wie bei `Relationship`. */
+  | { t: 'alliance'; op: 'leave'; id: AllianceId; agentId: AgentId }
+  | { t: 'alliance'; op: 'expel'; id: AllianceId; agentId: AgentId }
+  /** T22 — der einzige Weg, auf dem eine `EpisodicMemory` entsteht. */
+  | { t: 'episode_add'; agentId: AgentId; episode: EpisodicMemory }
+  /**
+   * T22 — Verfall UND Kompaktierung in einem Effekt, weil der Mutator beides
+   * ohnehin aus `config.memory` selbst herleitet (dieselbe Buchhaltungsregel
+   * wie bei `Relationship`): Salience alle bisherigen Episoden mit
+   * `1 - salienceDecay` multiplizieren, dann bei Ueberschreiten von
+   * `maxEpisodes` die untersten `compactionThreshold` nach Salience entfernen.
+   * Immer fuer JEDEN lebenden Agenten einmal pro Runde, unabhaengig davon, ob
+   * er in dieser Runde neue Episoden bekommen hat.
+   */
+  | { t: 'episode_upkeep'; agentId: AgentId }
   | { t: 'round_advance' }
   | { t: 'match_end'; reason: EndReason };
 
@@ -596,6 +694,12 @@ export interface WorldState {
   infoRegistry: InfoRegistry;
   /** Was wer zuletzt worueber gesagt hat — Grundlage von R7 (Doc 08 §8.2.2). */
   statementLog: StatementLog;
+  /**
+   * Aktive UND aufgeloeste Allianzen (`dissolvedRound` gesetzt) — eine
+   * aufgeloeste bleibt stehen, damit spaetere Episoden (T22) und Wissen
+   * weiter auf ihre `AllianceId` verweisen koennen, statt ins Leere zu zeigen.
+   */
+  alliances: Record<AllianceId, Alliance>;
   status: 'running' | 'finished';
   endReason?: EndReason;
 }
@@ -626,10 +730,30 @@ export interface MatchConfig {
   info: InfoConfig;
   attributes: AttributeConfig;
   combat: CombatConfig;
+  alliance: AllianceConfig;
+  memory: MemoryConfig;
   /** Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3) */
   buckets: BucketTable;
   /** Invarianten nach jeder Mutation pruefen. In Long-Run-Batches abschaltbar. */
   strictInvariants: boolean;
+}
+
+/** Doc 03 §3.10, Abschnitt `memory`. */
+export interface MemoryConfig {
+  /** Doc 03 §6.1: Obergrenze der Episoden je Agent. */
+  maxEpisodes: number;
+  /** Verfall der `salience` pro Runde: `salience *= (1 - salienceDecay)`. */
+  salienceDecay: number;
+  /** Anteil, der bei Ueberschreiten von `maxEpisodes` kompaktiert wird (Doc 03 §6.2: "die untersten 20 %"). */
+  compactionThreshold: number;
+}
+
+/** Allianzsystem (T20). Nicht in Doc 03 §3.10 vorgegeben — neu, wie `combat`. */
+export interface AllianceConfig {
+  /** Ab dieser Mitgliederzahl (nur lebende gezaehlt) nimmt eine Allianz niemanden mehr auf. */
+  maxSize: number;
+  /** Energiekosten des Austritts — wer geht, zahlt dafuer. */
+  exitPenalty: number;
 }
 
 /** Entwicklung der Faehigkeiten. Alle Werte sind **[ANNAHME]**. */

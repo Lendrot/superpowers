@@ -29,7 +29,7 @@ Diese Datei gilt für alles unterhalb von `ai-battle-royale/`.
    Stufe 7 in der Kette, das Gate ist `tests/unit/truthValidator.test.ts`.
 7. **Neue Aktion ⇒ neue Datei in `actions/defs/` + Unit-Test + Eintrag in
    `resolutionOrder`.** Ein Eintrag in `registry.ts` ist die Zusage, dass die
-   Aktion funktioniert — `ActionType` kennt 14, implementiert sind acht.
+   Aktion funktioniert — `ActionType` kennt 14, implementiert sind elf.
 8. **Jede Lesson braucht `supportingEpisodeIds` aus dem eigenen Speicher des
    Agenten.** Ab T24.
 9. **Vor jedem Commit: `pnpm test` inklusive `determinism.test.ts` grün.**
@@ -105,20 +105,37 @@ Fallen, die dort schon zweimal zugeschnappt haben:
 2. **Ertragsterme multiplizieren, nicht addieren.** Wer einen Bonus fürs bloße
    Können addiert (Energie haben, Vorrat haben), gewinnt auch dort, wo nichts zu
    holen ist. Alle Ertragsterme hängen deshalb am erwarteten Anteil.
-3. **Kostenlose Aktionen dürfen bezahlte nicht verdrängen.** `share_information`
-   und `request_information` kosten keine Energie, `move` und `gather_resource`
-   schon. Bei vergleichbarer Größenordnung gewinnt das Kostenlose immer, sobald
-   ein Nachbar da ist — Tag 4 fror `move` dadurch ein zweites Mal ein (0
-   Ortswechsel nach Runde 300, dieselbe Beobachtung wie bei Falle 1, ein
-   anderer Mechanismus). Deshalb bleiben die Gewichte für kostenlose soziale
-   Aktionen bewusst unter dem, was `rest` ohnehin bietet — mit dem
-   dokumentierten Nebeneffekt, dass sie im laufenden Match praktisch nie
-   gewinnen (README, „Was noch offen ist"). Ein echter Ausweg braucht mehr als
-   eine weitere Zahl: entweder echte Kosten fürs Reden, oder eine Policy, die
-   nicht rein per Argmax entscheidet (T23).
+3. **Kostenlose Aktionen dürfen bezahlte nicht verdrängen.** `share_information`,
+   `request_information` und seit T20 auch `offer_alliance`/`leave_alliance`/
+   `expel_member` kosten keine Energie (der Effekt-Kostenpunkt `exitPenalty`
+   bei `leave_alliance` ist Energie, aber kein Aktionsgewicht), `move` und
+   `gather_resource` schon. Bei vergleichbarer Größenordnung gewinnt das
+   Kostenlose immer, sobald ein Nachbar da ist — Tag 4 fror `move` dadurch ein
+   zweites Mal ein (0 Ortswechsel nach Runde 300, dieselbe Beobachtung wie bei
+   Falle 1, ein anderer Mechanismus). Deshalb bleiben die Gewichte für
+   kostenlose soziale UND strategische Aktionen bewusst unter dem, was `rest`
+   ohnehin bietet — mit dem dokumentierten Nebeneffekt, dass keine von ihnen
+   im laufenden Match praktisch je gewinnt (README, „Was noch offen ist"). Ein
+   echter Ausweg braucht mehr als eine weitere Zahl: entweder echte Kosten
+   fürs Reden/Verbünden, oder eine Policy, die nicht rein per Argmax
+   entscheidet.
 
 Und: Vergleiche sind Vergleiche. Eine Erinnerung an einen anderen Ort zählt
 gegen den eigenen Standort, nicht absolut.
+
+**T23** hat dafür einen einzigen Ort geschaffen, an dem eine Kalibrierung
+ansetzen kann, ohne jede Aktion einzeln anzufassen: `decision/utility.ts`
+exportiert `UTILITY_WEIGHTS`, einen benannten Gewichtsvektor über Doc 05 §5.2s
+sechs Kategorien (`survival`, `wealth`, `social`, `alliance`, `information`,
+`caution`), den `policyProvider.ts` auf jeden Breakdown-Wert anwendet, bevor
+summiert wird (`CATEGORY_OF` ordnet jeden verwendeten Breakdown-Schlüssel
+seiner Kategorie zu). Der Vektor steht auf neutral 1.0 auf jeder Achse — die
+einzelnen Terme sind gegen echte Läufe kalibriert, nicht der Vektor selbst;
+ihn zu verschieben ist die Aufgabe von T43, nicht dieses Commits. Zwei Terme
+aus Doc 05 §5.2 fehlen dem Modul vollständig und absichtlich:
+`goalAlignment(c, goals)` (kein `Goal`-Typ existiert) und `lessonBias(c,
+lessons)` (kommt erst mit T24). Ein Term ohne Datenquelle wäre eine Erfindung,
+keine Näherung.
 
 ## Fähigkeiten, Macht und Gewalt
 
@@ -164,6 +181,85 @@ dieses Repos gelten trotzdem weiter:
   `lastEventTypes`) gehören **nicht** ins `delta` eines `relationship`-Effekts
   — der `StateMutator` leitet sie selbst her. Ein Effekt, der sie im `delta`
   trüge, wäre eine Verschiebung, die sie nicht sind.
+
+## Allianzen
+
+`Alliance` ist bewusst auf T20s drei Aktionen reduziert (siehe Kopfkommentar
+am Typ in `core/types.ts`): kein `charter`, keine `contributions`, keine
+`secretPacts` — dafür gibt es noch keinen Schreiber. `cohesion` ist aus
+demselben Grund keine gespeicherte Zahl, sondern eine geplante, noch nicht
+geschriebene abgeleitete Funktion — wie bei den Attributen.
+
+- **Mitgliedschaft ändert sich ausschließlich über vier `alliance`-Effekt-Ops**
+  (`create`, `join`, `leave`, `expel`), angewandt in `stateMutator.ts`. Keine
+  direkte Zuweisung von `agent.allianceId` oder `alliance.members` irgendwo
+  sonst im Code.
+- **Führungswechsel und Selbstauflösung sind vom `StateMutator` selbst
+  hergeleitete Buchhaltung, nie Teil eines Effekts** — dieselbe Regel wie bei
+  `Relationship`s Zählfeldern. Fällt die Zahl LEBENDER Mitglieder nach einem
+  `leave`/`expel` unter zwei, löst sich die Allianz auf; verliert sie dabei
+  ihren Leader, übernimmt automatisch das lebende Mitglied mit der kleinsten
+  `AgentId` (`settleMembershipChange`).
+- **Tod räumt keine Allianz auf.** Wer im Kampf oder an Hunger stirbt,
+  verlässt seine Allianz nicht automatisch — kein `leave`/`expel`-Effekt läuft
+  dafür. Eine aktive Allianz kann deshalb durchaus unter zwei lebende
+  Mitglieder fallen und trotzdem als Datensatz bestehen bleiben, bis jemand
+  tatsächlich geht oder ausgeschlossen wird (auch ein bereits toter). Kein
+  Invariantenbruch — `assertInvariants` prüft hier nur Struktur (sortierte,
+  eindeutige Mitgliederliste; ein Leader, der Mitglied ist), keine
+  Lebendzahl.
+- **`offer_alliance`/`leave_alliance`/`expel_member` sind Klasse 6 und prüfen
+  deshalb live gegen die `EffectProjection`, nicht nur gegen den
+  Rundenanfang** — dieselbe Notwendigkeit wie bei `share_information` (Fix 3):
+  zwei Aktionen dieser Klasse können in derselben Runde dieselbe Allianz oder
+  denselben Zielagenten treffen. `EffectProjection.allianceOf`/
+  `.allianceMembers` bilden das ab. **Bekannte, dokumentierte Lücke:** ob ein
+  Agent aktuell *Leader* ist, wird gegen `state.alliances[id].leaderId`
+  geprüft (Rundenanfang), nicht gegen eine live nachgeführte Führung — ein
+  Führungswechsel durch eine früher aufgelöste `leave_alliance` derselben
+  Runde wird von einer späteren `expel_member`-Prüfung also nicht gesehen.
+  Seltener Randfall, in `expelMember.ts`s Kopfkommentar benannt.
+
+## Gedächtnis
+
+Episodisches Gedächtnis (`EpisodicMemory`, `Agent.episodic`) entsteht
+ausschließlich in Phase 9 (`memory/episodes.ts`), für genau die Events, in
+deren Beobachterset ein Agent stand — dieselbe Epistemik-Schranke wie bei
+Wissen (Phase 2), geprüft im selben `no-omniscience.test.ts`.
+
+- **Phase 9 braucht anders als Phase 2 KEINE Rundenverzögerung.** Perception
+  verarbeitet die Events der Vorrunde, weil sie vor der eigenen
+  Bewegungsauflösung läuft. Memory läuft nach Phase 6/7 derselben Runde, wenn
+  alle Ortswechsel bereits vollzogen sind — die aktuellen
+  `state.agents`-Positionen sind exakt die, unter denen die Events dieser
+  Runde entstanden. Wer das umkehrt (Events der Vorrunde mit aktuellen
+  Positionen, oder umgekehrt), bekommt falsche Beobachtersets.
+- **Nicht jeder Event-Typ erzeugt eine Episode.** Nur wer in `EPISODE_BASE`
+  (`memory/episodes.ts`) steht — mundane Ereignisse (`rest`,
+  `gather_resource`, `move`, ...) sind nicht "sozial genug" (Doc 03 §3.7s
+  Beispiel ist "Jonas gab mir Nahrung", nicht "ich erntete"). Ein Event ohne
+  Eintrag dort erzeugt für niemanden eine Episode.
+- **Verfall UND Kompaktierung laufen über einen einzigen Effekt pro Agent und
+  Runde** (`episode_upkeep`), immer, unabhängig davon, ob der Agent neue
+  Episoden bekommen hat — dieselbe Buchhaltungsregel wie bei `Relationship`.
+  Kompaktierung entfernt bei Überschreiten von `maxEpisodes` nur die
+  untersten `compactionThreshold` (20 %) nach Salience, nicht alles auf
+  einmal: **kein Rundenschritt garantiert sofort wieder `<= maxEpisodes`**,
+  die Länge pendelt sich über mehrere Runden ein. Ein harter
+  Pro-Runden-Invariant auf die Obergrenze wäre deshalb falsch;
+  `assertInvariants` prüft hier nur die Form jedes Eintrags (Salience/Valenz
+  in ihren Wertebereichen).
+- **Kompaktieren heißt Löschen, nicht Aggregieren** — anders als Doc 03 §6.2
+  wörtlich beschreibt ("aggregiere sie in die Relationship-Zähler"): das ist
+  hier kein zweiter Schritt, weil die Relationship-Konsequenz bereits in Phase
+  8 DERSELBEN Runde gesetzt wurde, bevor die Episode in Phase 9 überhaupt
+  entsteht. Die Erkenntnis steckt schon im `Relationship`-Delta; Phase 9
+  verwirft beim Kompaktieren nur noch das Detail.
+- **`pledgeInvolved` in der Salience-Formel ist immer `false`** (kein `Pledge`
+  existiert vor T21) und **`resourceMagnitudeNorm` fehlt komplett** (kein
+  einheitlicher Betrags-Leser über alle Event-Payloads) — beide dokumentiert
+  im Kopfkommentar von `memory/episodes.ts`, nicht stillschweigend auf 0
+  gesetzt.
 
 ## Golden-Hashes
 

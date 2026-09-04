@@ -94,6 +94,29 @@ export const DEFAULT_COMBAT = {
 } as const;
 
 /**
+ * Allianzsystem (T20). **[ANNAHME]**. `maxSize: 5` haelt Allianzen klein genug,
+ * dass `cohesion` (mittleres Trust unter Mitgliedern) noch etwas ueber die
+ * Gruppe aussagt — bei 30 Agenten waeren grosse Allianzen sonst kaum von
+ * "alle kennen alle" zu unterscheiden. `exitPenalty` in Energie, damit sie auf
+ * derselben Skala wie `moveEnergyCost`/`combat.energyCost` liegt.
+ */
+export const DEFAULT_ALLIANCE = {
+  maxSize: 5,
+  exitPenalty: 10,
+} as const;
+
+/**
+ * Gedaechtnissystem (T22). Zahlen aus Doc 03 §6.1/§6.2 uebernommen, wo die
+ * Spec welche nennt (`maxEpisodes: 60`, `salienceDecay: 0.03`, "die
+ * untersten 20 %"); alles Uebrige **[ANNAHME]**.
+ */
+export const DEFAULT_MEMORY = {
+  maxEpisodes: 60,
+  salienceDecay: 0.03,
+  compactionThreshold: 0.2,
+} as const;
+
+/**
  * Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3).
  *
  * Ohne feste Grenzen ist "irrefuehrende Teilwahrheit" nicht entscheidbar: dass
@@ -126,6 +149,8 @@ export const DEFAULT_CONFIG: MatchConfig = {
   info: { ...DEFAULT_INFO },
   attributes: { ...DEFAULT_ATTRIBUTES },
   combat: { ...DEFAULT_COMBAT },
+  alliance: { ...DEFAULT_ALLIANCE },
+  memory: { ...DEFAULT_MEMORY },
   buckets: { ...DEFAULT_BUCKETS },
   strictInvariants: true,
 };
@@ -140,6 +165,8 @@ export interface MatchConfigInput {
   info?: Partial<MatchConfig['info']>;
   attributes?: Partial<MatchConfig['attributes']>;
   combat?: Partial<MatchConfig['combat']>;
+  alliance?: Partial<MatchConfig['alliance']>;
+  memory?: Partial<MatchConfig['memory']>;
   buckets?: MatchConfig['buckets'];
   strictInvariants?: boolean;
 }
@@ -157,6 +184,8 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
     info: { ...DEFAULT_INFO, ...stripUndefined(input.info ?? {}) },
     attributes: { ...DEFAULT_ATTRIBUTES, ...stripUndefined(input.attributes ?? {}) },
     combat: { ...DEFAULT_COMBAT, ...stripUndefined(input.combat ?? {}) },
+    alliance: { ...DEFAULT_ALLIANCE, ...stripUndefined(input.alliance ?? {}) },
+    memory: { ...DEFAULT_MEMORY, ...stripUndefined(input.memory ?? {}) },
     buckets: { ...DEFAULT_BUCKETS, ...(input.buckets ?? {}) },
   };
 
@@ -191,6 +220,25 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
   for (const key of ['killMargin', 'lootShare'] as const) {
     if (!Number.isFinite(config.combat[key]) || config.combat[key] < 0 || config.combat[key] > 1) {
       throw new RangeError(`config.combat.${key} muss in [0, 1] liegen, war ${config.combat[key]}`);
+    }
+  }
+
+  if (!Number.isInteger(config.alliance.maxSize) || config.alliance.maxSize < 2) {
+    throw new RangeError(`config.alliance.maxSize muss eine ganze Zahl >= 2 sein, war ${config.alliance.maxSize}`);
+  }
+  if (!Number.isInteger(config.alliance.exitPenalty) || config.alliance.exitPenalty < 0) {
+    throw new RangeError(
+      `config.alliance.exitPenalty muss eine ganze Zahl >= 0 sein, war ${config.alliance.exitPenalty}`,
+    );
+  }
+
+  if (!Number.isInteger(config.memory.maxEpisodes) || config.memory.maxEpisodes < 1) {
+    throw new RangeError(`config.memory.maxEpisodes muss eine ganze Zahl >= 1 sein, war ${config.memory.maxEpisodes}`);
+  }
+  for (const key of ['salienceDecay', 'compactionThreshold'] as const) {
+    const value = config.memory[key];
+    if (!Number.isFinite(value) || value < 0 || value > 1) {
+      throw new RangeError(`config.memory.${key} muss in [0, 1] liegen, war ${value}`);
     }
   }
 

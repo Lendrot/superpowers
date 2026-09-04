@@ -1,6 +1,6 @@
-# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem
+# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem, Allianzen, Gedächtnis
 
-Stand: **Tag 1 bis Tag 4** aus `12-build-order.md` (T21 ausgenommen, siehe unten).
+Stand: **Tag 1 bis Tag 5** aus `12-build-order.md` (T21 ausgenommen, siehe unten).
 
 - **Tag 1** (T01, T02 reduziert, T03–T07, Kern von T09): Welt aus Seed, Runden
   laufen headless, Event-Log-Hash reproduzierbar.
@@ -15,11 +15,18 @@ Stand: **Tag 1 bis Tag 4** aus `12-build-order.md` (T21 ausgenommen, siehe unten
   Wissenstransfer, ein Beziehungssystem mit acht Dimensionen. Der
   Truth-Validator prüft jetzt echte Aussagen statt nur seiner eigenen
   Testtabelle — die Hörensagen-Kette A→B→C ist beweisbar, nicht nur behauptet.
+- **Tag 5** (T20, T22, T23): Allianzen (`offer_alliance`/`leave_alliance`/
+  `expel_member`, mit einem Live-Ledger in der `EffectProjection` gegen
+  Doppel-Ausschlüsse in derselben Runde), episodisches Gedächtnis (Phase 9,
+  dieselbe Beobachterset-Schranke wie Wissen, mit Verfall und Kompaktierung
+  statt unbegrenztem Wachstum) und die Utility-Policy als eigenes Modul
+  (`decision/utility.ts`) mit einem benannten, aktuell neutralen
+  Gewichtsvektor über Doc 05s sechs Kategorien. Siehe „Tag 5" unten.
 - **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
   sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
   Kampfsystem, in dem Agenten einander töten können. Siehe unten.
 
-Kein UI, kein LLM, keine Allianzen, keine Zusagen, kein Lernsystem.
+Kein UI, kein LLM, keine Zusagen (Pledges), kein Lernsystem.
 
 ## Fähigkeiten, Instinkte, Macht, Gewalt
 
@@ -191,15 +198,17 @@ prüft jeden Wissenseintrag gegen diese Rekonstruktion.
 | `validation/truthValidator.ts` | R1–R7 + R9 gegen den **Wissensstand**, nie gegen die Weltwahrheit |
 | `agents/agentView.ts` | die abgeschottete Sicht eines Agenten (Doc 05 §5.1), inkl. eigener Beziehungssicht |
 | `mutation/stateMutator.ts` | die einzige Schreibstelle, inkl. Erhaltungsprüfung |
-| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack`, `share_information`, `request_information`, `trade` |
+| `actions/defs/` | `rest`, `gather_resource`, `move`, `consume`, `attack`, `share_information`, `request_information`, `trade`, `offer_alliance`, `leave_alliance`, `expel_member` |
 | `agents/attributes.ts` | Fähigkeiten, Instinkte, Glück, Macht — alles abgeleitet |
 | `world/consequence.ts` | Phase 8: Erfahrungsgewinn und -verfall, Drift der Veranlagung |
 | `world/relationships.ts` | `RELATIONSHIP_DELTA_TABLE`, Persönlichkeits-Modulation, Phase-8-Anwendung |
 | `information/disclosurePolicy.ts` | `statementFor`/`deriveToldEntry` — ein `KnowledgeEntry` wird ein `Statement`, eine Aussage ein neuer `KnowledgeEntry` |
 | `actions/resolutionOrder.ts` | Klassenreihenfolge + Initiative (Doc 04 §4.3) |
-| `decision/policyProvider.ts` | deterministische Utility-Policy auf `AgentView` (Vorstufe von T23) |
-| `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 6, 7, 9 |
-| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 11; zentrale R7-Anbindung für jede Aktion mit `statement` |
+| `memory/episodes.ts` | Phase 9 (T20): `EpisodicMemory` nur für Beobachter im Observer-Set, Salience-Formel, Verfall + Kompaktierung |
+| `decision/utility.ts` | T23: die Scoring-Terme selbst, plus `UTILITY_WEIGHTS` — ein benannter Gewichtsvektor über Doc 05s sechs Kategorien |
+| `decision/policyProvider.ts` | T23: die Entscheidungsschale — Kandidaten bewerten (`utility.ts`), Tie-Break, besten wählen |
+| `validation/validateAction.ts` | Validierungskette, Stufen 1, 2, 4, 5, 6, 7, 9; `EffectProjection` führt seit T20 auch ein Allianz-Ledger |
+| `runner/runRound.ts` | Phasen 1, 2, 3, 4, 5, 6, 7, 8, 9, 11; zentrale R7-Anbindung für jede Aktion mit `statement` |
 | `cli/sim.ts` | headless, JSON-Report |
 
 ## Bewusste Abweichungen von der Spezifikation
@@ -467,44 +476,65 @@ Kalibrierungspunkt, kein Konstruktionsfehler.
 
 ## Was noch offen ist
 
-- **`trade`, `share_information` und `request_information` gewinnen in der
-  laufenden Simulation so gut wie nie.** Das ist der ehrlichste Befund von
-  Tag 4, gemessen über sechs Seeds × 400 Runden × 30 Agenten: null
-  `information_shared`-, `trade_accepted`- und verwandte Events. Nicht, weil
+- **`trade`, `share_information`, `request_information` UND jetzt auch
+  `offer_alliance`/`leave_alliance`/`expel_member` gewinnen in der laufenden
+  Simulation so gut wie nie.** Neu gemessen mit Tag 5 (Seed 42, 400 Runden,
+  30 Agenten): null Allianz-Events, `alliancesTotal: 0` am Matchende — exakt
+  derselbe Befund wie bei den Tag-4-Aktionen, aus demselben Grund. Nicht, weil
   die Aktionen kaputt sind — `generate`/`precondition`/`resolve` sind einzeln
-  vollständig getestet, die Hörensagen-Kette ist bewiesen —, sondern weil ihr
-  Policy-Gewicht bewusst klein gehalten ist. Der erste Versuch, es
-  großzügiger zu setzen (vergleichbar mit `share_information: honesty ×
-  sociability × 1.0`), ließ `move` ein zweites Mal komplett einfrieren: 0
-  Ortswechsel nach Runde 300 in einem 1200-Runden-Lauf, derselbe
-  Fehlermodus wie beim ersten Einfrieren (`CLAUDE.md`, „Entscheidungsgewichte").
-  Kostenlose Aktionen gewinnen bei gleicher Größenordnung immer gegen
-  Aktionen mit echten Kosten (Energie bei `move`/`gather_resource`), sobald
-  ein Nachbar da ist. Die aktuellen Gewichte schützen `move` — auf Kosten
-  davon, dass Reden und Handeln fast nie vorkommen. Beides gleichzeitig zu
-  lösen braucht mehr als eine weitere Zahl: entweder echte Kosten fürs Reden,
-  oder eine Policy, die nicht rein per Argmax entscheidet (T23). Eingang für
-  den Kalibrierungs-Sweep (T43) — mit den beiden gemessenen Endpunkten
-  bereits dokumentiert, nicht nur vermutet.
+  vollständig getestet, der Lebenszyklus (gründen → beitreten → austreten →
+  ausschließen) ist über einen echten Mehrrunden-Lauf bewiesen —, sondern weil
+  ihr Policy-Gewicht bewusst klein gehalten ist (`scoreOfferAlliance` &
+  Nachbarn in `decision/utility.ts`, aus denselben Größenordnungsgründen wie
+  `scoreShareInformation`). Der erste Versuch, es großzügiger zu setzen
+  (vergleichbar mit `share_information: honesty × sociability × 1.0`), ließ
+  `move` ein zweites Mal komplett einfrieren: 0 Ortswechsel nach Runde 300 in
+  einem 1200-Runden-Lauf, derselbe Fehlermodus wie beim ersten Einfrieren
+  (`CLAUDE.md`, „Entscheidungsgewichte"). Kostenlose Aktionen gewinnen bei
+  gleicher Größenordnung immer gegen Aktionen mit echten Kosten (Energie bei
+  `move`/`gather_resource`), sobald ein Nachbar da ist. Die aktuellen Gewichte
+  schützen `move` — auf Kosten davon, dass Reden, Handeln und jetzt auch
+  Bündnisse fast nie vorkommen. T23 hat dafür die Struktur geschaffen
+  (`UTILITY_WEIGHTS`, ein benannter Vektor über sechs Kategorien statt
+  verstreuter Einzelzahlen), aber bewusst NICHT die Gewichte selbst verändert
+  — jede Änderung hätte den gerade erst bewiesenen Zustand ungeprüft
+  überschrieben. Der eigentliche Ausweg bleibt derselbe wie vorher: entweder
+  echte Kosten fürs Reden/Verbünden, oder eine Policy, die nicht rein per
+  Argmax entscheidet. Eingang für den Kalibrierungs-Sweep (T43) — jetzt mit
+  einem einzigen Ort, an dem er ansetzen kann.
 - **`agent_resource` wird noch von keiner Wahrnehmung gespeist.** Ein Agent
   kann nur über fremde Vorräte reden, wenn er es je gehört hat — niemand
   beobachtet sie direkt. Siehe Abweichung 19.
-- **Vier der acht `InfoTopic`-Werte** (`agent_alliance`, `agent_secret_goal`,
-  `pledge_state`, `agent_intent_declared`) existieren als Typ, ohne System
-  dahinter. Kommt mit T20/T21/T23.
-- **T21 (Pledges) fehlt** — Tag 4 der Spezifikation zählt es dazu, dieser
-  Durchgang hat sich auf T17–T19 beschränkt. `declare_intent` existiert als
+- **Zwei der acht `InfoTopic`-Werte** (`agent_secret_goal`, `pledge_state`)
+  existieren noch als Typ ohne System dahinter — `agent_alliance` und
+  `agent_intent_declared` sind mit T20/T23 nicht automatisch bedient: eine
+  Allianz-Zugehörigkeit ist zwar jetzt Weltzustand (`Agent.allianceId`), aber
+  noch keine `InfoItem`/`KnowledgeEntry`, über die geredet werden könnte —
+  dieselbe Lücke wie bei `agent_resource`.
+- **T21 (Pledges) fehlt weiterhin.** `declare_intent` existiert als
   `StatementKind` (R8: keine Tatsachenbehauptung, kein Validierungsfehler bei
   Bruch), aber ohne `Pledge`-Typ, Fälligkeitsprüfung oder Bruch-Erkennung
-  dahinter.
+  dahinter — auch `offer_alliance`/`leave_alliance`/`expel_member` erzeugen
+  keinen, obwohl Doc 04 §4.1 das als optionale Ergänzung nennt.
+- **Goals (Doc 03 §3.2.3) und Lessons (T24) existieren nicht.** Deshalb fehlen
+  der Utility-Formel aus Doc 05 §5.2 zwei ihrer Terme —
+  `goalAlignment(c, goals)` und `lessonBias(c, lessons)` —, dokumentiert direkt
+  im Kopfkommentar von `decision/utility.ts`, nicht stillschweigend
+  ausgelassen. Lessons kommen mit T24 (Tag 6); Goals stehen in keinem Tag der
+  Spezifikation als eigene Aufgabe.
+- **Cohesion (Doc 03 §3.6) ist als Funktion vorgesehen, aber noch nicht
+  geschrieben** — mangels Konsumenten: keine Aktion und kein Score-Term
+  braucht sie in T20/T23. `world/alliances.ts#cohesionOf` ist ein Name im
+  Kommentar von `core/types.ts`, keine existierende Datei.
 - **Intelligenz streut kaum** (33–37), weil Ruhen bei allen ähnlich häufig ist.
   Anders als bei Intuition ist die Quelle nicht zu selten, sondern zu
   gleichverteilt — es fehlt eine Handlung, bei der sich Agenten im Denken
   unterscheiden. Kandidat: `investigate` (T35).
 - **Die Ökonomie- und Gewichtungszahlen sind Kalibrierungsmaße, keine
   Messwerte.** Sämtliche Werte in `core/config.ts`, `world/locations.ts`,
-  `decision/policyProvider.ts` und jetzt auch `actions/defs/trade.ts` sind
-  **[ANNAHME]** und gehören in den Sweep (T43).
+  `decision/utility.ts` (inkl. `UTILITY_WEIGHTS`, aktuell neutral 1.0 auf
+  jeder Achse) und `actions/defs/trade.ts` sind **[ANNAHME]** und gehören in
+  den Sweep (T43).
 
 ## Der Truth-Validator arbeitet jetzt wirklich
 
@@ -525,12 +555,31 @@ Regelfall. Ein Ausschlag dieser Kennzahl wäre ein Bug im Generator, nicht ein
 lügender Agent — und `truthValidator.test.ts` plus die neue
 `shareInformation`/`requestInformation`-Suite zeigen, dass der Generator hält.
 
+## Beobachtungen aus Tag 5 (Seed 42, 400 Runden, 30 Agenten)
+
+| Größe | Wert |
+|---|---|
+| Allianzen gegründet | 0 (siehe „Was noch offen ist" — dasselbe Gewichtsproblem wie bei `trade`) |
+| Größte Episodenliste eines Agenten am Matchende | 59 von `maxEpisodes: 60` — die Kompaktierung hält die Grenze, ohne sie ständig zu unterschreiten |
+| Golden-Hash-Verschiebung durch T22 (Gedächtnis) allein | keine — Phase 9 erzeugt keine Events, nur `state.agents[].episodic` |
+| Golden-Hash-Verschiebung durch T23 (Utility-Refactor) allein | keine — verifiziert per Hash-Vergleich vor/nach dem Umzug in `decision/utility.ts`, `UTILITY_WEIGHTS` steht auf 1.0 |
+| Golden-Hash-Verschiebung durch T20 (Allianzen) | ja — drei weitere Aktionstypen verschieben den RNG-Tie-Break-Verbrauch, plus `event.allianceId` als neues Feld auf vier Event-Typen |
+
+Der leere Allianz-Befund ist kein Fehlschlag des Lebenszyklus selbst:
+`tests/integration/allianceLifecycle.test.ts` fährt gründen → beitreten →
+austreten → ausschließen über vier echte Runden durch `runRound` und bestätigt
+jeden Schritt (Mitgliederliste, Führungswechsel, Selbstauflösung unter zwei
+Mitgliedern, `exiledFrom`-Zählung). Er zeigt nur, was die aktuellen
+Policy-Gewichte damit tun — bzw. nicht tun, siehe oben.
+
 ## Nächster Schritt
 
-Tag 5 (`12-build-order.md`): **T20, T22, T23** — Allianzen, episodisches
-Gedächtnis mit Deckel, die vollständige Utility-Policy. Davor steht noch ein
-Rest aus Tag 4: **T21** (Pledges), das `declare_intent` einen echten
-Verratsmechanismus gibt. Erst mit T22/T23 wird auch die offene Frage oben
-beantwortbar — eine Policy, die aus Erinnerung und Zielen entscheidet statt
-nur aus vier Gewichten pro Runde, hat andere Mittel, Reden gegen Handeln
-abzuwägen, als ein einzelner Score-Term.
+Tag 6 (`12-build-order.md`): **T24, T25, T26, T27** — Lessons aus Mustern
+(Pattern-Miner, kein LLM), eine Simulations-Invarianten-Suite über Doc 10 §C,
+ein Long-Run-Harness mit Statistik-Report (`pnpm sim --matches 100 --rounds
+400`), Persistenz (SQLite-Schema, Event-Log, Snapshots, Resume). Danach Tag 7:
+Lernwirkung nachweisen, oder — falls der Report aus T26 nichts Interessantes
+zeigt — ein Kalibrierungstag (T43), der genau an `UTILITY_WEIGHTS` ansetzt.
+
+Weiterhin offen, unabhängig vom Tag: **T21** (Pledges), das `declare_intent`
+einen echten Verratsmechanismus gibt.

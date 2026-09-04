@@ -194,6 +194,88 @@ describe('no-omniscience', () => {
     }
   });
 
+  it('laeuft lange genug, um auch fuer Episoden etwas zu beweisen', () => {
+    const withEpisodes = Object.values(result.state.agents).filter(
+      (agent) => agent && agent.episodic.length > 0,
+    );
+    expect(withEpisodes.length).toBeGreaterThan(0);
+  });
+
+  it('fuehrt jede Episode auf ein reales Ereignis zurueck, das der Agent wahrnehmen konnte (T22)', () => {
+    // Dieselbe Rekonstruktion wie oben fuer `knowledge`, jetzt fuer
+    // `episodic` — unabhaengig von `memory/episodes.ts` nachgerechnet, sonst
+    // bewiese der Test nur, dass die Implementierung sich selbst zustimmt.
+    const violations: string[] = [];
+    const toldTypes = new Set(['information_shared', 'information_refused']);
+
+    for (const agent of Object.values(result.state.agents)) {
+      if (!agent) continue;
+
+      for (const episode of agent.episodic) {
+        const event = byId.get(episode.id);
+        if (!event) {
+          violations.push(`${agent.id}: Episode ${episode.id} verweist auf kein reales Event`);
+          continue;
+        }
+        if (event.type !== episode.eventType || event.round !== episode.round) {
+          violations.push(`${agent.id}: Episode ${episode.id} weicht von Event ${event.id} ab`);
+          continue;
+        }
+
+        const expectedRole =
+          event.actorId === agent.id
+            ? 'actor'
+            : event.targetId === agent.id
+              ? toldTypes.has(event.type)
+                ? 'told'
+                : 'target'
+              : 'witness';
+        if (episode.role !== expectedRole) {
+          violations.push(`${agent.id}: Episode ${episode.id} hat Rolle ${episode.role}, erwartet ${expectedRole}`);
+        }
+
+        switch (event.visibility.scope) {
+          case 'public':
+            break;
+          case 'location': {
+            const where = timeline.get(event.round)?.[agent.id];
+            if (where !== event.visibility.locationId) {
+              violations.push(
+                `${agent.id}: Episode ${episode.id} aus ${event.id} an ${event.visibility.locationId}, ` +
+                  `stand aber in Runde ${event.round} an ${where ?? 'unbekannt'}`,
+              );
+            }
+            break;
+          }
+          case 'participants':
+            if (event.actorId !== agent.id && event.targetId !== agent.id) {
+              violations.push(`${agent.id}: Episode ${episode.id} ohne Beteiligung`);
+            }
+            break;
+          case 'private':
+            if (!event.visibility.agentIds.includes(agent.id)) {
+              violations.push(`${agent.id}: Episode ${episode.id} aus privatem ${event.id}`);
+            }
+            break;
+          case 'alliance':
+            if (agent.allianceId !== event.visibility.allianceId) {
+              violations.push(`${agent.id}: Episode ${episode.id} aus fremder Allianz`);
+            }
+            break;
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('haelt die Episodenzahl je Agent in einem grosszuegigen Rahmen um maxEpisodes (T22)', () => {
+    for (const agent of Object.values(result.state.agents)) {
+      if (!agent) continue;
+      expect(agent.episodic.length).toBeLessThanOrEqual(2 * config.memory.maxEpisodes);
+    }
+  });
+
   it('erzeugt Wissen, das dem Weltzustand widerspricht — Irrtum ist erlaubt', () => {
     // Wenn niemand je eine veraltete Ueberzeugung haette, waere das Wissenssystem
     // nur eine teure Kopie der Weltwahrheit. Genau die Abweichung ist der Punkt.

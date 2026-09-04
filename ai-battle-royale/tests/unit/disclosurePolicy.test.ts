@@ -60,6 +60,7 @@ function speaker(entry: KnowledgeEntry): Agent {
     status: { hungerStreak: 0, exhaustionStreak: 0, exiledFrom: [] },
     knowledge: { [infoId]: entry },
     relationships: {},
+    episodic: [],
     cooldowns: {},
     allianceId: null,
   };

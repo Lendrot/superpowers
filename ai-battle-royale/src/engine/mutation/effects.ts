@@ -10,9 +10,11 @@ import { RESOURCE_KINDS, emptyResources } from '../core/resources.js';
 import type {
   ActionType,
   AgentId,
+  AllianceId,
   Effect,
   EliminationCause,
   EndReason,
+  EpisodicMemory,
   EventType,
   Experience,
   InfoItem,
@@ -75,6 +77,24 @@ export const effect = {
   knowledge(agentId: AgentId, entry: KnowledgeEntry): Effect {
     return { t: 'knowledge', agentId, entry };
   },
+  allianceCreate(id: AllianceId, name: string, founderId: AgentId, joinerId: AgentId): Effect {
+    return { t: 'alliance', op: 'create', id, name, founderId, joinerId };
+  },
+  allianceJoin(id: AllianceId, agentId: AgentId): Effect {
+    return { t: 'alliance', op: 'join', id, agentId };
+  },
+  allianceLeave(id: AllianceId, agentId: AgentId): Effect {
+    return { t: 'alliance', op: 'leave', id, agentId };
+  },
+  allianceExpel(id: AllianceId, agentId: AgentId): Effect {
+    return { t: 'alliance', op: 'expel', id, agentId };
+  },
+  episodeAdd(agentId: AgentId, episode: EpisodicMemory): Effect {
+    return { t: 'episode_add', agentId, episode };
+  },
+  episodeUpkeep(agentId: AgentId): Effect {
+    return { t: 'episode_upkeep', agentId };
+  },
   roundAdvance(): Effect {
     return { t: 'round_advance' };
   },
@@ -132,9 +152,28 @@ export function describeEffect(item: Effect): string {
       return `info_item ${item.item.id}`;
     case 'knowledge':
       return `knowledge ${item.agentId} <- ${item.entry.infoId}`;
+    case 'alliance':
+      return describeAllianceEffect(item);
+    case 'episode_add':
+      return `episode_add ${item.agentId} <- ${item.episode.eventType}/${item.episode.role} (${item.episode.id})`;
+    case 'episode_upkeep':
+      return `episode_upkeep ${item.agentId}`;
     case 'round_advance':
       return 'round_advance';
     case 'match_end':
       return `match_end (${item.reason})`;
+  }
+}
+
+function describeAllianceEffect(item: Extract<Effect, { t: 'alliance' }>): string {
+  switch (item.op) {
+    case 'create':
+      return `alliance ${item.id} create (${item.founderId} + ${item.joinerId})`;
+    case 'join':
+      return `alliance ${item.id} join ${item.agentId}`;
+    case 'leave':
+      return `alliance ${item.id} leave ${item.agentId}`;
+    case 'expel':
+      return `alliance ${item.id} expel ${item.agentId}`;
   }
 }

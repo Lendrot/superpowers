@@ -7,7 +7,7 @@
  */
 
 import { hashValue } from './hash.js';
-import type { AgentId, EventId, MatchId, Round } from './types.js';
+import type { AgentId, AllianceId, EventId, MatchId, Round } from './types.js';
 
 export function agentId(index: number): AgentId {
   if (!Number.isInteger(index) || index < 0) {
@@ -28,6 +28,17 @@ export function agentIndex(id: AgentId): number {
 
 export function eventId(round: Round, seq: number): EventId {
   return `event_${String(round).padStart(4, '0')}_${String(seq).padStart(5, '0')}`;
+}
+
+/**
+ * Dieselbe Bauart wie `eventId`: `(round, seq)` ist innerhalb eines Matches
+ * eindeutig, weil `seq` vom `EventLog` fortlaufend vergeben wird — eine neu
+ * gegruendete Allianz entsteht immer im selben Aufloesungsschritt wie ihr
+ * `alliance_founded`-Event und kann dessen `seq` deshalb mitverwenden, ohne
+ * einen eigenen Zaehler zu brauchen.
+ */
+export function allianceId(round: Round, seq: number): AllianceId {
+  return `alliance_${String(round).padStart(4, '0')}_${String(seq).padStart(5, '0')}`;
 }
 
 /**

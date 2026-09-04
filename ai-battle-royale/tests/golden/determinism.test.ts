@@ -16,9 +16,31 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben nach dem Opus-Review-Fixdurchgang (5 "bald
- * beheben"-Punkte auf Tag 4). Drei der fuenf Fixes aendern tatsaechliches
- * Verhalten, nicht nur eine verschobene `MatchId`:
+ * Zuletzt neu geschrieben mit Tag 5 (T20, T22, T23): Allianzen, episodisches
+ * Gedaechtnis, volle Utility-Policy-Struktur. Zwei von drei Aenderungen
+ * verschieben die Event-Folge tatsaechlich:
+ *
+ * - T20 (`offer_alliance`/`leave_alliance`/`expel_member`): drei weitere
+ *   Aktionstypen ab Runde 1 in jedem Kandidatensatz — verschiebt, wie oft der
+ *   RNG-Tie-Break-Stream in `policyProvider.ts` gezogen wird, selbst wenn
+ *   diese Aktionen unter Tag-4/5-Gewichten so gut wie nie gewinnen (README,
+ *   „Was noch offen ist"). Ausserdem tragen `alliance_offer_accepted`,
+ *   `leave_alliance`s Events und `alliance_expelled` jetzt `event.allianceId`
+ *   — ein neues Feld im kanonischen JSON jedes so getroffenen Events.
+ * - T22 (episodisches Gedaechtnis, Phase 9): schreibt nur `state.agents[].
+ *   episodic`, erzeugt keine neuen Events und veraendert keine bestehenden —
+ *   fuer sich allein haette T22 die Hashes NICHT verschoben.
+ * - T23 (`decision/utility.ts`, `UTILITY_WEIGHTS`): rein strukturelle
+ *   Umlagerung der bestehenden Scoring-Terme; alle Gewichte stehen auf 1.0
+ *   (siehe dort), verifiziert per Vergleich der Hashes vor/nach dem Umzug —
+ *   identisch. Fuer sich allein haette auch T23 die Hashes NICHT verschoben.
+ *
+ * Neue Werte also ausschliesslich wegen T20 (mehr Kandidaten + `allianceId`
+ * auf Events), nicht wegen T22/T23.
+ *
+ * Davor: der Opus-Review-Fixdurchgang (5 "bald beheben"-Punkte auf Tag 4).
+ * Drei der fuenf Fixes aenderten tatsaechliches Verhalten, nicht nur eine
+ * verschobene `MatchId`:
  *
  * - Fix 1: `attack` liest die Energie des Ziels (und die eigene) jetzt live
  *   aus der `EffectProjection`, nicht mehr vom Rundenanfang — toedlich wird
@@ -63,11 +85,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'c59104141cda667d',
+  seed42x100: 'ab502f4f0318e9be',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '9b7eed48120d0779',
+  seed42x400: '8e88dbac14c7a005',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: '689e3b39f3327a90',
+  seed7x100: 'c155d4cd5ddbe087',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {

@@ -84,6 +84,30 @@ export const RELATIONSHIP_DELTA_TABLE: Partial<Record<EventType, DeltaPair>> = {
   trade_declined: {
     actorToTarget: { rivalry: 2 },
   },
+  // T20. Beitritt ist ein beidseitig kostspieliges Bekenntnis (Doc 04 §4.1 Nr.
+  // 8) — deutlich staerker als ein einzelner Handel, deshalb ueber
+  // `trade_accepted` angesiedelt, aber unter dem, was Kampf oder Verrat
+  // bewegt.
+  alliance_offer_accepted: {
+    actorToTarget: { trust: 8, friendship: 5 },
+    targetToActor: { trust: 8, friendship: 5, respect: 3 },
+  },
+  // Wie `trade_declined`: nur der Zurueckgewiesene traegt etwas davon.
+  alliance_offer_declined: {
+    actorToTarget: { rivalry: 2 },
+  },
+  // `actorId` ist die/der Gehende, `targetId` je ein verbleibendes Mitglied —
+  // ein Event pro Person (siehe `leaveAllianceAction`). "Harte Trust-Deltas
+  // bei Ex-Mitgliedern" (Doc 04 §4.1 Nr. 9) steht in `targetToActor`.
+  alliance_left: {
+    actorToTarget: { respect: -2 },
+    targetToActor: { trust: -12, suspicion: 6, respect: -5 },
+  },
+  // `actorId` ist der Leader, `targetId` das ausgeschlossene Mitglied.
+  alliance_expelled: {
+    actorToTarget: { suspicion: 3 },
+    targetToActor: { fear: 10, trust: -20, rivalry: 10 },
+  },
 };
 
 /**

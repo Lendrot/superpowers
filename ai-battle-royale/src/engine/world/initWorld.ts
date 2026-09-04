@@ -75,6 +75,8 @@ export function initWorld(config: MatchConfig): InitWorldResult {
     infoRegistry,
     // Leer: bis zur ersten Aussage hat niemand etwas gesagt, das ihn binden koennte.
     statementLog: {},
+    // Leer: vor Runde 1 hat niemand `offer_alliance` aufgeloest.
+    alliances: {},
     status: 'running',
   };
 

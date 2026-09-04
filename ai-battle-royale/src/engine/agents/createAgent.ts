@@ -71,6 +71,9 @@ export function createAgent({ index, rng, locations, attributes }: CreateAgentOp
     // Ebenso leer: eine Beziehung entsteht erst an der ersten gemeinsamen
     // Interaktion (Phase 8), nicht am Start.
     relationships: {},
+    // Ebenso leer: die erste Episode entsteht fruehestens in Phase 9 der
+    // ersten Runde (Doc 03 §6.2).
+    episodic: [],
     cooldowns: {},
     allianceId: null,
   };

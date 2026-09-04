@@ -1,10 +1,9 @@
 /**
  * T07 — Rundenskelett.
  *
- * Implementiert sind die Phasen 1, 2, 3, 4, 5, 6, 7, 8 und 11 aus Doc 02 §2.3. Die
- * uebrigen fehlen NICHT aus Versehen:
+ * Implementiert sind die Phasen 1, 2, 3, 4, 5, 6, 7, 8, 9 und 11 aus Doc 02
+ * §2.3. Die uebrigen fehlen NICHT aus Versehen:
  *
- *   Phase 9  Memory       → T22
  *   Phase 10 Reflection   → T24/T34
  *
  * Die Reihenfolge der vorhandenen Phasen ist Teil des Determinismus-Vertrags
@@ -26,6 +25,7 @@ import { generateCandidates } from '../decision/candidates.js';
 import type { DecisionProvider } from '../decision/provider.js';
 import { statementInfoId } from '../information/statements.js';
 import { statementRecordFor } from '../information/statementLog.js';
+import { memoryEffects } from '../memory/episodes.js';
 import { effect } from '../mutation/effects.js';
 import { applyEffects } from '../mutation/stateMutator.js';
 import { EffectProjection, validateAction } from '../validation/validateAction.js';
@@ -59,6 +59,8 @@ export interface RoundResult {
   aborted: number;
   /** Wieviele Agenten in Phase 8 Erfahrung gewonnen oder verloren haben. */
   developed: number;
+  /** Wieviele Episoden Phase 9 geschrieben hat. */
+  remembered: number;
   /** Wer in dieser Runde ausgeschieden ist. */
   eliminated: AgentAction['actorId'][];
   finished: boolean;
@@ -219,6 +221,13 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
   const consequences = consequence(state, events, perception.newKnowledgePerAgent);
   applyEffects(state, [...consequences.effects, ...relationshipEffectsFor(state, events)]);
 
+  // ── Phase 9 — Memory ───────────────────────────────────────────────────────
+  // Dieselben Events wie Phase 8, nicht die der Vorrunde (siehe Kopfkommentar
+  // von `memory/episodes.ts`): Ortswechsel dieser Runde sind bereits
+  // aufgeloest, die aktuellen Positionen sind also die richtigen.
+  const memory = memoryEffects(state, events, round);
+  applyEffects(state, memory.effects);
+
   // ── Phase 11 — Scoring ────────────────────────────────────────────────────
   const scoring = scoringEffects(state);
 
@@ -253,6 +262,7 @@ export function runRound(state: WorldState, deps: RoundDeps): RoundResult {
     perceived: perception.written,
     aborted,
     developed: consequences.changed,
+    remembered: memory.written,
     eliminated: upkeepResult.events.flatMap((e) => (e.actorId ? [e.actorId] : [])),
     // Nicht `state.status` lesen: der Typ ist an dieser Stelle bereits auf
     // 'running' verengt, weil TypeScript die Mutation im Mutator nicht sieht.

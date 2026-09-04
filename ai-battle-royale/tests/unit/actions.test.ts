@@ -51,8 +51,11 @@ describe('registry', () => {
     expect(IMPLEMENTED_ACTIONS.map((d) => d.type).sort()).toEqual([
       'attack',
       'consume',
+      'expel_member',
       'gather_resource',
+      'leave_alliance',
       'move',
+      'offer_alliance',
       'request_information',
       'rest',
       'share_information',
@@ -61,8 +64,8 @@ describe('registry', () => {
   });
 
   it('meldet nicht implementierte Aktionen als solche', () => {
-    expect(findAction('offer_alliance')).toBeUndefined();
-    expect(() => requireAction('offer_alliance')).toThrow(/nicht implementiert/);
+    expect(findAction('investigate')).toBeUndefined();
+    expect(() => requireAction('investigate')).toThrow(/nicht implementiert/);
   });
 });
 

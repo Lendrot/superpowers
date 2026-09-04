@@ -1,6 +1,6 @@
-# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem, Allianzen, Gedächtnis, Lernen
+# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem, Allianzen, Gedächtnis, Lernen, Persistenz
 
-Stand: **Tag 1 bis Tag 6** aus `12-build-order.md` (T21, T27 ausgenommen, siehe unten).
+Stand: **Tag 1 bis Tag 6 vollständig** aus `12-build-order.md` (nur T21 fehlt weiterhin, siehe unten).
 
 - **Tag 1** (T01, T02 reduziert, T03–T07, Kern von T09): Welt aus Seed, Runden
   laufen headless, Event-Log-Hash reproduzierbar.
@@ -22,20 +22,23 @@ Stand: **Tag 1 bis Tag 6** aus `12-build-order.md` (T21, T27 ausgenommen, siehe 
   statt unbegrenztem Wachstum) und die Utility-Policy als eigenes Modul
   (`decision/utility.ts`) mit einem benannten, aktuell neutralen
   Gewichtsvektor über Doc 05s sechs Kategorien. Siehe „Tag 5" unten.
-- **Tag 6** (T24, T25, T26; T27 fehlt noch, siehe unten): ein
+- **Tag 6** (T24, T25, T26, T27 — vollständig): ein
   Pattern-Miner (Phase 10, kein LLM, sechs Detektoren + Laplace-Konfidenz)
   destilliert `Lesson`s aus dem episodischen Gedächtnis jedes Agenten und
   fließt über `lessonBias` in die Utility-Policy zurück; eine konsolidierte
-  Simulations-Invarianten-Suite (Doc 10 §C) und ein Long-Run-Harness
+  Simulations-Invarianten-Suite (Doc 10 §C); ein Long-Run-Harness
   (`engine/runner/stats.ts`, `pnpm sim --matches <n>` ab zwei Matches) mit den
-  acht Kennzahlengruppen aus Doc 10 §10.1 D. Der Long-Run-Lauf selbst deckte
-  einen echten Bug auf, keinen nur theoretischen: siehe „Beobachtungen aus
-  Tag 6" unten.
+  acht Kennzahlengruppen aus Doc 10 §10.1 D; und eine SQLite-Persistenz
+  (`src/persistence/`, außerhalb der Engine) mit Event-Log, periodischen
+  Snapshots und einem echten Resume — bewiesen durch einen bitgleichen
+  Folgezustand gegenüber einem ununterbrochenen Lauf. Der Long-Run-Lauf selbst
+  deckte einen echten Bug auf, keinen nur theoretischen: siehe „Beobachtungen
+  aus Tag 6" unten.
 - **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
   sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
   Kampfsystem, in dem Agenten einander töten können. Siehe unten.
 
-Kein UI, kein LLM, keine Zusagen (Pledges), keine Persistenz.
+Kein UI, kein LLM, keine Zusagen (Pledges).
 
 ## Fähigkeiten, Instinkte, Macht, Gewalt
 
@@ -628,15 +631,58 @@ Reports. Golden-Hash-Verschiebung durch T24 (Lernen) allein: ja — sowohl
 verdrahteter Scoring-Term ab Runde 1 (siehe `tests/golden/determinism.test.ts`,
 Kopfkommentar).
 
+## Persistenz (T27)
+
+`src/persistence/` (SQLite via `better-sqlite3`, außerhalb der Engine — Doc 09
+§9.1, `eslint.config.js` führt `better-sqlite3`/`@/persistence/*` bereits in
+der Restriktionsliste für `src/engine/**`) legt sieben Tabellen an (Doc 02
+§2.5): `matches`, `event_log`, `snapshots` haben in T27 einen Schreiber;
+`llm_calls`, `decision_traces`, `persistent_lessons`, `sim_runs` stehen bereit
+für T31/T32/T34/`learning/persistence.ts`, aber ohne Erzeuger — keine Zeile
+wird hineingeschrieben, solange die fehlen (`schema.sql`, Kopfkommentar).
+
+- **`runPersistedMatch`/`resumeMatch`** (`persistMatch.ts`) fahren denselben
+  Phasenablauf wie `runner/runMatch.ts` (`initWorld` → `runRound`-Schleife),
+  aber mit einem Event-Log, das nach jeder Runde nach SQLite geflusht wird,
+  und einem Snapshot alle `snapshotInterval` Runden (Default 25, Doc 02 §2.5)
+  plus immer am Ende des Aufrufs. `runMatch.ts` selbst bleibt unverändert und
+  bewusst nicht resumable — die reine In-Memory-Variante für Tests und den
+  Long-Run-Harness (T26), wo eine SQLite-Datei pro Match nur Kosten ohne
+  Nutzen wäre.
+- **Ein Snapshot bettet den *live* RNG-Zählerstand ein**, nicht den aus
+  `initWorld`. `state.rngState` wird während einer Runde absichtlich nicht
+  vom `StateMutator` nachgeführt (`core/types.ts`, Kommentar an
+  `RngStateBundle`) — der Snapshot ist die einzige Stelle, an der
+  `rng.snapshot()` in den serialisierten `WorldState` einfließt. (Aktuell
+  benutzt kein Modul einen langlebigen `rng.stream(...)`-Zaehler — jede
+  Zufälligkeit läuft über `rng.derive(...)`, dessen Folge allein aus Runde und
+  AgentId reproduzierbar ist. `rngState` ist deshalb heute immer `{}`, aber
+  der Mechanismus ist bereits richtig verdrahtet für den Tag, an dem ein
+  Modul `.stream()` braucht.)
+- **Resume spielt das persistierte Event-Log in ein frisches `EventLog`
+  zurück, statt seinen internen Zustand zu übernehmen.** `EventLog.append`
+  vergibt `id`/`seq` rein aus der Position (`core/ids.ts#eventId`), also
+  rekonstruiert `log.append(draft)` für jeden geladenen Event-Draft in der
+  gespeicherten Reihenfolge exakt dieselben `id`s und denselben Rollhash-Stand
+  wie der Originallauf — ohne dass `EventLog` selbst eine
+  "von-hier-fortsetzen"-Konstruktion bräuchte.
+- **Bewiesen, nicht behauptet**: `tests/integration/persistenceResume.test.ts`
+  vergleicht einen ununterbrochenen `runMatch`-Lauf gegen denselben Seed über
+  `runPersistedMatch` (abgebrochen mitten im Match) + `resumeMatch` — gleicher
+  `logHash`, bitgleicher `canonicalJson(state)`, sogar über zwei
+  Unterbrechungen hintereinander. Gefundener und behobener Fehler dabei: der
+  erste Entwurf von `runPersistedMatch` vergaß das einmalige
+  `match_started`-Event, das `runMatch.ts` vor der ersten Runde schreibt —
+  ohne es weicht die Event-Folge (und damit `logHash`) schon am ersten
+  Eintrag ab. `tests/unit/persistence.test.ts` deckt die drei Repositories
+  einzeln ab, inklusive einer absichtlich manipulierten `state_hash`-Prüfung
+  (ein beschädigter Snapshot wirft, statt still falsche Daten zu laden).
+
 ## Nächster Schritt
 
-T24, T25 und T26 aus Tag 6 sind fertig — siehe „Beobachtungen aus Tag 6" oben.
-Offen aus Tag 6 bleibt **T27** (Persistenz: SQLite-Schema, Event-Log,
-Snapshots, Resume) — braucht `better-sqlite3` als neue Abhängigkeit und lebt
-in `src/persistence/`, außerhalb der Engine (`eslint.config.js` führt
-`better-sqlite3`/`@/persistence/*` schon in der Restriktionsliste für
-`src/engine/**`). Danach Tag 7: Web-UI (Dashboard, Event-Feed,
-Charakterprofil, Steuerung, Debug-Modus).
+Tag 6 ist komplett — T24, T25, T26, T27, siehe „Beobachtungen aus Tag 6" oben
+und „Persistenz (T27)" unten. Als Nächstes Tag 7: Web-UI (Dashboard,
+Event-Feed, Charakterprofil, Steuerung, Debug-Modus).
 
 Der T26-Report selbst liefert bereits ein klares Bild statt eines offenen
 Befunds: `trade`/`share_information`/`request_information`/`offer_alliance`

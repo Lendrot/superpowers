@@ -39,6 +39,7 @@ export { LOCATION_IDS, createLocations } from './world/locations.js';
 export { upkeep } from './world/upkeep.js';
 export { perceptionEffects, resolveObservers } from './world/perception.js';
 export { leaderboard, scoreOfAgent, scoringEffects } from './world/scoring.js';
+export type { ScoreEntry, ScoringResult } from './world/scoring.js';
 
 export { buildAgentView, believedStock } from './agents/agentView.js';
 export type { AgentView, BeliefView, PublicAgent, VisibleLocation } from './agents/agentView.js';

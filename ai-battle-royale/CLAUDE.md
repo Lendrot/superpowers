@@ -131,11 +131,11 @@ sechs Kategorien (`survival`, `wealth`, `social`, `alliance`, `information`,
 summiert wird (`CATEGORY_OF` ordnet jeden verwendeten Breakdown-Schlüssel
 seiner Kategorie zu). Der Vektor steht auf neutral 1.0 auf jeder Achse — die
 einzelnen Terme sind gegen echte Läufe kalibriert, nicht der Vektor selbst;
-ihn zu verschieben ist die Aufgabe von T43, nicht dieses Commits. Zwei Terme
-aus Doc 05 §5.2 fehlen dem Modul vollständig und absichtlich:
-`goalAlignment(c, goals)` (kein `Goal`-Typ existiert) und `lessonBias(c,
-lessons)` (kommt erst mit T24). Ein Term ohne Datenquelle wäre eine Erfindung,
-keine Näherung.
+ihn zu verschieben ist die Aufgabe von T43, nicht dieses Commits. Ein Term aus
+Doc 05 §5.2 fehlt dem Modul weiterhin vollständig und absichtlich:
+`goalAlignment(c, goals)` (kein `Goal`-Typ existiert). Ein Term ohne
+Datenquelle wäre eine Erfindung, keine Näherung. `lessonBias(c, lessons)` ist
+seit T24 echt verdrahtet — siehe „Lernen" unten.
 
 ## Fähigkeiten, Macht und Gewalt
 
@@ -272,6 +272,78 @@ Wissen (Phase 2), geprüft im selben `no-omniscience.test.ts`.
   einheitlicher Betrags-Leser über alle Event-Payloads) — beide dokumentiert
   im Kopfkommentar von `memory/episodes.ts`, nicht stillschweigend auf 0
   gesetzt.
+
+## Lernen
+
+`Lesson` (T24) entsteht ausschließlich in Phase 10 (`learning/patternMiner.ts`)
+aus dem episodischen Gedächtnis desselben Agenten — Regel 8 gilt hart:
+`supportingEpisodeIds` muss aus `agent.episodic` stammen, der `StateMutator`
+wirft sonst.
+
+- **`lesson_sync` ersetzt den vollständigen Lesson-Satz eines Agenten jede
+  Runde neu**, kein Upsert einzelner Schlüssel — derselbe Grund wie bei
+  `EpisodicMemory`s Kompaktierung: ein Detektor rechnet ohnehin bei jedem Lauf
+  über die ganze (gedeckelte) Episodenliste neu.
+- **Sechs Detektoren, Laplace-Konfidenz** `(evidence+1)/(evidence+contradictory+2)`,
+  `evidenceCap` (`config.learning.evidenceCap`) deckelt die Zählung, bevor die
+  Konfidenz gerechnet wird — sonst würde ein Agent mit sehr vielen Episoden
+  eine Konfidenz nahe 1 erreichen, die nichts mehr über neue Beweislage
+  aussagt.
+- **Dieselbe Episode kann für mehrere Detektoren zählen, auch widersprüchlich.**
+  Ein `information_refused`-Event ist zugleich Gegenbeweis für
+  `shares_information` UND Beleg für `withholds_from_me` — beide Lessons
+  entstehen aus demselben Ereignis, aus unterschiedlichen Blickwinkeln.
+- **`lessonBias` in `decision/utility.ts` ist ein echter, additiver Term**
+  (nicht gewichtet über `UTILITY_WEIGHTS`, siehe „Entscheidungsgewichte"),
+  verdrahtet über `LESSON_ACTION_BIAS` — eine feste Tabelle von
+  `Lesson`-Schlüssel-Präfix → (Aktionstyp, Vorzeichen/Stärke). Wirkt nur, wenn
+  `subjectRef` der Lesson mit dem `target`-Parameter des Kandidaten
+  übereinstimmt (`readTargetId`). Verschiebt seit T24 messbar reales Verhalten
+  (`tests/simulation/development.test.ts`, Kommentar zur Schwellenabsenkung
+  8→7: `attacked_me(X)` gibt `attack` gegen X einen Vergeltungsbonus).
+
+## Persistenz
+
+`src/persistence/` (T27) ist der einzige Ort im Projekt, der `better-sqlite3`
+importiert — erzwungen per ESLint-Boundary (Regel 2), nicht nur Konvention.
+
+- **`runMatch.ts` bleibt unverändert und bewusst nicht resumable.** Die
+  In-Memory-Variante ist fuer Tests und den Long-Run-Harness (T26) richtig,
+  wo eine SQLite-Datei pro Match nur Kosten ohne Nutzen wäre.
+  `persistence/persistMatch.ts#runPersistedMatch`/`resumeMatch` fahren
+  denselben Phasenablauf (`initWorld`/`runRound`, unverändert) über eine
+  eigene, resumable Schleife — beide Varianten stehen auf denselben
+  öffentlichen Engine-Primitiven, keine dupliziert Phasenlogik.
+- **`state.rngState` wird während einer Runde absichtlich nicht vom
+  `StateMutator` nachgeführt** (`core/types.ts`, Kommentar an
+  `RngStateBundle`) — der Snapshot ist die einzige Stelle, an der
+  `rng.snapshot()` in den serialisierten `WorldState` einfließt
+  (`repositories/snapshots.ts`). Ohne dieses Einmischen wäre jedes Resume auf
+  den RNG-Stand der Startwelt zurückgesetzt.
+- **Resume rekonstruiert das `EventLog` durch Wiederabspielen, nicht durch
+  einen eigenen "Fortsetzen"-Modus.** `EventLog.append` vergibt `id`/`seq`
+  rein aus der Position in der Liste (`core/ids.ts#eventId`) — ein frisches
+  `EventLog`, gefüttert mit den geladenen Event-Drafts in Persistenzreihenfolge,
+  landet exakt beim selben internen Zustand (Rollhash, `nextSeq`) wie der
+  Originallauf an dieser Stelle.
+  **Gefundener Fehler dabei** (T27, beim ersten Resume-Test): der erste
+  Entwurf von `runPersistedMatch` schrieb das einmalige
+  `match_started`-Event (das `runMatch.ts` vor der ersten Runde erzeugt)
+  nicht — dadurch wich die Event-Folge, und damit `logHash`, schon am
+  allerersten Eintrag ab. Ohne den direkten Hash-Vergleich gegen einen
+  ununterbrochenen `runMatch`-Lauf (`tests/integration/persistenceResume.test.ts`)
+  wäre das unbemerkt geblieben — ein rein struktureller Test ("Resume wirft
+  nicht") hätte das nicht gefangen.
+- **Snapshot-Kadenz ist ein Zeit-/Platz-Kompromiss, keine Korrektheitsfrage.**
+  Alle `snapshotInterval` Runden (Default 25, Doc 02 §2.5) plus immer am Ende
+  des jeweiligen Aufrufs — ein zu grober Wert kostet beim Resume nur mehr
+  wiederabgespielte Events, keine Korrektheit.
+- **Vier der sieben Tabellen aus Doc 02 §2.5 haben in T27 keinen Schreiber**
+  (`llm_calls`, `decision_traces`, `persistent_lessons`, `sim_runs`) — ihre
+  Erzeuger existieren noch nicht (T31/T32/T34, `learning/persistence.ts`, ein
+  DB-Report für Long-Run-Batches). Im Schema stehen sie trotzdem, dokumentiert
+  im Kopfkommentar von `schema.sql`, damit spätere Tasks keine Migration
+  brauchen.
 
 ## Golden-Hashes
 

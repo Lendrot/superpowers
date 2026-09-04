@@ -10,6 +10,8 @@
 
 import { z } from 'zod';
 
+import { EVENT_TYPES } from './types.js';
+
 export const agentIdSchema = z
   .string()
   .regex(/^agent_[a-z0-9_]+$/, 'AgentId muss dem Muster agent_<slug> folgen');
@@ -121,23 +123,7 @@ export const worldEventSchema = z.object({
   matchId: z.string(),
   round: z.number().int().min(1),
   seq: z.number().int().min(0),
-  type: z.enum([
-    'match_started',
-    'round_started',
-    'agent_rested',
-    'resource_gathered',
-    'gather_failed',
-    'agent_moved',
-    'food_consumed',
-    'agent_attacked',
-    'agent_killed',
-    'attack_aborted',
-    'attribute_grown',
-    'agent_eliminated',
-    'action_rejected',
-    'round_ended',
-    'match_ended',
-  ]),
+  type: z.enum(EVENT_TYPES),
   actorId: agentIdSchema.optional(),
   targetId: agentIdSchema.optional(),
   allianceId: z.string().optional(),

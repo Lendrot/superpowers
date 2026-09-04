@@ -131,6 +131,44 @@ describe('Stufe 9 — Effect Sanity', () => {
   });
 });
 
+describe('needAvailable — der Stand mit dieser Runde bereits eingerechnet', () => {
+  it('ohne Effekte gilt der Stand vom Rundenbeginn', () => {
+    const projection = new EffectProjection(state);
+    expect(projection.needAvailable(A, 'energy')).toBe(state.agents[A]!.needs.energy);
+  });
+
+  it('rechnet uebernommene need-Effekte mit ein', () => {
+    const projection = new EffectProjection(state);
+    projection.commit([effect.need(A, { energy: -30 })]);
+    expect(projection.needAvailable(A, 'energy')).toBe(state.agents[A]!.needs.energy - 30);
+  });
+
+  it('summiert mehrere Effekte derselben Runde', () => {
+    const projection = new EffectProjection(state);
+    projection.commit([effect.need(A, { energy: -20 })]);
+    projection.commit([effect.need(A, { energy: -15 })]);
+    expect(projection.needAvailable(A, 'energy')).toBe(state.agents[A]!.needs.energy - 35);
+  });
+
+  it('klemmt auf 0..100 wie der StateMutator', () => {
+    const projection = new EffectProjection(state);
+    projection.commit([effect.need(A, { energy: -1000 })]);
+    expect(projection.needAvailable(A, 'energy')).toBe(0);
+
+    const other = new EffectProjection(state);
+    other.commit([effect.need(A, { energy: 1000 })]);
+    expect(other.needAvailable(A, 'energy')).toBe(100);
+  });
+
+  it('ist pro Agent und pro Beduerfnis getrennt', () => {
+    const OTHER: AgentId = 'agent_001';
+    const projection = new EffectProjection(state);
+    projection.commit([effect.need(A, { energy: -50 })]);
+    expect(projection.needAvailable(OTHER, 'energy')).toBe(state.agents[OTHER]!.needs.energy);
+    expect(projection.needAvailable(A, 'satiety')).toBe(state.agents[A]!.needs.satiety);
+  });
+});
+
 describe('Stufe 6 und 7 — Wissen und Wahrheit', () => {
   const infoId = stockInfoId('commons', 'food');
 

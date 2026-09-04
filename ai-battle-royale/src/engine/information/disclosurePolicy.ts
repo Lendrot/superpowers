@@ -125,6 +125,14 @@ function disclosureAt(
         ? { mode: 'qualitative', bucket: bucketOf(value, thresholds) }
         : { mode: 'exact', value };
     case 'existence_only':
-      return { mode: 'existence_only' };
+      // 'existence_only' behauptet Anwesenheit ("da ist etwas") — `entails`
+      // prueft das ueber `meansPresence` (Doc 08 §8.2.2 R3). Bedeutet der
+      // Wert Abwesenheit, waere diese Disclosure also nie erfuellbar, egal
+      // was sie sonst begleitet (`belief`/`hearsay`, wenn `assertable` false
+      // ist — sonst waere ohnehin schon `assert_absence` gewaehlt worden).
+      // Faellt deshalb auf `qualitative` zurueck: Bucket `none` entailt 0
+      // korrekt, und bei Booleans/Strings landet `disclosureAt('qualitative')`
+      // ohnehin schon bei `exact`.
+      return meansAbsence(value) ? disclosureAt('qualitative', value, thresholds) : { mode: 'existence_only' };
   }
 }

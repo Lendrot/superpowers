@@ -7,6 +7,7 @@ import { createEventLog } from '@/engine/core/eventLog.js';
 import { createRngBundle } from '@/engine/core/rng.js';
 import type { AgentAction, AgentId, WorldState } from '@/engine/core/types.js';
 import { canonicalJson } from '@/engine/core/hash.js';
+import { effect } from '@/engine/mutation/effects.js';
 import { applyEffects } from '@/engine/mutation/stateMutator.js';
 import { EffectProjection } from '@/engine/validation/validateAction.js';
 import { initWorld } from '@/engine/world/initWorld.js';
@@ -165,6 +166,38 @@ describe('attack — Ausgang', () => {
     expect(events[0]?.visibility).toEqual({ scope: 'public' });
     expect(effects.some((e) => e.t === 'eliminate' && e.agentId === B && e.cause === 'killed')).toBe(true);
     expect(effects.some((e) => e.t === 'kill' && e.agentId === A)).toBe(true);
+  });
+
+  it('bewertet Erschoepfung live, nicht vom Rundenanfang — `attack` ist Klasse 8, die letzte', () => {
+    // Derselbe Kampf, derselbe RNG-Wurf (gleicher Seed, gleiche Runde, gleiche
+    // Beteiligten) wie im vorigen Fall "macht aus einem nicht toedlichen
+    // Kampf" — dort bei voller Energie nicht toedlich. Hier hat der
+    // Verlierer in DIESER Runde schon fast alle Energie verloren, zum
+    // Beispiel durch einen frueheren Angriff, der als Klasse 8 vor diesem
+    // aufgeloest wurde. Der State selbst zeigt das nicht — sein
+    // `needs.energy` bleibt beim Rundenanfangswert, nur die Projektion weiss
+    // davon.
+    state.agents[A]!.experience.strength = 520;
+    state.agents[B]!.experience.strength = 500;
+    expect(state.agents[A]!.needs.energy).toBe(100);
+    expect(state.agents[B]!.needs.energy).toBe(100);
+
+    const control = attackAction.resolve(attack(B), makeCtx(state));
+    expect(control.events[0]?.type).toBe('agent_attacked');
+    const damage = control.events[0]!.payload['damage'] as number;
+    const loserId = control.events[0]!.payload['loserId'] as AgentId;
+    expect(damage).toBeGreaterThan(0);
+
+    const live = makeCtx(state);
+    // Beide starten bei 100 (siehe oben) — der Abzug gilt unabhaengig davon,
+    // wer diesmal verliert.
+    live.projection.commit([effect.need(loserId, { energy: -(100 - (damage - 1)) })]);
+    // Live-Energie ist jetzt knapp unter dem Schaden, der State zeigt weiterhin 100.
+    expect(live.projection.needAvailable(loserId, 'energy')).toBe(damage - 1);
+    expect(state.agents[loserId]!.needs.energy).toBe(100);
+
+    const result = attackAction.resolve(attack(B), live);
+    expect(result.events[0]?.type).toBe('agent_killed');
   });
 
   it('macht aus einem nicht toedlichen Kampf Schaden statt Tod', () => {

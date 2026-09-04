@@ -16,9 +16,29 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben mit Tag 4 (T17-T19): `trade`, `share_information`,
- * `request_information` und das Beziehungssystem. Diesmal **echt** neues
+ * Zuletzt neu geschrieben nach dem Opus-Review-Fixdurchgang (5 "bald
+ * beheben"-Punkte auf Tag 4). Drei der fuenf Fixes aendern tatsaechliches
  * Verhalten, nicht nur eine verschobene `MatchId`:
+ *
+ * - Fix 1: `attack` liest die Energie des Ziels (und die eigene) jetzt live
+ *   aus der `EffectProjection`, nicht mehr vom Rundenanfang — toedlich wird
+ *   ein Treffer jetzt auch dann, wenn eine fruehere Aktion derselben Runde
+ *   das Ziel schon geschwaecht hat. Verschiebt, wer einen Kampf ueberlebt.
+ * - Fix 2: `statementFor` waehlt bei Abwesenheit nie mehr `existence_only`
+ *   (unerfuellbar dort) — vorher fing das nur die zweite Verteidigungslinie
+ *   (Stufe 7) mit einem Fallback auf `express_uncertainty` ab. Verschiebt,
+ *   welche Aussage bei geringer `honesty` tatsaechlich uebertragen wird.
+ * - Fix 3: `share_information`/`request_information` vergleichen den
+ *   Wissensstand des Ziels (und den eigenen) jetzt gegen die Projektion
+ *   dieser Runde statt gegen den Stand vom Rundenbeginn — innerhalb einer
+ *   Runde kann eine fruehere Aufloesung derselben Klasse (5) jetzt nicht
+ *   mehr uebersehen werden. Verschiebt, wer was mit welcher Sicherheit weiss.
+ *
+ * (Fix 4, `EVENT_TYPES` zentralisieren, und Fix 5, README-Zahlen, aendern
+ * keine Event-Folge.)
+ *
+ * Davor: Tag 4 (T17-T19): `trade`, `share_information`, `request_information`
+ * und das Beziehungssystem. Auch damals echt neues Verhalten:
  *
  * - Kampf loest jetzt zusaetzlich `relationship`-Effekte aus (Phase 8,
  *   `world/relationships.ts`) — keine neuen Events, aber ein veraenderter
@@ -43,11 +63,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: '4a1b50a480c14df8',
+  seed42x100: 'c59104141cda667d',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: 'e17a76f95ba18e2a',
+  seed42x400: '9b7eed48120d0779',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: '64d11e65f9b5754e',
+  seed7x100: '689e3b39f3327a90',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {

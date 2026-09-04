@@ -439,38 +439,46 @@ export interface Location {
 /**
  * Nur die Event-Typen, die der Kern erzeugt. Jeder weitere Typ kommt mit der
  * Aktion, die ihn erzeugt — ein Event-Typ ohne Erzeuger ist toter Code.
+ *
+ * Fix 4 (Opus-Review): einzige Quelle fuer alle Event-Typen. `EventType`,
+ * `isEventType` (eventLog.ts) und `worldEventSchema` (schemas.ts) leiten sich
+ * alle von hier ab — vorher fuehrten drei separat gepflegte Aufzaehlungen
+ * dazu, dass fuenf Tag-4-Event-Typen im Zod-Schema fehlten.
  */
-export type EventType =
-  | 'match_started'
-  | 'round_started'
-  | 'agent_rested'
-  | 'resource_gathered'
+export const EVENT_TYPES = [
+  'match_started',
+  'round_started',
+  'agent_rested',
+  'resource_gathered',
   /** Ernte lief ins Leere, weil ein frueher aufgeloester Agent den Bestand hatte. */
-  | 'gather_failed'
-  | 'agent_moved'
-  | 'food_consumed'
-  | 'agent_attacked'
-  | 'agent_killed'
+  'gather_failed',
+  'agent_moved',
+  'food_consumed',
+  'agent_attacked',
+  'agent_killed',
   /** Angriff lief ins Leere, weil das Ziel in dieser Runde schon gefallen war. */
-  | 'attack_aborted'
-  | 'attribute_grown'
-  | 'agent_eliminated'
-  | 'action_rejected'
+  'attack_aborted',
+  'attribute_grown',
+  'agent_eliminated',
+  'action_rejected',
   /** `share_information` oder eine offenlegende Antwort auf `request_information`. */
-  | 'information_shared'
+  'information_shared',
   /** Antwort auf `request_information`, die nichts preisgibt (R9-Formen). */
-  | 'information_refused'
-  | 'trade_accepted'
+  'information_refused',
+  'trade_accepted',
   /**
    * Zusatzmarkierung, kein eigenes Ergebnis: das Ziel hat verhandelt statt
    * direkt zu antworten. Tritt IMMER zusammen mit `trade_accepted` oder
    * `trade_declined` auf, nie allein — die Verhandlung selbst hat keinen
    * Ausgang, nur das, was danach kam.
    */
-  | 'trade_countered'
-  | 'trade_declined'
-  | 'round_ended'
-  | 'match_ended';
+  'trade_countered',
+  'trade_declined',
+  'round_ended',
+  'match_ended',
+] as const;
+
+export type EventType = (typeof EVENT_TYPES)[number];
 
 export type Visibility =
   | { scope: 'public' }

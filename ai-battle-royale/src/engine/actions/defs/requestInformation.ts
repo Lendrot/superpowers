@@ -19,7 +19,7 @@
 
 import { getAgent } from '../../core/access.js';
 import { eventId } from '../../core/ids.js';
-import type { Agent, AgentId, Effect, InfoId, InfoItem, JsonValue, Statement } from '../../core/types.js';
+import type { Agent, AgentId, Effect, InfoId, InfoItem, JsonValue, KnowledgeEntry, Statement } from '../../core/types.js';
 import type { Precision } from '../../information/disclosurePolicy.js';
 import { deriveToldEntry, statementFor } from '../../information/disclosurePolicy.js';
 import { isRefusal } from '../../information/statements.js';
@@ -111,7 +111,12 @@ export const requestInformationAction: ActionDef = {
     const item = ctx.state.infoRegistry[infoId];
     if (!item) throw new Error(`request_information: ${infoId} fehlt in der Registry — Validierung uebersprungen?`);
 
-    const candidate = chooseResponse(target, infoId, item, ctx);
+    // Live gelesen: `request_information` ist Klasse 5. Hat das Ziel in dieser
+    // Runde bereits von einem Dritten gehoert (fruehere Aufloesung, gleiche
+    // Klasse), muss die Antwort auf DIESEM Wissen beruhen, nicht auf dem Stand
+    // vom Rundenbeginn.
+    const targetEntry = ctx.projection.knowledgeEntry(target.id, infoId);
+    const candidate = chooseResponse(target, targetEntry, infoId, item, ctx);
     const truthCtx: TruthContext = {
       round: ctx.round,
       config: ctx.state.config,
@@ -143,19 +148,19 @@ export const requestInformationAction: ActionDef = {
     }
 
     // Nur erreichbar, wenn `chooseResponse` eine informative Aussage
-    // konstruiert hat — und das tut sie nur, wenn `target.knowledge[infoId]`
-    // existiert (siehe dort).
-    const targetEntry = target.knowledge[infoId]!;
-
+    // konstruiert hat — und das tut sie nur, wenn `targetEntry` existiert
+    // (siehe dort).
     const newEntry = deriveToldEntry({
       statement: finalStatement,
-      senderEntry: targetEntry,
+      senderEntry: targetEntry!,
       item,
       round: ctx.round,
       config: ctx.state.config,
       sourceAgent: target.id,
       sourceEventId: thisEventId,
-      existing: asker.knowledge[infoId],
+      // Ebenso live: der Fragende koennte in dieser Runde schon von jemand
+      // anderem gehoert haben.
+      existing: ctx.projection.knowledgeEntry(asker.id, infoId),
     });
     if (newEntry) effects.push(effect.knowledge(asker.id, newEntry));
 
@@ -190,14 +195,18 @@ export const requestInformationAction: ActionDef = {
  * — hohe Werte bevorzugen `assert_fact` mit hoher Praezision, niedrige `withhold`.
  * Ob ueberhaupt geantwortet wird, ist eine Charakterfrage, kein Kalkuel — anders
  * als bei `trade` (siehe dort) geht diese Entscheidung deshalb durch einen Wurf.
+ *
+ * `entry` kommt vom Aufrufer (projektionsbewusst, siehe dort) statt hier aus
+ * `target.knowledge` gelesen zu werden — sonst wuerde diese Funktion denselben
+ * Rundenanfangs-Fehler machen, den die Projektion gerade vermeiden soll.
  */
 function chooseResponse(
   target: Readonly<Agent>,
+  entry: Readonly<KnowledgeEntry> | undefined,
   infoId: InfoId,
   item: Readonly<InfoItem>,
   ctx: ActionContext,
 ): Statement {
-  const entry = target.knowledge[infoId];
   if (!entry) return { kind: 'express_uncertainty', topic: item.topic };
 
   const honesty = target.personality.honesty / 100;

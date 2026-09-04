@@ -121,10 +121,18 @@ export const attackAction: ActionDef = {
     // Entscheidend ist deshalb der Schaden: wer am Boden liegt, steht nicht
     // wieder auf. Damit wird der Zeitpunkt zur Waffe, nicht nur die Kraft.
     const damage = Math.round(config.combat.damageScale * margin);
-    const lethal = margin >= config.combat.killMargin || damage >= loser.needs.energy;
+    // Live gelesen, nicht vom Rundenbeginn: `attack` ist Klasse 8, die letzte
+    // — wer diese Runde schon Schaden genommen hat (als Ziel eines frueheren
+    // Angriffs oder als Angreifer, der selbst zuerst Ziel eines anderen war),
+    // darf nicht mit seiner Energie vom Rundenanfang bewertet werden. Sonst
+    // entscheidet ein veralteter Wert ueber Leben und Tod.
+    const loserEnergyNow = ctx.projection.needAvailable(loser.id, 'energy');
+    const lethal = margin >= config.combat.killMargin || damage >= loserEnergyNow;
 
     const effects: Effect[] = [
-      effect.need(attacker.id, { energy: -Math.min(config.combat.energyCost, attacker.needs.energy) }),
+      effect.need(attacker.id, {
+        energy: -Math.min(config.combat.energyCost, ctx.projection.needAvailable(attacker.id, 'energy')),
+      }),
       effect.cooldown(attacker.id, 'attack', ctx.round + config.combat.cooldown),
     ];
 
@@ -150,11 +158,13 @@ export const attackAction: ActionDef = {
         effect.experience(winner.id, { strength: config.attributes.fightWinGain }),
       );
     } else {
-      // Kein toedlicher Ausgang: der Verlierer traegt Schaden davon.
+      // Kein toedlicher Ausgang: der Verlierer traegt Schaden davon. Auch hier
+      // live gelesen (siehe `loserEnergyNow` oben) — sonst koennte der Effekt
+      // mehr Energie abziehen wollen, als tatsaechlich noch da ist.
       effects.push(
         effect.need(loser.id, {
-          energy: -Math.min(damage, loser.needs.energy),
-          satiety: -Math.min(Math.round(damage / 2), loser.needs.satiety),
+          energy: -Math.min(damage, loserEnergyNow),
+          satiety: -Math.min(Math.round(damage / 2), ctx.projection.needAvailable(loser.id, 'satiety')),
         }),
         effect.experience(winner.id, { strength: config.attributes.fightWinGain }),
         // Auch eine Niederlage lehrt etwas — aber Gespuer, nicht Kraft.

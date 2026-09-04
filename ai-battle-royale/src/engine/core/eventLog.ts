@@ -9,6 +9,7 @@
 
 import { RollingHash, canonicalJson } from './hash.js';
 import { eventId } from './ids.js';
+import { EVENT_TYPES } from './types.js';
 import type { EventType, MatchId, Round, WorldEvent } from './types.js';
 
 /** Alles ausser `id` und `seq` — die vergibt der Log. */
@@ -96,22 +97,8 @@ export function hashEvents(matchId: MatchId, events: readonly WorldEvent[]): str
   return rolling.digest();
 }
 
+const EVENT_TYPE_SET: ReadonlySet<string> = new Set(EVENT_TYPES);
+
 export function isEventType(value: string): value is EventType {
-  return (
-    value === 'match_started' ||
-    value === 'round_started' ||
-    value === 'agent_rested' ||
-    value === 'resource_gathered' ||
-    value === 'gather_failed' ||
-    value === 'agent_moved' ||
-    value === 'food_consumed' ||
-    value === 'agent_attacked' ||
-    value === 'agent_killed' ||
-    value === 'attack_aborted' ||
-    value === 'attribute_grown' ||
-    value === 'agent_eliminated' ||
-    value === 'action_rejected' ||
-    value === 'round_ended' ||
-    value === 'match_ended'
-  );
+  return EVENT_TYPE_SET.has(value);
 }

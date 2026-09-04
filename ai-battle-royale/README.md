@@ -393,7 +393,13 @@ mit denen sie sich zeigen.
    Gehen kannte. Mit einem Überlebensterm (kein Essen hier, kein Vorrat, fallende
    Sättigung) sank das auf 4 Ausgeschiedene.
 
-## Beobachtungen aus dem Lauf (Seed 42, 400 Runden, 30 Agenten)
+## Beobachtungen aus dem Lauf (Seed 42, 400 Runden, 30 Agenten) — Stand Tag 2, vor Kampf
+
+Historischer Schnappschuss direkt nach der Bewegungsreparatur: noch ohne
+`attack` (kommt erst mit den Fähigkeiten, Tag 3) und beim damaligen Default
+`satietyDecayPerRound: 1`. Die aktuellen Zahlen unter dem heutigen Default
+stehen im nächsten Abschnitt — sie sind nicht vergleichbar, weil seitdem
+Kampf eine zweite Todesursache ist.
 
 | Größe | Wert |
 |---|---|
@@ -411,24 +417,37 @@ ein Agent, der eine veraltete Überzeugung ausspricht, irrt sich, er lügt nicht
 
 ## Die Ökonomie ist zu großzügig — gemessen, nicht vermutet
 
-Dass jetzt alle 30 Agenten überleben, ist **kein** Zeichen von Balance. Bis zur
-Reparatur der Bewegung starben Agenten nicht an Knappheit, sondern weil sie an
-Orten festsaßen, an denen nie Nahrung nachwächst. Die eigentlichen Zahlen:
+Neu gemessen (Fix 5, Opus-Review): die alte Fassung dieses Abschnitts zitierte
+noch `satietyDecayPerRound: 1` als Default und eine Tabelle von vor Tag 3 —
+der Code-Default ist seit der Kampf-Einführung `4` (`core/config.ts`, dort
+auch die Begründung), und ohne `attack` in der Messung war die Tabelle
+unvollständig: Kampf ist inzwischen die zweite Todesursache neben Verhungern.
+Neu gelaufen mit demselben Seed/Agentenzahl/Rundenzahl wie oben, jetzt mit
+Kampf:
 
-| `satietyDecayPerRound` | Bedarf/Runde | Überlebende von 30 |
-|---|---|---|
-| **1 (Default)** | 1,2 | 30 |
-| 4 | 4,8 | 24 |
-| 8 | 9,6 | 23 |
-| 12 | 14,4 | 21 |
-| 20 | 24,0 | 18 |
+| `satietyDecayPerRound` | Bedarf/Runde | Überlebende von 30 | davon verhungert/erschöpft | davon getötet (Kampf) |
+|---|---|---|---|---|
+| 1 | 1,2 | 23 | 1 | 6 |
+| **4 (Default)** | 4,8 | 18 | 6 | 6 |
+| 8 | 9,6 | 21 | 7 | 2 |
+| 12 | 14,4 | 19 | 11 | 0 |
+| 20 | 24,0 | 17 | 13 | 0 |
 
-Dem steht ein Nahrungsnachschub von **23 pro Runde** gegenüber (fields 12,
-well 6, commons 3, warehouse 2). Beim Default ist das ein 19-facher Überschuss —
-Nahrung ist wertlos, und damit wären auch Handel (T17) und Allianzlager (T20)
-ohne Einsatz. Der Default bleibt vorerst bei 1, weil Kalibrierung eine eigene
-Aufgabe ist (T43) und jede Änderung alle Golden-Hashes verschiebt;
-`tests/integration/elimination.test.ts` prüft das Ausscheiden deshalb unter
+Nicht mehr monoton, und das ist der eigentliche Befund: mehr Hunger ersetzt
+Kampf, statt sich zu ihm zu addieren. Bei knappem Default (4) verbringen
+Agenten mehr Runden mit Ernten/Essen und weniger mit Angreifen — 320 `attack`
+gegenüber 822 beim alten Default 1 — bis Knappheit ab `satietyDecayPerRound:
+12` Kampf faktisch verdrängt (47 bzw. 17 `attack`, kein einziger tödlicher
+Ausgang mehr). Beide Todesursachen ziehen aus demselben Handlungsbudget einer
+Runde.
+
+Dem Bedarf steht ein Nahrungsnachschub von **23 pro Runde** gegenüber (fields
+12, well 6, commons 3, warehouse 2). Beim aktuellen Default (4) ist das immer
+noch ein knapp 5-facher Überschuss auf dem Papier — dass trotzdem 40 % nicht
+überleben, zeigt, dass Verteilung (FCFS, Ortsbindung) mehr entscheidet als die
+Gesamtsumme. `satietyDecayPerRound` bleibt **[ANNAHME]** und Kalibrierungsmaß
+(T43); jede weitere Änderung verschiebt wieder alle Golden-Hashes.
+`tests/integration/elimination.test.ts` prüft das Ausscheiden weiterhin unter
 `satietyDecayPerRound: 8`.
 
 ## Beobachtungen aus dem Lauf mit Fähigkeiten und Kampf

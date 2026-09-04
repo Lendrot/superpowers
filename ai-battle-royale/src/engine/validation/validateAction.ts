@@ -25,7 +25,10 @@ import type {
   AgentAction,
   AgentId,
   Effect,
+  InfoId,
+  KnowledgeEntry,
   LocationId,
+  Needs,
   RejectReason,
   ResourceKind,
   WorldState,
@@ -121,6 +124,8 @@ export function validateAction(action: AgentAction, ctx: ActionContext): Validat
 export class EffectProjection {
   private readonly resourceDelta = new Map<string, number>();
   private readonly stockDelta = new Map<string, number>();
+  private readonly needDelta = new Map<string, number>();
+  private readonly knowledgeDelta = new Map<string, KnowledgeEntry>();
   private readonly eliminated = new Set<AgentId>();
 
   constructor(private readonly state: Readonly<WorldState>) {}
@@ -145,6 +150,45 @@ export class EffectProjection {
   /** Was dieser Agent in dieser Runde noch besitzt. */
   agentResource(agentId: AgentId, kind: ResourceKind): number {
     return this.agentAmount(agentId, kind);
+  }
+
+  /**
+   * Der Beduerfniswert dieses Agenten mit allen `need`-Effekten dieser Runde
+   * bereits eingerechnet — nicht nur der Stand vom Rundenbeginn.
+   *
+   * Naeherung, keine exakte Wiederholung: der `StateMutator` klemmt jeden
+   * Effekt einzeln auf 0..100, hier wird die Summe der Deltas einmal am Ende
+   * geklemmt. Bei mehreren `need`-Effekten fuer denselben Agenten in
+   * derselben Runde, von denen einer allein schon eine Grenze erreicht haette,
+   * kann das geringfuegig abweichen. Fuer eine Kampfentscheidung — der einzige
+   * heutige Aufrufer — ist das die richtige Grenze der Genauigkeit: exakt
+   * waere nur eine geordnete Wiederholung aller Effekte, und die Runde
+   * beschliesst ohnehin erst in Phase 7 endgueltig, wer wieviel Energie hat.
+   */
+  needAvailable(agentId: AgentId, need: keyof Needs): number {
+    const base = this.state.agents[agentId]?.needs[need] ?? 0;
+    const raw = base + (this.needDelta.get(`${agentId}:${need}`) ?? 0);
+    return Math.max(0, Math.min(100, raw));
+  }
+
+  /**
+   * Der `KnowledgeEntry` dieses Agenten zu dieser Info, wie er nach allen
+   * bisher in dieser Runde uebernommenen `knowledge`-Effekten aussieht — nicht
+   * nur der Stand vom Rundenbeginn.
+   *
+   * Noetig, weil `share_information`/`request_information` zweimal denselben
+   * Fehler machen koennten, ohne diese Methode: Erstens vergleicht
+   * `deriveToldEntry` das Angebot gegen das, was der Empfaenger schon hat —
+   * hat der Empfaenger in DIESER Runde bereits von jemand anderem gehoert
+   * (fruehere Aufloesung, gleiche Klasse), muss das der Vergleich sehen, sonst
+   * gewinnt blind der zuletzt aufgeloeste Effekt statt die hoehere Sicherheit.
+   * Zweitens aktualisiert der Sender beim Teilen sein eigenes `sharedWith` —
+   * dafuer braucht es den AKTUELLEN eigenen Eintrag, nicht den vom
+   * Rundenbeginn, sonst wuerde das Update einen Eintrag ueberschreiben, den
+   * der Sender selbst erst in dieser Runde bekommen hat.
+   */
+  knowledgeEntry(agentId: AgentId, infoId: InfoId): KnowledgeEntry | undefined {
+    return this.knowledgeDelta.get(`${agentId}:${infoId}`) ?? this.state.agents[agentId]?.knowledge[infoId];
   }
 
   check(effects: readonly Effect[]): ValidationResult {
@@ -212,6 +256,17 @@ export class EffectProjection {
           const key = `${item.locationId}:${kind}`;
           this.stockDelta.set(key, (this.stockDelta.get(key) ?? 0) + delta);
         }
+      } else if (item.t === 'need') {
+        for (const need of ['satiety', 'energy'] as const) {
+          const delta = item.delta[need];
+          if (!delta) continue;
+          const key = `${item.agentId}:${need}`;
+          this.needDelta.set(key, (this.needDelta.get(key) ?? 0) + delta);
+        }
+      } else if (item.t === 'knowledge') {
+        // Der letzte Effekt gewinnt — dieselbe Reihenfolge, in der Phase 7 sie
+        // gleich anwenden wird, weil beide der Aufloesungsreihenfolge folgen.
+        this.knowledgeDelta.set(`${item.agentId}:${item.entry.infoId}`, item.entry);
       }
     }
   }

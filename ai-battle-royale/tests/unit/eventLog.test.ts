@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createEventLog, hashEvents } from '@/engine/core/eventLog.js';
+import { createEventLog, hashEvents, isEventType } from '@/engine/core/eventLog.js';
 import type { EventDraft } from '@/engine/core/eventLog.js';
 import { worldEventSchema } from '@/engine/core/schemas.js';
+import { EVENT_TYPES } from '@/engine/core/types.js';
 import type { MatchId } from '@/engine/core/types.js';
 
 const MATCH: MatchId = 'match_test';
@@ -107,5 +108,27 @@ describe('eventLog — Hash', () => {
     log.append(draft(2, 'round_ended'));
 
     expect(hashEvents(MATCH, log.events)).toBe(log.hash);
+  });
+});
+
+describe('eventLog — EVENT_TYPES ist die einzige Quelle', () => {
+  /**
+   * Fix 4 (Opus-Review): `EventType`, `isEventType` und `worldEventSchema`
+   * pflegten je eine eigene Aufzaehlung. Sie liefen auseinander — dem Schema
+   * fehlten die fuenf Tag-4-Typen (`information_shared`, `information_refused`,
+   * `trade_accepted`, `trade_countered`, `trade_declined`), obwohl `isEventType`
+   * und der `EventType`-Unionstyp sie kannten. Jetzt leiten sich alle drei von
+   * `EVENT_TYPES` ab — dieser Test iteriert genau darueber, statt eine vierte,
+   * separat gepflegte Liste anzulegen.
+   */
+  it.each(EVENT_TYPES)('%s ist fuer isEventType UND worldEventSchema gueltig', (type) => {
+    expect(isEventType(type)).toBe(true);
+    const event = createEventLog(MATCH).append(draft(1, type));
+    expect(worldEventSchema.safeParse(event).success).toBe(true);
+  });
+
+  it('kein Event-Typ existiert nur im Schema oder nur in EVENT_TYPES', () => {
+    const schemaTypes = worldEventSchema.shape.type.options as readonly string[];
+    expect(new Set(schemaTypes)).toEqual(new Set(EVENT_TYPES));
   });
 });

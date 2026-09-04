@@ -119,6 +119,14 @@ export const shareInformationAction: ActionDef = {
     // und `no-omniscience` (Doc 08 §8.4) an ihm nicht mehr pruefbar.
     const thisEventId = eventId(ctx.round, ctx.log.nextSeq);
 
+    // Live gelesen, nicht vom Rundenbeginn: `share_information` ist Klasse 5.
+    // Hat das Ziel in dieser Runde schon von jemand anderem gehoert (fruehere
+    // Aufloesung, gleiche Klasse), muss `deriveToldEntry` GEGEN DAS vergleichen
+    // — sonst gewinnt blind der zuletzt aufgeloeste Effekt statt die hoehere
+    // Sicherheit, und die "nicht mit Schwaecherem ueberschreiben"-Regel greift
+    // nicht.
+    const existingForTarget = ctx.projection.knowledgeEntry(target.id, infoId);
+
     const newEntry = deriveToldEntry({
       statement,
       senderEntry,
@@ -127,17 +135,22 @@ export const shareInformationAction: ActionDef = {
       config: ctx.state.config,
       sourceAgent: actor.id,
       sourceEventId: thisEventId,
-      existing: target.knowledge[infoId],
+      existing: existingForTarget,
     });
     if (newEntry) {
       effects.push(effect.knowledge(target.id, newEntry));
     }
 
-    if (!senderEntry.sharedWith.includes(target.id)) {
+    // Ebenso live: der eigene Eintrag koennte sich in dieser Runde bereits
+    // geaendert haben (der Sender kann selbst gerade erst von einem Dritten
+    // gehoert haben). Aus dem Stand vom Rundenbeginn heraus wuerde dieses
+    // Update genau diese frischere Version wieder ueberschreiben.
+    const currentSenderEntry = ctx.projection.knowledgeEntry(actor.id, infoId) ?? senderEntry;
+    if (!currentSenderEntry.sharedWith.includes(target.id)) {
       effects.push(
         effect.knowledge(actor.id, {
-          ...senderEntry,
-          sharedWith: [...senderEntry.sharedWith, target.id],
+          ...currentSenderEntry,
+          sharedWith: [...currentSenderEntry.sharedWith, target.id],
         }),
       );
     }

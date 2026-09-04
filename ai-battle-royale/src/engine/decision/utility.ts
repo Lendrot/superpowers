@@ -7,14 +7,25 @@
  * Relationship-Tabelle vs. Phase 8).
  *
  * **Ehrliche Deckungslücke gegenüber Doc 05 §5.2:** die volle Formel nennt
- * zusaetzlich `goalAlignment(c, goals)` und `lessonBias(c, lessons)`. Beide
- * fehlen hier vollstaendig, weil ihre Voraussetzungen es tun — `Goal` ist in
- * keinem Tag bisher gebaut worden, `Lesson` kommt erst mit T24. Ein Term ohne
- * Datenquelle ist keine Naeherung, sondern eine Erfindung; deshalb steht hier
- * keiner. `personalityBias` ist nicht als eigener Term ausgewiesen, sondern
- * *in* jedem Term verwoben (Persoenlichkeit modelliert schon immer mit) —
- * eine nachtraegliche zweite Persoenlichkeits-Zahl obendrauf wuerde doppelt
- * zaehlen, was einzelne Terme (z. B. `restraint` bei `attack`) schon leisten.
+ * zusaetzlich `goalAlignment(c, goals)`. Der fehlt hier vollstaendig, weil
+ * seine Voraussetzung es tut — `Goal` ist in keinem Tag bisher gebaut worden.
+ * Ein Term ohne Datenquelle ist keine Naeherung, sondern eine Erfindung;
+ * deshalb steht hier keiner. `personalityBias` ist nicht als eigener Term
+ * ausgewiesen, sondern *in* jedem Term verwoben (Persoenlichkeit modelliert
+ * schon immer mit) — eine nachtraegliche zweite Persoenlichkeits-Zahl
+ * obendrauf wuerde doppelt zaehlen, was einzelne Terme (z. B. `restraint` bei
+ * `attack`) schon leisten.
+ *
+ * **`lessonBias(c, lessons)` (T24) ist dagegen echt verdrahtet** — Doc 05
+ * §5.2s "hier wirkt Gelerntes", der einzige Kanal, ueber den `Agent.lessons`
+ * das Verhalten beeinflusst. `LESSON_ACTION_BIAS` bildet jeden der sechs
+ * Pattern-Miner-Detektoren (`learning/patternMiner.ts`) auf die Aktionstypen
+ * ab, die er plausibel beeinflusst — nur fuer Kandidaten mit einem `target`,
+ * dessen `AgentId` mit `lesson.subjectRef` uebereinstimmt. Anders als die
+ * sechs Kategorien wird `lessonBias` NICHT durch `UTILITY_WEIGHTS` skaliert
+ * (kein Eintrag in `CATEGORY_OF`, `weightFor` faellt auf 1 zurueck) — Doc 05
+ * §5.2 fuehrt ihn als eigenstaendigen additiven Term, nicht als siebte
+ * Kategorie.
  *
  * **`UTILITY_WEIGHTS`** ist die im Vergleich zu Tag 4 tatsaechlich neue
  * Struktur: ein einziger, benannter Gewichtsvektor ueber Doc 05s sechs
@@ -126,6 +137,16 @@ const STOCK_SCALE = 20;
 const KIND_WEIGHT = { food: 1, materials: 0.6 } as const;
 
 export function scoreOf(view: Readonly<AgentView>, candidate: ActionCandidate): Record<string, number> {
+  const breakdown = rawScoreOf(view, candidate);
+  const targetId = readTargetId(candidate);
+  if (targetId) {
+    const bias = lessonBiasFor(view, candidate.type, targetId);
+    if (bias !== 0) breakdown['lessonBias'] = bias;
+  }
+  return breakdown;
+}
+
+function rawScoreOf(view: Readonly<AgentView>, candidate: ActionCandidate): Record<string, number> {
   switch (candidate.type) {
     case 'rest':
       return scoreRest(view);
@@ -153,6 +174,39 @@ export function scoreOf(view: Readonly<AgentView>, candidate: ActionCandidate): 
       // Ein Kandidat ohne Bewertung waere ein stiller Nulltreffer. Lieber laut.
       throw new Error(`utility.ts kennt die Aktion ${candidate.type} nicht`);
   }
+}
+
+function readTargetId(candidate: ActionCandidate): AgentId | undefined {
+  const value = candidate.params['target'];
+  return typeof value === 'string' && value.startsWith('agent_') ? (value as AgentId) : undefined;
+}
+
+/**
+ * T24 — `lessonBias(c, lessons)`, Doc 05 §5.2. Jeder Detektorname aus
+ * `learning/patternMiner.ts` bildet auf die Aktionstypen ab, die er
+ * plausibel beeinflusst, mit Vorzeichen und Groessenordnung **[ANNAHME]** —
+ * kalibriert an denselben Groessenordnungen wie `rapport`/`trustBonus`
+ * (0.1–0.15) bis `dealmaking` (bis 0.5), nicht an einer eigenen Skala.
+ */
+const LESSON_ACTION_BIAS: Partial<Record<string, Partial<Record<ActionCandidate['type'], number>>>> = {
+  shares_information: { request_information: 0.3 },
+  withholds_from_me: { request_information: -0.3 },
+  trades_fairly: { trade: 0.3 },
+  attacked_me: { trade: -0.2, share_information: -0.15, offer_alliance: -0.3, attack: 0.2 },
+  left_alliance: { offer_alliance: -0.25 },
+  reliable_ally: { offer_alliance: 0.35, attack: -0.3 },
+};
+
+function lessonBiasFor(view: Readonly<AgentView>, candidateType: ActionCandidate['type'], targetId: AgentId): number {
+  let total = 0;
+  for (const lesson of Object.values(view.self.lessons)) {
+    if (lesson.subjectRef !== targetId) continue;
+    const detectorName = lesson.key.slice(0, lesson.key.indexOf('('));
+    const magnitude = LESSON_ACTION_BIAS[detectorName]?.[candidateType];
+    if (magnitude === undefined) continue;
+    total += magnitude * lesson.confidence;
+  }
+  return total;
 }
 
 function scoreRest(view: Readonly<AgentView>): Record<string, number> {

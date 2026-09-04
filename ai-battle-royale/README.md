@@ -1,6 +1,6 @@
-# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem, Allianzen, Gedächtnis
+# AI Battle Royale — deterministischer Kern, Wahrnehmung, Wahrheit, Sozialsystem, Allianzen, Gedächtnis, Lernen
 
-Stand: **Tag 1 bis Tag 5** aus `12-build-order.md` (T21 ausgenommen, siehe unten).
+Stand: **Tag 1 bis Tag 6** aus `12-build-order.md` (T21, T27 ausgenommen, siehe unten).
 
 - **Tag 1** (T01, T02 reduziert, T03–T07, Kern von T09): Welt aus Seed, Runden
   laufen headless, Event-Log-Hash reproduzierbar.
@@ -22,11 +22,20 @@ Stand: **Tag 1 bis Tag 5** aus `12-build-order.md` (T21 ausgenommen, siehe unten
   statt unbegrenztem Wachstum) und die Utility-Policy als eigenes Modul
   (`decision/utility.ts`) mit einem benannten, aktuell neutralen
   Gewichtsvektor über Doc 05s sechs Kategorien. Siehe „Tag 5" unten.
+- **Tag 6** (T24, T25, T26; T27 fehlt noch, siehe unten): ein
+  Pattern-Miner (Phase 10, kein LLM, sechs Detektoren + Laplace-Konfidenz)
+  destilliert `Lesson`s aus dem episodischen Gedächtnis jedes Agenten und
+  fließt über `lessonBias` in die Utility-Policy zurück; eine konsolidierte
+  Simulations-Invarianten-Suite (Doc 10 §C) und ein Long-Run-Harness
+  (`engine/runner/stats.ts`, `pnpm sim --matches <n>` ab zwei Matches) mit den
+  acht Kennzahlengruppen aus Doc 10 §10.1 D. Der Long-Run-Lauf selbst deckte
+  einen echten Bug auf, keinen nur theoretischen: siehe „Beobachtungen aus
+  Tag 6" unten.
 - **Erweiterung außerhalb der Spezifikation** (auf Ansage): Fähigkeiten, die
   sich entwickeln, Instinkte, die daraus folgen, Macht als Ziel, und ein
   Kampfsystem, in dem Agenten einander töten können. Siehe unten.
 
-Kein UI, kein LLM, keine Zusagen (Pledges), kein Lernsystem.
+Kein UI, kein LLM, keine Zusagen (Pledges), keine Persistenz.
 
 ## Fähigkeiten, Instinkte, Macht, Gewalt
 
@@ -502,6 +511,12 @@ Kalibrierungspunkt, kein Konstruktionsfehler.
   echte Kosten fürs Reden/Verbünden, oder eine Policy, die nicht rein per
   Argmax entscheidet. Eingang für den Kalibrierungs-Sweep (T43) — jetzt mit
   einem einzigen Ort, an dem er ansetzen kann.
+  Bestätigt mit Tag 6 im großen Maßstab (`pnpm sim --matches 100 --rounds
+  400`, 40.000 Runden gesamt, Seeds 42–141): `trade` gewann in keinem
+  einzigen Match (`mostCommonTradePairs: []`), `offer_alliance` 95-mal, aber
+  nur eine einzige daraus entstandene Allianz überlebte bis zur Auswertung
+  (`alliances.totalFormed: 1`, siehe „Beobachtungen aus Tag 6" unten) — kein
+  Einzelfall des Seeds 42, sondern dasselbe Bild über 100 unabhängige Läufe.
 - **`agent_resource` wird noch von keiner Wahrnehmung gespeist.** Ein Agent
   kann nur über fremde Vorräte reden, wenn er es je gehört hat — niemand
   beobachtet sie direkt. Siehe Abweichung 19.
@@ -516,12 +531,13 @@ Kalibrierungspunkt, kein Konstruktionsfehler.
   Bruch), aber ohne `Pledge`-Typ, Fälligkeitsprüfung oder Bruch-Erkennung
   dahinter — auch `offer_alliance`/`leave_alliance`/`expel_member` erzeugen
   keinen, obwohl Doc 04 §4.1 das als optionale Ergänzung nennt.
-- **Goals (Doc 03 §3.2.3) und Lessons (T24) existieren nicht.** Deshalb fehlen
-  der Utility-Formel aus Doc 05 §5.2 zwei ihrer Terme —
-  `goalAlignment(c, goals)` und `lessonBias(c, lessons)` —, dokumentiert direkt
-  im Kopfkommentar von `decision/utility.ts`, nicht stillschweigend
-  ausgelassen. Lessons kommen mit T24 (Tag 6); Goals stehen in keinem Tag der
-  Spezifikation als eigene Aufgabe.
+- **Goals (Doc 03 §3.2.3) existieren weiterhin nicht.** Der Utility-Formel aus
+  Doc 05 §5.2 fehlt deshalb `goalAlignment(c, goals)`, dokumentiert direkt im
+  Kopfkommentar von `decision/utility.ts`. `lessonBias(c, lessons)` ist mit
+  T24 (Tag 6) dagegen echt verdrahtet — sechs Pattern-Miner-Detektoren
+  (`learning/patternMiner.ts`) leiten `Lesson`s aus dem episodischen
+  Gedächtnis her, mit Laplace-Konfidenz `(evidence+1)/(evidence+contradictory+2)`.
+  Goals stehen in keinem Tag der Spezifikation als eigene Aufgabe.
 - **Cohesion (Doc 03 §3.6) ist als Funktion vorgesehen, aber noch nicht
   geschrieben** — mangels Konsumenten: keine Aktion und kein Score-Term
   braucht sie in T20/T23. `world/alliances.ts#cohesionOf` ist ein Name im
@@ -572,14 +588,64 @@ jeden Schritt (Mitgliederliste, Führungswechsel, Selbstauflösung unter zwei
 Mitgliedern, `exiledFrom`-Zählung). Er zeigt nur, was die aktuellen
 Policy-Gewichte damit tun — bzw. nicht tun, siehe oben.
 
+## Beobachtungen aus Tag 6 (`pnpm sim --matches 100 --rounds 400`, Seeds 42–141, 30 Agenten)
+
+Der Long-Run-Harness (T26) ist nicht nur Statistik — der erste echte Lauf über
+100 Matches × 400 Runden fand einen Bug, den kein Einzel-Match-Test bis dahin
+ausgelöst hatte: bei Seed 113 warf `assertInvariants` nach rund 350 Runden
+`strength wuerde auf 1003 laufen (erlaubt 0..1000)`. Ursache:
+`actions/defs/attack.ts` vergab `fightWinGain`/`fightLossGain` bislang roh, ohne
+sie wie `world/consequence.ts#addGain` gegen `maxExperience` zu klammern — ein
+Agent, dessen Kraft-Erfahrung durch viele gewonnene Kämpfe schon nahe am
+Maximum stand, riss beim nächsten Sieg die Obergrenze. Behoben durch
+`clampExperienceDelta` an beiden Stellen (`attack.ts`), mit drei neuen
+Regressionstests in `attack.test.ts` und dem exakten Seed im Kommentar. Bekannte
+Restlücke, dokumentiert im Quelltext: die Klammerung liest `ctx.state`
+(Rundenbeginn), kein Live-Ledger für Erfahrung existiert — gewinnt oder
+verliert derselbe Agent im selben Zug gegen zwei verschiedene Gegner, rechnen
+beide Effekte gegen denselben Ausgangswert. In keinem der 100 Matches
+beobachtet.
+
+Nach dem Fix lief der komplette 100×400-Durchlauf (40.000 Runden) ohne einen
+einzigen Invariantenbruch und mit `rejectRate: 0` durch. Ausgewählte Werte aus
+dem `LongRunReport`:
+
+| Größe | Wert |
+|---|---|
+| Reject-Rate (Mittel über 100 Matches) | 0 |
+| Allianzen gegründet insgesamt | 1 (bei 95 `offer_alliance`-Versuchen über alle Matches) |
+| Handelspaare | keine — `trade` gewann in keinem Match |
+| Lessons pro Agent (Mittel) | 1,55, mittlere Konfidenz 0,81 |
+| Gini-Koeffizient Ressourcen (Mittel) | Food 0,78 / Coins 0,70 / Materials 0,84 — deutliche Ungleichverteilung |
+| Überlebensrate nach Archetyp | Loyalist 52 %, Connector 53 %, Recluse 42 %, Opportunist 34 %, Striver 15 % |
+| Performance | ~4 ms/Runde, Spitzen-Heap ~69 MB |
+
+Der Archetyp-Unterschied (Striver überlebt am seltensten, Loyalist/Connector am
+häufigsten) ist über 100 Matches stabil genug, um mehr als Rauschen zu sein —
+aber eine Erklärung dafür ist Sache von T43 (Kalibrierung), nicht dieses
+Reports. Golden-Hash-Verschiebung durch T24 (Lernen) allein: ja — sowohl
+`MatchConfig.learning` als neues Feld als auch `lessonBias` als echter,
+verdrahteter Scoring-Term ab Runde 1 (siehe `tests/golden/determinism.test.ts`,
+Kopfkommentar).
+
 ## Nächster Schritt
 
-Tag 6 (`12-build-order.md`): **T24, T25, T26, T27** — Lessons aus Mustern
-(Pattern-Miner, kein LLM), eine Simulations-Invarianten-Suite über Doc 10 §C,
-ein Long-Run-Harness mit Statistik-Report (`pnpm sim --matches 100 --rounds
-400`), Persistenz (SQLite-Schema, Event-Log, Snapshots, Resume). Danach Tag 7:
-Lernwirkung nachweisen, oder — falls der Report aus T26 nichts Interessantes
-zeigt — ein Kalibrierungstag (T43), der genau an `UTILITY_WEIGHTS` ansetzt.
+T24, T25 und T26 aus Tag 6 sind fertig — siehe „Beobachtungen aus Tag 6" oben.
+Offen aus Tag 6 bleibt **T27** (Persistenz: SQLite-Schema, Event-Log,
+Snapshots, Resume) — braucht `better-sqlite3` als neue Abhängigkeit und lebt
+in `src/persistence/`, außerhalb der Engine (`eslint.config.js` führt
+`better-sqlite3`/`@/persistence/*` schon in der Restriktionsliste für
+`src/engine/**`). Danach Tag 7: Web-UI (Dashboard, Event-Feed,
+Charakterprofil, Steuerung, Debug-Modus).
+
+Der T26-Report selbst liefert bereits ein klares Bild statt eines offenen
+Befunds: `trade`/`share_information`/`request_information`/`offer_alliance`
+gewinnen unter den aktuellen Gewichten so gut wie nie (siehe „Was noch offen
+ist"). Das ist der stärkste Hinweis bisher, dass ein Kalibrierungstag (T43),
+der an `UTILITY_WEIGHTS` ansetzt, vor der Web-UI mehr wert wäre als danach —
+eine UI, die eine Simulation zeigt, in der fast nur geerntet, geruht und
+gekämpft wird, zeigt wenig von dem, was Doc 01 als Schwerpunkt nennt
+("sozial").
 
 Weiterhin offen, unabhängig vom Tag: **T21** (Pledges), das `declare_intent`
 einen echten Verratsmechanismus gibt.

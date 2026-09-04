@@ -7,14 +7,21 @@
  * Abnahmekriteriums aus Doc 12, Tag 1: zwei Laeufe mit gleichem Seed muessen
  * denselben Wert liefern.
  *
+ * T26 — ab `--matches 2` haengt zusaetzlich ein `LongRunReport`
+ * (`engine/runner/stats.ts`) an: die acht Kennzahlengruppen aus Doc 10
+ * §10.1 D ueber alle gelaufenen Matches gemittelt, nicht nur die
+ * Einzel-Summaries nebeneinander. Der Seed steigt je Match um 1 — jedes
+ * Match ist ein eigener, deterministischer Lauf, `aggregateLongRun` fasst sie
+ * nur zusammen.
+ *
  * Die CLI liegt ausserhalb der Engine und darf deshalb `node:fs` benutzen.
  */
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { resolveConfig, runMatch } from '../engine/index.js';
-import type { MatchResult } from '../engine/index.js';
+import { aggregateLongRun, resolveConfig, runMatch, sampleMatch } from '../engine/index.js';
+import type { MatchResult, MatchSample } from '../engine/index.js';
 
 interface CliOptions {
   matches: number;
@@ -113,6 +120,7 @@ function summarize(result: MatchResult, seed: number, durationMs: number): Recor
 function main(): void {
   const options = parseArgs(process.argv.slice(2));
   const reports: Record<string, unknown>[] = [];
+  const samples: MatchSample[] = [];
 
   for (let i = 0; i < options.matches; i += 1) {
     const seed = options.seed + i;
@@ -125,8 +133,10 @@ function main(): void {
 
     const startedAt = performance.now();
     const result = runMatch(config);
-    const summary = summarize(result, seed, performance.now() - startedAt);
+    const durationMs = performance.now() - startedAt;
+    const summary = summarize(result, seed, durationMs);
     reports.push(summary);
+    samples.push(sampleMatch(result, seed, durationMs));
 
     if (!options.quiet) {
       console.log(
@@ -143,9 +153,22 @@ function main(): void {
       `${(totalMs / options.matches).toFixed(1)} ms pro Match`,
   );
 
+  // Doc 10 §10.1 D) "Long-Run Tests": ab zwei Matches sind Einzel-Summaries
+  // allein nicht die verlangte Kennzahl — erst ueber viele Matches gemittelt
+  // sagen sie etwas ueber die Simulation, nicht nur ueber einen Seed.
+  const longRun = options.matches > 1 ? aggregateLongRun(samples) : null;
+  if (longRun && !options.quiet) {
+    console.log('\n--- Long-Run-Report ---');
+    console.log(JSON.stringify(longRun, null, 2));
+  }
+
   if (options.report) {
     mkdirSync(dirname(options.report), { recursive: true });
-    writeFileSync(options.report, `${JSON.stringify({ options, matches: reports }, null, 2)}\n`, 'utf8');
+    writeFileSync(
+      options.report,
+      `${JSON.stringify({ options, matches: reports, longRun }, null, 2)}\n`,
+      'utf8',
+    );
     console.log(`Report geschrieben: ${options.report}`);
   }
 }

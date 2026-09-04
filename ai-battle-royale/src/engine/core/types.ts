@@ -213,6 +213,15 @@ export interface Agent {
    */
   episodic: EpisodicMemory[];
 
+  /**
+   * Verallgemeinerte Erkenntnisse (Doc 03 §6.1), Schluessel = `Lesson.key`.
+   * Entsteht ausschliesslich in Phase 10 (`learning/patternMiner.ts`), aus
+   * genau diesem Agenten eigenen `episodic`-Eintraegen — dieselbe
+   * Epistemik-Schranke wie bei Wissen und Episoden. Gedeckelt auf
+   * `config.learning.maxLessons`.
+   */
+  lessons: Record<string, Lesson>;
+
   /** frueheste naechste Runde je Aktionstyp; fehlender Eintrag = kein Cooldown */
   cooldowns: Partial<Record<ActionType, Round>>;
   allianceId: AllianceId | null;
@@ -318,6 +327,40 @@ export interface EpisodicMemory {
   summaryKey: string;
   /** Optionaler Anzeigetext fuer eine spaetere UI — nie entscheidungsrelevant, in T22 nie befuellt. */
   detail?: string;
+}
+
+/**
+ * Doc 03 §3.7, T24. `key` folgt einer geschlossenen Taxonomie
+ * (`learning/patternMiner.ts#LESSON_DETECTORS`), Form `<name>(<AgentId>)` fuer
+ * `scope: 'about_agent'`.
+ *
+ * Reduziert gegenueber Doc 03: nur `scope: 'about_agent'` hat einen Detektor
+ * (Pfad A/Pattern-Miner) — `about_world` und `about_strategy` brauchen
+ * Systeme, die es nicht gibt (`food_scarce_early` waere `about_world` ohne
+ * Match-uebergreifende Speicherung; jede `about_strategy`-Lesson braucht
+ * `Strategy.weights`, das kein Tag bisher baut). Kein LLM (`llmMode: 'off'`
+ * ist die einzige implementierte Betriebsart) heisst auch: Pfad B (LLM
+ * Reflection, freie Lessons) existiert nicht — `persistAcrossMatches` ist
+ * deshalb bei jeder heute erzeugten Lesson `false`, das Feld selbst aber real:
+ * die Regel ("nur `about_strategy` mit confidence >= 0.7 darf persistieren")
+ * ist bereits pruefbar, sie hat nur noch keinen wahren Fall.
+ */
+export interface Lesson {
+  key: string;
+  scope: 'about_agent';
+  subjectRef: AgentId;
+  /** Menschenlesbar, aus einem Template — nie freie Eingabe, siehe `patternMiner.ts`. */
+  statement: string;
+  /** = (evidenceCount + 1) / (evidenceCount + contradictoryEvidence + 2), Laplace. */
+  confidence: Score01;
+  /** Gedeckelt auf `config.learning.evidenceCap`. */
+  evidenceCount: number;
+  contradictoryEvidence: number;
+  /** Max 5 (CLAUDE.md Regel 8) — jede Id muss im `episodic` DIESES Agenten stehen. */
+  supportingEpisodeIds: EventId[];
+  firstLearnedRound: Round;
+  lastUpdated: Round;
+  persistAcrossMatches: boolean;
 }
 
 // ── 3.4 Informationssystem ───────────────────────────────────────────────────
@@ -656,6 +699,16 @@ export type Effect =
    * er in dieser Runde neue Episoden bekommen hat.
    */
   | { t: 'episode_upkeep'; agentId: AgentId }
+  /**
+   * T24 — der einzige Weg, auf dem sich `Agent.lessons` aendert. Ein
+   * Pattern-Miner-Durchlauf (Phase 10) rechnet deterministisch aus den
+   * AKTUELLEN `episodic`-Eintraegen den vollstaendigen neuen Lesson-Satz neu
+   * — kein Upsert einzelner Schluessel, weil ein Detektor ohnehin bei jedem
+   * Lauf neu ueber die ganze (gedeckelte, also billige) Episodenliste
+   * rechnet. `lessons` ersetzt den bisherigen Bestand komplett; auf
+   * `config.learning.maxLessons` gekuerzt hat das schon der Miner erledigt.
+   */
+  | { t: 'lesson_sync'; agentId: AgentId; lessons: Record<string, Lesson> }
   | { t: 'round_advance' }
   | { t: 'match_end'; reason: EndReason };
 
@@ -732,10 +785,24 @@ export interface MatchConfig {
   combat: CombatConfig;
   alliance: AllianceConfig;
   memory: MemoryConfig;
+  learning: LearningConfig;
   /** Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3) */
   buckets: BucketTable;
   /** Invarianten nach jeder Mutation pruefen. In Long-Run-Batches abschaltbar. */
   strictInvariants: boolean;
+}
+
+/**
+ * Doc 03 §3.10, Abschnitt `learning`, reduziert: `enabled`/`freeLessonSlots`/
+ * `persistAcrossMatches`/`maxWeightDeltaPerReflection` gehoeren zu Pfad B
+ * (LLM Reflection) — ohne LLM (`llmMode: 'off'` ist alles, was implementiert
+ * ist) gibt es diesen Pfad nicht, die Felder waeren unbenutzt.
+ */
+export interface LearningConfig {
+  /** Obergrenze der Lessons je Agent (Doc 03 §6.1). */
+  maxLessons: number;
+  /** Deckel fuer `evidenceCount`/`contradictoryEvidence` — gleitendes Fenster (Doc 03 §6.3). */
+  evidenceCap: number;
 }
 
 /** Doc 03 §3.10, Abschnitt `memory`. */

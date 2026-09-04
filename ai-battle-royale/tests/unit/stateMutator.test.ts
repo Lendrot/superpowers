@@ -87,20 +87,20 @@ describe('stateMutator — Effekttypen', () => {
   });
 });
 
-describe('stateMutator — Episoden (T22)', () => {
-  function episode(id: string, salience: number): EpisodicMemory {
-    return {
-      id: id as EventId,
-      round: 1,
-      eventType: 'trade_accepted',
-      participants: [A],
-      role: 'actor',
-      valence: 0.2,
-      salience,
-      summaryKey: `trade_accepted:${id}`,
-    };
-  }
+function episode(id: string, salience: number): EpisodicMemory {
+  return {
+    id: id as EventId,
+    round: 1,
+    eventType: 'trade_accepted',
+    participants: [A],
+    role: 'actor',
+    valence: 0.2,
+    salience,
+    summaryKey: `trade_accepted:${id}`,
+  };
+}
 
+describe('stateMutator — Episoden (T22)', () => {
   it('episode_add haengt an, episode_upkeep laesst die Salience verfallen', () => {
     applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.5))]);
     expect(state.agents[A]!.episodic).toHaveLength(1);
@@ -134,6 +134,54 @@ describe('stateMutator — Episoden (T22)', () => {
     expect(() => applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.9))])).toThrow(
       InvariantError,
     );
+  });
+});
+
+describe('stateMutator — Lessons (T24)', () => {
+  function lesson(key: string, supportingEpisodeIds: EventId[]) {
+    return {
+      key,
+      scope: 'about_agent' as const,
+      subjectRef: B,
+      statement: 'Testaussage.',
+      confidence: 0.75,
+      evidenceCount: 2,
+      contradictoryEvidence: 0,
+      supportingEpisodeIds,
+      firstLearnedRound: 1,
+      lastUpdated: 1,
+      persistAcrossMatches: false,
+    };
+  }
+
+  it('lesson_sync ersetzt den Lesson-Bestand, wenn alle Belege im eigenen episodic stehen', () => {
+    applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.5))]);
+    const key = `attacked_me(${B})`;
+    applyEffects(state, [effect.lessonSync(A, { [key]: lesson(key, ['event_0001_00000' as EventId]) })]);
+    expect(state.agents[A]!.lessons[key]).toMatchObject({ key, subjectRef: B });
+  });
+
+  it('lehnt eine Lesson ab, deren Beleg nicht im eigenen episodic steht (CLAUDE.md Regel 8)', () => {
+    const key = `attacked_me(${B})`;
+    expect(() =>
+      applyEffects(state, [effect.lessonSync(A, { [key]: lesson(key, ['event_9999_00000' as EventId]) })]),
+    ).toThrow(/nicht in agent_000s episodic/);
+  });
+
+  it('lehnt eine Lesson ohne supportingEpisodeIds ab', () => {
+    const key = `attacked_me(${B})`;
+    expect(() => applyEffects(state, [effect.lessonSync(A, { [key]: lesson(key, []) })])).toThrow(InvariantError);
+  });
+
+  it('lehnt mehr Lessons ab, als config.learning.maxLessons erlaubt', () => {
+    applyEffects(state, [effect.episodeAdd(A, episode('event_0001_00000', 0.5))]);
+    const withCap = state.config.learning.maxLessons;
+    const lessons: Record<string, ReturnType<typeof lesson>> = {};
+    for (let i = 0; i <= withCap; i += 1) {
+      const key = `attacked_me(agent_${String(i + 100).padStart(3, '0')})`;
+      lessons[key] = lesson(key, ['event_0001_00000' as EventId]);
+    }
+    expect(() => applyEffects(state, [effect.lessonSync(A, lessons)])).toThrow(/maxLessons/);
   });
 });
 

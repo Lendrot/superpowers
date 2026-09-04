@@ -313,6 +313,41 @@ function applyOne(state: WorldState, item: Effect): void {
       return;
     }
 
+    case 'lesson_sync': {
+      const agent = getAgent(state, item.agentId);
+      const count = Object.keys(item.lessons).length;
+      if (count > state.config.learning.maxLessons) {
+        // Der Miner muss VOR dem Effekt kuerzen, nicht der Mutator — dieselbe
+        // Aufgabenteilung wie bei jedem anderen Effekt: der Erzeuger rechnet,
+        // der Mutator prueft nur noch.
+        throw new InvariantError(`${describeEffect(item)}: ${count} Lessons ueberschreiten maxLessons (${state.config.learning.maxLessons})`);
+      }
+      for (const [key, lesson] of Object.entries(item.lessons)) {
+        if (lesson.key !== key) {
+          throw new InvariantError(`${describeEffect(item)}: Schluessel '${key}' und lesson.key '${lesson.key}' weichen ab`);
+        }
+        if (lesson.supportingEpisodeIds.length === 0) {
+          throw new InvariantError(`${describeEffect(item)}: Lesson '${key}' ohne supportingEpisodeIds (CLAUDE.md Regel 8)`);
+        }
+        if (lesson.supportingEpisodeIds.length > 5) {
+          throw new InvariantError(`${describeEffect(item)}: Lesson '${key}' hat mehr als 5 supportingEpisodeIds`);
+        }
+        for (const episodeId of lesson.supportingEpisodeIds) {
+          if (!agent.episodic.some((episode) => episode.id === episodeId)) {
+            // CLAUDE.md Regel 8, woertlich: eine Lesson ohne Beleg aus dem
+            // EIGENEN Speicher waere Wissen aus dem Nichts.
+            throw new InvariantError(
+              `${describeEffect(item)}: Lesson '${key}' beruft sich auf ${episodeId}, das nicht in ${agent.id}s episodic steht`,
+            );
+          }
+        }
+      }
+      agent.lessons = Object.fromEntries(
+        Object.entries(item.lessons).map(([key, lesson]) => [key, { ...lesson, supportingEpisodeIds: [...lesson.supportingEpisodeIds] }]),
+      );
+      return;
+    }
+
     case 'round_advance': {
       state.round += 1;
       return;

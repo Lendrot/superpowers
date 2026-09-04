@@ -54,11 +54,17 @@ describe('Entwicklung der Faehigkeiten', () => {
     // und mehr (auch verlierende) Kandidaten in der Liste heissen mehr Zuege
     // vor jedem spaeteren Kandidaten. Determinismus bleibt gewahrt (derselbe
     // Seed liefert weiter denselben Lauf), nur die genaue Verteilung wandert.
+    //
+    // Mit T24 von 8 auf 7 gesenkt (gemessen: 8): `lessonBias` gibt
+    // `attacked_me(X)` jetzt einen echten `+0.2 * confidence`-Vergeltungsterm
+    // auf `attack` gegen X (`decision/utility.ts`) — dieselbe Art Verschiebung
+    // wie oben, diesmal durch eine neue Einflussgroesse auf den Kampf statt
+    // durch mehr Kandidaten.
     const spreads = ATTRIBUTE_TRACKS.map(
       (track) => Math.max(...values(track)) - Math.min(...values(track)),
     ).sort((a, b) => b - a);
     expect(spreads[0]).toBeGreaterThan(20);
-    expect(spreads[1]).toBeGreaterThan(8);
+    expect(spreads[1]).toBeGreaterThan(7);
   });
 
   it('trennt die Faehigkeiten voneinander', () => {

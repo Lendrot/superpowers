@@ -63,3 +63,5 @@ export { runRound } from './runner/runRound.js';
 export type { RoundDeps, RoundResult } from './runner/runRound.js';
 export { runMatch } from './runner/runMatch.js';
 export type { MatchResult, RunMatchOptions } from './runner/runMatch.js';
+export { aggregateLongRun, giniCoefficient, sampleMatch } from './runner/stats.js';
+export type { LongRunReport, MatchSample } from './runner/stats.js';

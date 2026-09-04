@@ -26,7 +26,7 @@
 import { getAgent } from '../../core/access.js';
 import { RESOURCE_KINDS } from '../../core/resources.js';
 import type { AgentId, Effect, JsonValue, Resources } from '../../core/types.js';
-import { attributesOf, instinctsOf, luckyRoll } from '../../agents/attributes.js';
+import { attributesOf, clampExperienceDelta, instinctsOf, luckyRoll } from '../../agents/attributes.js';
 import { attributeInfoId } from '../../information/infoRegistry.js';
 import { effect } from '../../mutation/effects.js';
 import type { ActionCandidate, ActionContext, ActionDef } from '../types.js';
@@ -151,12 +151,31 @@ export const attackAction: ActionDef = {
       );
     }
 
+    // Erfahrung wird geklammert, nie roh vergeben — derselbe Vertrag wie bei
+    // `world/consequence.ts#clampExperienceDelta`: der Erzeuger des Effekts
+    // rechnet gegen die Grenze, nicht der Mutator. Gemessen ueber T26s
+    // Long-Run-Harness (Seed 113, 400 Runden): ein Agent mit bereits fast
+    // maximaler Kraft-Erfahrung gewann einen weiteren Kampf und riss die
+    // Obergrenze, weil hier bislang roh `fightWinGain` vergeben wurde, ohne
+    // gegen den aktuellen Stand zu pruefen. Bekannte, dokumentierte
+    // Restluecke: der geklammerte Wert liest `ctx.state` (Rundenbeginn), kein
+    // Live-Ledger fuer Erfahrung existiert (anders als bei Energie/Ressourcen
+    // ueber `ctx.projection`) — gewinnt oder verliert derselbe Agent im
+    // selben Zug gegen zwei verschiedene Gegner (zwei Angreifer waehlen
+    // dasselbe Ziel), rechnen beide Effekte gegen denselben Ausgangswert.
+    // Seltener als der behobene Fall (ein Treffer reicht schon, um zu ueberlaufen)
+    // und bislang in keinem Long-Run beobachtet.
+    const winnerStrengthGain = clampExperienceDelta(
+      winner.experience.strength,
+      config.attributes.fightWinGain,
+      config.attributes,
+    );
     if (lethal) {
       effects.push(effect.eliminate(loser.id, 'killed', winner.id));
       effects.push(effect.kill(winner.id));
-      effects.push(
-        effect.experience(winner.id, { strength: config.attributes.fightWinGain }),
-      );
+      if (winnerStrengthGain !== 0) {
+        effects.push(effect.experience(winner.id, { strength: winnerStrengthGain }));
+      }
     } else {
       // Kein toedlicher Ausgang: der Verlierer traegt Schaden davon. Auch hier
       // live gelesen (siehe `loserEnergyNow` oben) — sonst koennte der Effekt
@@ -166,10 +185,19 @@ export const attackAction: ActionDef = {
           energy: -Math.min(damage, loserEnergyNow),
           satiety: -Math.min(Math.round(damage / 2), ctx.projection.needAvailable(loser.id, 'satiety')),
         }),
-        effect.experience(winner.id, { strength: config.attributes.fightWinGain }),
-        // Auch eine Niederlage lehrt etwas — aber Gespuer, nicht Kraft.
-        effect.experience(loser.id, { intuition: config.attributes.fightLossGain }),
       );
+      if (winnerStrengthGain !== 0) {
+        effects.push(effect.experience(winner.id, { strength: winnerStrengthGain }));
+      }
+      // Auch eine Niederlage lehrt etwas — aber Gespuer, nicht Kraft.
+      const loserIntuitionGain = clampExperienceDelta(
+        loser.experience.intuition,
+        config.attributes.fightLossGain,
+        config.attributes,
+      );
+      if (loserIntuitionGain !== 0) {
+        effects.push(effect.experience(loser.id, { intuition: loserIntuitionGain }));
+      }
     }
 
     const events = [

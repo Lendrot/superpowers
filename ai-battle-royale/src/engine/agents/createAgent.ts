@@ -74,6 +74,9 @@ export function createAgent({ index, rng, locations, attributes }: CreateAgentOp
     // Ebenso leer: die erste Episode entsteht fruehestens in Phase 9 der
     // ersten Runde (Doc 03 §6.2).
     episodic: [],
+    // Ebenso leer: die erste Lesson braucht mindestens eine Episode als Beleg,
+    // die es vor Phase 10 der ersten Runde noch nicht gibt.
+    lessons: {},
     cooldowns: {},
     allianceId: null,
   };

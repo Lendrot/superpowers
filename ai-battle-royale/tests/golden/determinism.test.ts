@@ -16,9 +16,23 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 
 /**
- * Zuletzt neu geschrieben mit Tag 5 (T20, T22, T23): Allianzen, episodisches
- * Gedaechtnis, volle Utility-Policy-Struktur. Zwei von drei Aenderungen
- * verschieben die Event-Folge tatsaechlich:
+ * Zuletzt neu geschrieben mit Tag 6 (T24): Lernen/Pattern-Miner. Verschiebt
+ * die Event-Folge auf zwei Wegen:
+ *
+ * - `MatchConfig.learning` (`maxLessons`, `evidenceCap`) ist ein neues Feld —
+ *   das allein verschiebt schon die `MatchId` und damit jeden Hash, auch ohne
+ *   Verhaltensaenderung.
+ * - `lessonBias` in `decision/utility.ts` ist ab Runde 1 ein echter,
+ *   zusaetzlicher Scoring-Term (siehe `utility.test.ts`, Block
+ *   `lessonBias (T24)`) — sobald ein Agent eine Lesson hat, verschiebt das
+ *   den Score einzelner Kandidaten und damit, welcher gewinnt. Gemessen
+ *   dokumentiert in `tests/simulation/development.test.ts` (Schwelle 8 → 7:
+ *   die `attacked_me`-Vergeltung auf `attack` verschiebt messbar, wie stark
+ *   Intuition streut).
+ *
+ * Davor: Tag 5 (T20, T22, T23): Allianzen, episodisches Gedaechtnis, volle
+ * Utility-Policy-Struktur. Zwei von drei Aenderungen verschieben die
+ * Event-Folge tatsaechlich:
  *
  * - T20 (`offer_alliance`/`leave_alliance`/`expel_member`): drei weitere
  *   Aktionstypen ab Runde 1 in jedem Kandidatensatz — verschiebt, wie oft der
@@ -85,11 +99,11 @@ import { initWorld } from '@/engine/world/initWorld.js';
  */
 const GOLDEN = {
   /** Seed 42, 30 Agenten, 100 Runden — das Abnahmekriterium des ersten Schritts. */
-  seed42x100: 'ab502f4f0318e9be',
+  seed42x100: '6558c5e4acdf2e3a',
   /** Derselbe Lauf ueber 400 Runden. */
-  seed42x400: '8e88dbac14c7a005',
+  seed42x400: '83bdeb27dd228190',
   /** Anderer Seed, damit ein konstanter Hash nicht als Determinismus durchgeht. */
-  seed7x100: 'c155d4cd5ddbe087',
+  seed7x100: 'fc5c3d6fcf50fec0',
 } as Record<string, string>;
 
 function run(seed: number, rounds: number, agents = 30) {

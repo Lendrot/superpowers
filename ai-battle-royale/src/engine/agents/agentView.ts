@@ -112,6 +112,12 @@ export interface AgentView {
     status: Agent['status'];
     cooldowns: Agent['cooldowns'];
     allianceId: Agent['allianceId'];
+    /**
+     * T24: die eigenen, aus der eigenen `episodic` gelernten Lessons — kein
+     * Fremdwissen, jede stammt aus einer Episode, die dieser Agent selbst im
+     * Beobachterset hatte (Doc 03 §6.2).
+     */
+    lessons: Agent['lessons'];
   };
   here: VisibleLocation;
   /** Anwesende ausser einem selbst, nach Id sortiert. */
@@ -162,6 +168,9 @@ export function buildAgentView(state: Readonly<WorldState>, agentId: AgentId): A
       status: { ...agent.status, exiledFrom: [...agent.status.exiledFrom] },
       cooldowns: { ...agent.cooldowns },
       allianceId: agent.allianceId,
+      lessons: Object.fromEntries(
+        Object.entries(agent.lessons).map(([key, lesson]) => [key, { ...lesson, supportingEpisodeIds: [...lesson.supportingEpisodeIds] }]),
+      ),
     },
     here: {
       id: location.id,

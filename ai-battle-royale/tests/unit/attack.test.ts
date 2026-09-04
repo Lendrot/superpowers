@@ -234,3 +234,57 @@ describe('attack — Ausgang', () => {
     expect(canonicalJson(first.effects)).toBe(canonicalJson(second.effects));
   });
 });
+
+describe('attack — Erfahrungsgrenze (Regression, Long-Run-Fund T26, Seed 113)', () => {
+  // Gemessener Fehlerfall: ein Agent mit Kraft-Erfahrung nahe der Obergrenze
+  // gewann einen Kampf und `effect.experience` trug den vollen, ungeklammerten
+  // `fightWinGain` — der StateMutator wirft dann hart (`stateMutator.ts`,
+  // "kein stilles Kappen"), weil `attack.ts` anders als `world/consequence.ts`
+  // nicht gegen `maxExperience` rechnete.
+  it('klammert den Kraftgewinn des Siegers, statt die Obergrenze zu reissen', () => {
+    state.agents[A]!.experience.strength = 995;
+    state.agents[B]!.experience.strength = 100;
+    const { effects } = attackAction.resolve(attack(B), ctx);
+
+    const gain = effects.find((e) => e.t === 'experience' && e.agentId === A);
+    expect(gain).toBeDefined();
+    if (gain?.t !== 'experience') throw new Error('unerwartet');
+    expect(gain.delta.strength).toBeLessThanOrEqual(5);
+    expect(() => applyEffects(state, effects)).not.toThrow();
+    expect(state.agents[A]!.experience.strength).toBeLessThanOrEqual(1000);
+  });
+
+  it('vergibt gar keinen Erfahrungseffekt, wenn der Sieger schon am Maximum steht', () => {
+    state.agents[A]!.experience.strength = 1000;
+    state.agents[B]!.experience.strength = 100;
+    const { effects } = attackAction.resolve(attack(B), ctx);
+
+    expect(effects.some((e) => e.t === 'experience' && e.agentId === A)).toBe(false);
+    expect(() => applyEffects(state, effects)).not.toThrow();
+  });
+
+  it('klammert auch den Instinktgewinn des Verlierers', () => {
+    // Der nicht-toedliche Ausgang haengt vom Wurf ab (siehe "macht aus einem
+    // nicht toedlichen Kampf Schaden statt Tod") — hier ueber mehrere Runden
+    // gesucht, bis A als Verlierer aus einem nicht toedlichen Kampf hervorgeht,
+    // statt einen einzelnen Wurf zu erzwingen.
+    state.agents[A]!.experience.strength = 520;
+    state.agents[B]!.experience.strength = 500;
+    state.agents[A]!.experience.intuition = 997;
+
+    let loss: { t: 'experience'; agentId: AgentId; delta: { intuition?: number } } | undefined;
+    for (let round = 1; round <= 60 && !loss; round += 1) {
+      const local = { ...makeCtx(state), round };
+      const { effects, events } = attackAction.resolve(attack(B), local);
+      if (events[0]?.type !== 'agent_attacked' || events[0]?.payload['loserId'] !== A) continue;
+      const found = effects.find((e) => e.t === 'experience' && e.agentId === A);
+      if (found?.t === 'experience') {
+        loss = found;
+        expect(() => applyEffects(state, effects)).not.toThrow();
+      }
+    }
+
+    expect(loss).toBeDefined();
+    expect(loss?.delta.intuition).toBeLessThanOrEqual(3);
+  });
+});

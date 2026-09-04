@@ -61,6 +61,7 @@ function speaker(entry: KnowledgeEntry): Agent {
     knowledge: { [infoId]: entry },
     relationships: {},
     episodic: [],
+    lessons: {},
     cooldowns: {},
     allianceId: null,
   };

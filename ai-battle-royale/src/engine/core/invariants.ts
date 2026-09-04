@@ -115,6 +115,31 @@ export function assertInvariants(state: Readonly<WorldState>): void {
         throw new InvariantError(`${who}: Episode ${memory.id} hat valence ${memory.valence} ausserhalb -1..1`);
       }
     }
+
+    // T24: anders als bei Episoden IST hier eine harte Obergrenze richtig —
+    // `lesson_sync` ersetzt den Bestand immer komplett, der Miner kuerzt VOR
+    // dem Effekt (siehe `stateMutator.ts`).
+    const lessonEntries = Object.entries(agent.lessons);
+    if (lessonEntries.length > state.config.learning.maxLessons) {
+      throw new InvariantError(`${who}: ${lessonEntries.length} Lessons ueberschreiten maxLessons (${state.config.learning.maxLessons})`);
+    }
+    for (const [key, lesson] of lessonEntries) {
+      if (lesson.key !== key) {
+        throw new InvariantError(`${who}: Lesson-Schluessel '${key}' und lesson.key '${lesson.key}' weichen ab`);
+      }
+      if (!Number.isFinite(lesson.confidence) || lesson.confidence < 0 || lesson.confidence > 1) {
+        throw new InvariantError(`${who}: Lesson '${key}' hat confidence ${lesson.confidence} ausserhalb 0..1`);
+      }
+      for (const field of ['evidenceCount', 'contradictoryEvidence'] as const) {
+        const value = lesson[field];
+        if (!Number.isInteger(value) || value < 0 || value > state.config.learning.evidenceCap) {
+          throw new InvariantError(`${who}: Lesson '${key}'.${field} = ${value} ausserhalb 0..evidenceCap`);
+        }
+      }
+      if (lesson.supportingEpisodeIds.length === 0 || lesson.supportingEpisodeIds.length > 5) {
+        throw new InvariantError(`${who}: Lesson '${key}' hat ${lesson.supportingEpisodeIds.length} supportingEpisodeIds (erlaubt 1..5)`);
+      }
+    }
   }
 
   // T20: Allianzen sterben nicht mit ihren Mitgliedern — wer im Kampf oder an

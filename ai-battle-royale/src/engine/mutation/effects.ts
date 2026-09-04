@@ -19,6 +19,7 @@ import type {
   Experience,
   InfoItem,
   KnowledgeEntry,
+  Lesson,
   LocationId,
   Needs,
   Personality,
@@ -95,6 +96,9 @@ export const effect = {
   episodeUpkeep(agentId: AgentId): Effect {
     return { t: 'episode_upkeep', agentId };
   },
+  lessonSync(agentId: AgentId, lessons: Record<string, Lesson>): Effect {
+    return { t: 'lesson_sync', agentId, lessons };
+  },
   roundAdvance(): Effect {
     return { t: 'round_advance' };
   },
@@ -158,6 +162,8 @@ export function describeEffect(item: Effect): string {
       return `episode_add ${item.agentId} <- ${item.episode.eventType}/${item.episode.role} (${item.episode.id})`;
     case 'episode_upkeep':
       return `episode_upkeep ${item.agentId}`;
+    case 'lesson_sync':
+      return `lesson_sync ${item.agentId} (${Object.keys(item.lessons).length} Lessons)`;
     case 'round_advance':
       return 'round_advance';
     case 'match_end':

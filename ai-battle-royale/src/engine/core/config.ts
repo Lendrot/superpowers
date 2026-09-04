@@ -117,6 +117,16 @@ export const DEFAULT_MEMORY = {
 } as const;
 
 /**
+ * Lernsystem (T24). `maxLessons: 30`/`evidenceCap: 20` sind Doc 03 §6.1/§6.3
+ * woertlich; alles Uebrige zu Pfad B (LLM Reflection) gehoert nicht hierher,
+ * siehe `LearningConfig`.
+ */
+export const DEFAULT_LEARNING = {
+  maxLessons: 30,
+  evidenceCap: 20,
+} as const;
+
+/**
  * Bucket-Grenzen je Thema (Doc 08 §8.2.2 R3).
  *
  * Ohne feste Grenzen ist "irrefuehrende Teilwahrheit" nicht entscheidbar: dass
@@ -151,6 +161,7 @@ export const DEFAULT_CONFIG: MatchConfig = {
   combat: { ...DEFAULT_COMBAT },
   alliance: { ...DEFAULT_ALLIANCE },
   memory: { ...DEFAULT_MEMORY },
+  learning: { ...DEFAULT_LEARNING },
   buckets: { ...DEFAULT_BUCKETS },
   strictInvariants: true,
 };
@@ -167,6 +178,7 @@ export interface MatchConfigInput {
   combat?: Partial<MatchConfig['combat']>;
   alliance?: Partial<MatchConfig['alliance']>;
   memory?: Partial<MatchConfig['memory']>;
+  learning?: Partial<MatchConfig['learning']>;
   buckets?: MatchConfig['buckets'];
   strictInvariants?: boolean;
 }
@@ -186,6 +198,7 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
     combat: { ...DEFAULT_COMBAT, ...stripUndefined(input.combat ?? {}) },
     alliance: { ...DEFAULT_ALLIANCE, ...stripUndefined(input.alliance ?? {}) },
     memory: { ...DEFAULT_MEMORY, ...stripUndefined(input.memory ?? {}) },
+    learning: { ...DEFAULT_LEARNING, ...stripUndefined(input.learning ?? {}) },
     buckets: { ...DEFAULT_BUCKETS, ...(input.buckets ?? {}) },
   };
 
@@ -239,6 +252,12 @@ export function resolveConfig(input: MatchConfigInput = {}): MatchConfig {
     const value = config.memory[key];
     if (!Number.isFinite(value) || value < 0 || value > 1) {
       throw new RangeError(`config.memory.${key} muss in [0, 1] liegen, war ${value}`);
+    }
+  }
+
+  for (const key of ['maxLessons', 'evidenceCap'] as const) {
+    if (!Number.isInteger(config.learning[key]) || config.learning[key] < 1) {
+      throw new RangeError(`config.learning.${key} muss eine ganze Zahl >= 1 sein, war ${config.learning[key]}`);
     }
   }
 

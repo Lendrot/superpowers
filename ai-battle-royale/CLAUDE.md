@@ -160,6 +160,18 @@ dieses Repos gelten trotzdem weiter:
 - **Wer in Phase 6 fällt, handelt nicht mehr und wird nicht mehr angegriffen.**
   Der Tod steht erst nach Phase 7 im State, ist aber vorher beschlossen — die
   `EffectProjection` führt ihn mit.
+- **Jeder `experience`-Effekt muss gegen `maxExperience` geklammert sein, bevor
+  er entsteht — der Mutator kappt nicht still.** Gefundener Fehlerfall (T26,
+  Long-Run-Harness, Seed 113 über 400 Runden): `attack.ts` vergab
+  `fightWinGain`/`fightLossGain` lange roh statt wie `world/consequence.ts`
+  mit `clampExperienceDelta` gegen den aktuellen Stand zu rechnen — ein Agent
+  nahe der Obergrenze riss sie beim nächsten Sieg. Ohne einen Lauf über
+  hunderte Runden UND viele Seeds war das nicht sichtbar: ein einzelner
+  Kampf reicht nicht, die Erfahrung muss erst nahe ans Maximum gewachsen sein.
+  Bekannte Restlücke: die Klammerung liest `ctx.state` (Rundenbeginn), kein
+  Live-Ledger für Erfahrung existiert wie bei Energie/Ressourcen — zwei
+  Angreifer gegen dasselbe Ziel im selben Zug rechnen beide gegen denselben
+  Ausgangswert.
 
 ## Beziehungen
 

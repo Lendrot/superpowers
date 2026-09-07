@@ -71,7 +71,7 @@ app.innerHTML = `
         <b>Lesart</b>
         <div><i class="confirmed"></i> vollzogen</div>
         <div><i class="pending"></i> angekündigt, unterzeichnet, in Prüfung</div>
-        <div><i class="unconfirmed"></i> Gerücht oder Verkaufsprozess — nicht bestätigt</div>
+        <div><i class="unconfirmed"></i> Gerücht, Verkaufsprozess oder Kaufabsicht — nicht bestätigt</div>
       </div>
       <section class="detail" id="detail" hidden aria-live="polite"></section>
     </div>
@@ -122,7 +122,7 @@ function matches(deal) {
 function renderFilters() {
   const statusHtml = state.data.filters.statuses
     .map((entry) => {
-      const unconfirmed = entry.key === 'rumored' || entry.key === 'sale_process';
+      const unconfirmed = entry.key === 'rumored' || entry.key === 'sale_process' || entry.key === 'intent';
       return `<label class="chip${unconfirmed ? ' is-unconfirmed' : ''}">
         <input type="checkbox" name="status" value="${esc(entry.key)}">
         ${esc(entry.label)} <span class="count">${entry.count}</span>

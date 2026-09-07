@@ -237,6 +237,7 @@ export function importDelivery(delivery: Delivery, coordinates: CoordinateLookup
       latitude: point?.latitude ?? null,
       longitude: point?.longitude ?? null,
       coordinate_accuracy: point?.accuracy ?? 'unknown',
+      coordinate_source_url: point?.source_url ?? null,
       industry: entry.industry,
       subindustry: entry.subindustry,
       website: entry.website,

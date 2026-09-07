@@ -2,7 +2,7 @@
   "dataset_id": "2026-09-deutschland-ma-v004",
   "prepared_at": "2026-09-07T07:17:13.000Z",
   "scope": "Deutschland-M&A: Transaktionen mit deutschem Zielunternehmen bzw. deutschem Käufer. Grundstock ist die eigene Recherche vom September 2026 nach Fallunterscheidungen (vollzogen, angekündigt, unterzeichnet, kartellrechtliche Prüfung, Verkaufsprozess, Gerücht; deutscher und ausländischer Käufer; Beteiligungserhöhung; Carve-out). Ergänzt um die sieben deutschen Beziehungen aus dem Marktatlas-Bestand v004, die dort noch fehlten. Der v004-Bestand führt zehn Beziehungen mit Deutschlandbezug; drei davon (Xella, Delivery Hero, Hugo Boss) lagen bereits vor.",
-  "verification_note": "Die Primärquellen konnten aus dem Buildcontainer heraus NICHT direkt abgerufen werden — der Egress-Proxy sperrt Unternehmens- und Medienseiten. Für den Grundstock stammen die Angaben aus einem Websuchindex. Die sieben ergänzten Beziehungen stammen aus der Marktatlas-Link- und Quellenprüfung vom 2026-09-07: dort wurden alle 31 M&A-Quellen des Stands v004 geöffnet und die Statusaussage am Meldungstext geprüft. Das belegt Beziehung und Status, nicht jedes Ereignisdatum — exakte Datumswerte sind dort ausdrücklich nicht für jede Transaktion zweitbelegt und bleiben hier deshalb überwiegend leer. Sitzangaben und Koordinaten des v004-Datenbestands lagen für diesen Import nicht vor; die ergänzten Unternehmen tragen deshalb keinen belegten Standort. Ausnahme: Holcim/Xella stammt aus dem geprüften Bestand des Marktatlas (Stand 2026-09-06) mit Primärquelle.",
+  "verification_note": "Die Primärquellen konnten aus dem Buildcontainer heraus NICHT direkt abgerufen werden — der Egress-Proxy sperrt Unternehmens- und Medienseiten. Für den Grundstock stammen die Angaben aus einem Websuchindex. Die sieben ergänzten Beziehungen stammen aus dem Marktdatensatz des Marktatlas-Stands v004 (market-data.json, Stand 2026-09-06) und aus dessen Link- und Quellenprüfung vom 2026-09-07, die alle 31 M&A-Quellen geöffnet und die Statusaussage am Meldungstext geprüft hat. Ereignisdaten, Sitzangaben und Koordinaten stammen aus dem Marktdatensatz; jede Koordinate trägt dort die Wikidata-Seite, aus der sie kommt. Wo eigene Recherche und v004 verschiedene Daten nennen, gilt v004 als benannter Stand; der frühere Wert steht in den Anmerkungen des Deals. Ausnahme: Holcim/Xella stammt aus dem geprüften Bestand des Marktatlas mit Primärquelle.",
   "sources": [
     {
       "ref": "covestro_offer",
@@ -203,6 +203,16 @@
       "source_type": "company_primary",
       "language": "de",
       "reliability_score": 90
+    },
+    {
+      "ref": "marktatlas_v004_marktdaten",
+      "url": null,
+      "publisher": "Marktatlas",
+      "title": "Marktatlas v004 Deutschland — Marktdatensatz (market-data.json)",
+      "publication_date": "2026-09-06",
+      "source_type": "database",
+      "language": "de",
+      "reliability_score": 80
     }
   ],
   "companies": [
@@ -322,7 +332,8 @@
       "status": "acquired",
       "source_refs": [
         "holcim_xella",
-        "wikidata_snapshot"
+        "wikidata_snapshot",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -347,7 +358,8 @@
       "status": "active",
       "source_refs": [
         "holcim_xella",
-        "wikidata_snapshot"
+        "wikidata_snapshot",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -511,7 +523,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "uebernahmeangebote"
+        "uebernahmeangebote",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 80,
       "evidence": "FACT",
@@ -525,15 +538,16 @@
       "former_names": [],
       "entity_type": "company",
       "country": "US",
-      "wikidata": null,
-      "city": null,
+      "wikidata": "Q780442",
+      "city": "San Francisco",
       "region": null,
       "industry": "technology_software",
       "subindustry": null,
       "website": null,
       "status": "active",
       "source_refs": [
-        "uebernahmeangebote"
+        "uebernahmeangebote",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
@@ -556,7 +570,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "uebernahmeangebote"
+        "uebernahmeangebote",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 80,
       "evidence": "FACT",
@@ -570,15 +585,16 @@
       "former_names": [],
       "entity_type": "company",
       "country": "GB",
-      "wikidata": null,
-      "city": "London",
+      "wikidata": "Q2913554",
+      "city": "Shirebrook",
       "region": null,
       "industry": "consumer_retail",
       "subindustry": null,
       "website": null,
       "status": "active",
       "source_refs": [
-        "uebernahmeangebote"
+        "uebernahmeangebote",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
@@ -670,7 +686,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "henkel_olaplex"
+        "henkel_olaplex",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 90,
       "evidence": "FACT",
@@ -693,7 +710,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "basf_agbitech"
+        "basf_agbitech",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 90,
       "evidence": "FACT",
@@ -716,7 +734,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "basf_surventis"
+        "basf_surventis",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -739,7 +758,8 @@
       "status": "active",
       "source_refs": [
         "wikidata_snapshot",
-        "allforone_vinci"
+        "allforone_vinci",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -754,7 +774,7 @@
       "entity_type": "company",
       "country": "DE",
       "wikidata": null,
-      "city": null,
+      "city": "Düsseldorf",
       "region": null,
       "industry": "construction_real_estate",
       "subindustry": "Gipsfaserplatten",
@@ -762,11 +782,12 @@
       "status": "active",
       "source_refs": [
         "holcim_fermacell",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 60,
-      "evidence": "INFERENCE",
-      "notes": "Deutschlandbezug aus dem v004-Bestand (Linkpruefung 2026-09-07). Sitz, Rechtsform und Wikidata-ID sind in der verfuegbaren Quelle nicht belegt und bleiben leer; der Datensatz erscheint deshalb ohne Kartenpunkt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "all_for_one",
@@ -776,8 +797,8 @@
       "former_names": [],
       "entity_type": "company",
       "country": "DE",
-      "wikidata": null,
-      "city": null,
+      "wikidata": "Q2647871",
+      "city": "Filderstadt",
       "region": null,
       "industry": "technology_software",
       "subindustry": "SAP-Beratung",
@@ -785,11 +806,12 @@
       "status": "active",
       "source_refs": [
         "allforone_vinci",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 70,
-      "evidence": "INFERENCE",
-      "notes": "Sitz und Wikidata-ID sind in der verfuegbaren Quelle nicht belegt und bleiben leer; ohne belegte Koordinate kein Kartenpunkt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "nagarro",
@@ -799,8 +821,8 @@
       "former_names": [],
       "entity_type": "company",
       "country": "DE",
-      "wikidata": null,
-      "city": null,
+      "wikidata": "Q18128427",
+      "city": "München",
       "region": null,
       "industry": "technology_software",
       "subindustry": "IT-Dienstleistungen",
@@ -808,11 +830,12 @@
       "status": "active",
       "source_refs": [
         "nagarro_persistent",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 70,
-      "evidence": "INFERENCE",
-      "notes": "Sitz und Wikidata-ID sind in der verfuegbaren Quelle nicht belegt und bleiben leer; ohne belegte Koordinate kein Kartenpunkt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "surventis",
@@ -825,7 +848,7 @@
       "entity_type": "company",
       "country": "DE",
       "wikidata": null,
-      "city": null,
+      "city": "Münster",
       "region": null,
       "industry": "chemicals",
       "subindustry": "Lacke und Beschichtungen",
@@ -833,11 +856,12 @@
       "status": "active",
       "source_refs": [
         "basf_surventis",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 65,
-      "evidence": "INFERENCE",
-      "notes": "Aus dem Coatings-Geschaeft der BASF hervorgegangen; der fruehere Name steht in der Linkpruefung 2026-09-07. Sitz und Rechtsform sind dort nicht belegt und bleiben leer."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "persistent_systems",
@@ -848,18 +872,19 @@
       "entity_type": "company",
       "country": "IN",
       "wikidata": null,
-      "city": null,
+      "city": "Pune",
       "region": null,
       "industry": "technology_software",
       "subindustry": "IT-Dienstleistungen",
       "website": null,
       "status": "active",
       "source_refs": [
-        "nagarro_persistent"
+        "nagarro_persistent",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 70,
-      "evidence": "INFERENCE",
-      "notes": "Bieter des freiwilligen oeffentlichen Uebernahmeangebots. Sitz in der verfuegbaren Quelle nicht belegt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "olaplex",
@@ -870,18 +895,19 @@
       "entity_type": "company",
       "country": "US",
       "wikidata": null,
-      "city": null,
+      "city": "New York City",
       "region": null,
       "industry": "consumer_retail",
       "subindustry": "Haarpflege",
       "website": null,
       "status": "acquired",
       "source_refs": [
-        "henkel_olaplex"
+        "henkel_olaplex",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 75,
-      "evidence": "INFERENCE",
-      "notes": "Sitz in der verfuegbaren Quelle nicht belegt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "agbitech",
@@ -890,20 +916,21 @@
       "aliases": [],
       "former_names": [],
       "entity_type": "company",
-      "country": "AU",
+      "country": "US",
       "wikidata": null,
-      "city": null,
+      "city": "Fort Worth",
       "region": null,
       "industry": "chemicals",
       "subindustry": "Biologischer Pflanzenschutz",
       "website": null,
       "status": "acquired",
       "source_refs": [
-        "basf_agbitech"
+        "basf_agbitech",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 50,
-      "evidence": "ASSUMPTION",
-      "notes": "Land aus dem Unternehmensprofil angenommen, in der verlinkten Meldung nicht nachgeprueft. Sitz nicht belegt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     },
     {
       "ref": "stahl",
@@ -914,18 +941,19 @@
       "entity_type": "company",
       "country": "NL",
       "wikidata": null,
-      "city": null,
+      "city": "Waalwijk",
       "region": null,
       "industry": "chemicals",
       "subindustry": "Spezialchemie für Oberflächen",
       "website": null,
       "status": "active",
       "source_refs": [
-        "henkel_stahl"
+        "henkel_stahl",
+        "marktatlas_v004_marktdaten"
       ],
-      "confidence": 65,
-      "evidence": "INFERENCE",
-      "notes": "Rechtsform B.V. weist auf die Niederlande; der Sitz ist in der verfuegbaren Quelle nicht belegt."
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null
     }
   ],
   "deals": [
@@ -1010,7 +1038,8 @@
       "stake_before_percentage": null,
       "stake_after_percentage": null,
       "source_refs": [
-        "holcim_xella"
+        "holcim_xella",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -1121,7 +1150,7 @@
       "deal_type": "acquisition",
       "transaction_structure": "share_deal",
       "status": "announced",
-      "announcement_date": "2026-05-23",
+      "announcement_date": "2026-07-16",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1130,11 +1159,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "uebernahmeangebote",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 65,
       "evidence": "FACT",
-      "notes": "Übernahmeangebot, angekündigt am 23.05.2026. Konditionen und Stand des Vollzugs sind aus der vorliegenden Quelle nicht belegt. Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der gespeicherte Name der Bietergesellschaft ist entsprechend zu korrigieren."
+      "notes": "Übernahmeangebot, angekündigt am 23.05.2026. Konditionen und Stand des Vollzugs sind aus der vorliegenden Quelle nicht belegt. Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der gespeicherte Name der Bietergesellschaft ist entsprechend zu korrigieren. Bis zur Uebernahme des v004-Marktdatensatzes stand hier 2026-05-23 aus eigener Recherche; v004 nennt 2026-07-16."
     },
     {
       "ref": "frasers_hugo_boss",
@@ -1149,8 +1179,8 @@
       "sellers": [],
       "deal_type": "acquisition",
       "transaction_structure": "share_deal",
-      "status": "announced",
-      "announcement_date": "2026-06-10",
+      "status": "intent",
+      "announcement_date": "2026-09-01",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1158,11 +1188,12 @@
       "stake_before_percentage": null,
       "stake_after_percentage": null,
       "source_refs": [
-        "uebernahmeangebote"
+        "uebernahmeangebote",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 65,
       "evidence": "FACT",
-      "notes": "Übernahmeangebot, angekündigt am 10.06.2026. Frasers Group war zuvor bereits an Hugo Boss beteiligt; die Höhe ist aus der vorliegenden Quelle nicht belegt und bleibt deshalb leer."
+      "notes": "Übernahmeangebot, angekündigt am 10.06.2026. Frasers Group war zuvor bereits an Hugo Boss beteiligt; die Höhe ist aus der vorliegenden Quelle nicht belegt und bleibt deshalb leer. Bis zur Uebernahme des v004-Marktdatensatzes stand hier 2026-06-10 aus eigener Recherche; v004 nennt 2026-09-01. Status aus v004 uebernommen: interest -> intent."
     },
     {
       "ref": "siemens_ebmpapst",
@@ -1212,7 +1243,7 @@
       "deal_type": "carve_out",
       "transaction_structure": "unknown",
       "status": "announced",
-      "announcement_date": null,
+      "announcement_date": "2026-08-20",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1221,11 +1252,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "holcim_fermacell",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
-      "notes": "Europaeisches Geschaeft von Fermacell. Die Verkaeuferseite ist in der verfuegbaren Quelle nicht benannt und bleibt leer. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Europaeisches Geschaeft von Fermacell. Die Verkaeuferseite ist in der verfuegbaren Quelle nicht benannt und bleibt leer."
     },
     {
       "ref": "vinci_all_for_one",
@@ -1241,7 +1273,7 @@
       "deal_type": "acquisition",
       "transaction_structure": "share_deal",
       "status": "announced",
-      "announcement_date": null,
+      "announcement_date": "2026-07-16",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1250,11 +1282,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "allforone_vinci",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
-      "notes": "Gemeinsame begruendete Stellungnahme von Vorstand und Aufsichtsrat zu einem Uebernahmeangebot; VINCI tritt als Kaeufergruppe auf. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Gemeinsame begruendete Stellungnahme von Vorstand und Aufsichtsrat zu einem Uebernahmeangebot; VINCI tritt als Kaeufergruppe auf."
     },
     {
       "ref": "henkel_olaplex",
@@ -1279,7 +1312,8 @@
       "stake_after_percentage": null,
       "source_refs": [
         "henkel_olaplex",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 85,
       "evidence": "FACT",
@@ -1306,7 +1340,7 @@
       "transaction_structure": "unknown",
       "status": "completed",
       "announcement_date": null,
-      "completion_date": null,
+      "completion_date": "2026-06-30",
       "deal_value": null,
       "currency": null,
       "stake_acquired_percentage": null,
@@ -1314,11 +1348,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "basf_surventis",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 75,
       "evidence": "FACT",
-      "notes": "Herauskauf des BASF-Coatings-Geschaefts durch eine Kaeufergruppe um Carlyle; das Geschaeft firmiert seither als Surventis. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Herauskauf des BASF-Coatings-Geschaefts durch eine Kaeufergruppe um Carlyle; das Geschaeft firmiert seither als Surventis."
     },
     {
       "ref": "persistent_nagarro",
@@ -1334,7 +1369,7 @@
       "deal_type": "acquisition",
       "transaction_structure": "share_deal",
       "status": "announced",
-      "announcement_date": null,
+      "announcement_date": "2026-06-26",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1343,11 +1378,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "nagarro_persistent",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
-      "notes": "Freiwilliges oeffentliches Uebernahmeangebot. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Freiwilliges oeffentliches Uebernahmeangebot."
     },
     {
       "ref": "basf_agbitech",
@@ -1364,7 +1400,7 @@
       "transaction_structure": "share_deal",
       "status": "completed",
       "announcement_date": null,
-      "completion_date": null,
+      "completion_date": "2026-03-31",
       "deal_value": null,
       "currency": null,
       "stake_acquired_percentage": null,
@@ -1372,11 +1408,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "basf_agbitech",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 75,
       "evidence": "FACT",
-      "notes": "Deutscher Kaeufer, auslaendisches Ziel — der Deal zaehlt zum Deutschlandbezug, erscheint aber nicht auf der Deutschlandkarte, die am Zielunternehmen haengt. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Deutscher Kaeufer, auslaendisches Ziel — der Deal zaehlt zum Deutschlandbezug, erscheint aber nicht auf der Deutschlandkarte, die am Zielunternehmen haengt."
     },
     {
       "ref": "henkel_stahl",
@@ -1392,7 +1429,7 @@
       "deal_type": "acquisition",
       "transaction_structure": "share_deal",
       "status": "announced",
-      "announcement_date": null,
+      "announcement_date": "2026-02-04",
       "completion_date": null,
       "deal_value": null,
       "currency": null,
@@ -1401,11 +1438,12 @@
       "stake_after_percentage": null,
       "source_refs": [
         "henkel_stahl",
-        "marktatlas_linkcheck"
+        "marktatlas_linkcheck",
+        "marktatlas_v004_marktdaten"
       ],
       "confidence": 70,
       "evidence": "FACT",
-      "notes": "Die Halbjahresmitteilung vom 2026-08-06 bezeichnet den Kauf ausdruecklich als noch nicht abgeschlossen. Eine spaetere Vollzugsmeldung wurde in der Linkpruefung nicht gesucht. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer."
+      "notes": "Die Halbjahresmitteilung vom 2026-08-06 bezeichnet den Kauf ausdruecklich als noch nicht abgeschlossen. Eine spaetere Vollzugsmeldung wurde in der Linkpruefung nicht gesucht."
     }
   ],
   "claims": [

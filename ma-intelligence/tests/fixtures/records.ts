@@ -44,6 +44,7 @@ export const exampleBuyer: Company = {
   latitude: 48.1372,
   longitude: 11.5756,
   coordinate_accuracy: 'locality',
+  coordinate_source_url: 'https://example.org/orte/musterstadt',
   industry: 'chemicals',
   subindustry: 'Spezialchemie',
   website: 'https://example.org',

@@ -16,9 +16,13 @@ Infrastruktur ruht auftragsgemaess.
 ## Wichtig fuer den Einstieg
 
 Die **bestehende Website ist die Ausgangsbasis** und liegt unter `site/`
-(Marktatlas v003, Stand 2026-09-06): 3D-Globus, 2D-Weltkarte mit 9.868
-Unternehmen aus Wikidata, 22 kuratierte Uebernahmen, alle Bibliotheken lokal
-gebuendelt. Sie wurde erweitert, nicht ersetzt. Ihre Analyse steht in
+(Marktatlas v004 Deutschland, Stand 2026-09-07): 3D-Globus, 2D-Weltkarte, dazu
+der Marktdatensatz `market-data.json` mit 10.207 Unternehmens-/Aktieneintraegen
+(327 mit Standort in Deutschland) und 31 Beziehungen, alle Bibliotheken lokal
+gebuendelt. Der aeltere `companies.json` mit 9.868 Wikidata-Unternehmen liegt
+unveraendert daneben; v004 hat ihn nicht angefasst. Die Website wurde
+erweitert, nicht ersetzt: hinzugekommen ist allein
+`site/dist/deutschland/`. Ihre Analyse steht in
 `docs/bestandsaufnahme-website.md`.
 
 ## Was umgesetzt ist
@@ -52,15 +56,17 @@ gebuendelt. Sie wurde erweitert, nicht ersetzt. Ihre Analyse steht in
 - **Import-Pipeline**: Lieferformat mit `ref`-Schluesseln statt IDs, Aufloesung
   gegen den Marktatlas-Bestand ueber Wikidata-ID, sonst ueber einen belegten
   Ortsmittelpunkt. Ohne Beleg bleibt der Standort leer und wird gemeldet.
-- **Datensatz**: 16 reale Transaktionen mit Deutschlandbezug, 20 Quellen und 15
-  Einzelbelegen. Grundstock sind neun eigene Recherchen, ausgewaehlt nach
-  Fallunterscheidungen (vollzogen, angekuendigt, unterzeichnet,
+- **Datensatz**: 16 reale Transaktionen mit Deutschlandbezug, 21 Quellen und 15
+  Einzelbelegen; 28 der 31 Unternehmen tragen einen belegten Standort.
+  Grundstock sind neun eigene Recherchen, ausgewaehlt nach Fallunterscheidungen (vollzogen, angekuendigt, unterzeichnet,
   kartellrechtliche Pruefung, Verkaufsprozess, Geruecht; deutscher und
   auslaendischer Kaeufer; Beteiligungserhoehung; Carve-out; staatlicher
   Verkaeufer; offener Kaeufer). Dazu die sieben deutschen Beziehungen aus dem
   **Marktatlas-Bestand v004**, die dort noch fehlten (Holcim/Fermacell,
   VINCI/All for One, Henkel/Olaplex, Carlyle/Surventis, Persistent/Nagarro,
-  BASF/AgBiTech, Henkel/Stahl).
+  BASF/AgBiTech, Henkel/Stahl). Ereignisdaten, Sitzangaben und Koordinaten
+  aller zehn v004-Beziehungen stammen aus dessen Marktdatensatz
+  (`docs/decisions.md` #20).
 - **Karte**: `site/dist/deutschland/` — Deutschland hervorgehoben, Marker nach
   Status in Farbe **und Form** getrennt (bestaetigt gefuellt, unbestaetigt
   gestrichelt), Detailansicht mit Parteien, Anteilen, Belegstatus, Einzelbelegen
@@ -92,7 +98,7 @@ Findings → Fix → erneutes Review.
 
 **Dokumentation.** `docs/analysis.md` (Bestandsaufnahme und Plan),
 `architecture.md`, `data-schema.md`, `research-rules.md`, `decisions.md`
-(19 Entscheidungen), `agent/GPT_HANDOFF.md` (Lieferformat fuer GPT).
+(22 Entscheidungen), `agent/GPT_HANDOFF.md` (Lieferformat fuer GPT).
 
 ## Relevante Dateien
 
@@ -140,6 +146,10 @@ Findings → Fix → erneutes Review.
 15. Import und Kartenexport sind deterministisch.
 16. Deals mit deutschem Kaeufer und Ziel im Ausland werden gezaehlt und benannt,
     statt still aus der Karte zu fallen.
+17. Der v004-Marktdatensatz ist der massgebliche Stand; abweichende eigene
+    Werte bleiben als Anmerkung erhalten.
+18. Die belegte Kaufabsicht ist ein eigener, unbestaetigter Dealstatus.
+19. Jede Koordinate traegt ihre Quelle im Datensatz — vom Schema erzwungen.
 
 Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 
@@ -162,20 +172,21 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
   einem Websuchindex; jede Quelle ist mit URL erfasst und vor einer
   Veroeffentlichung am Original zu bestaetigen. Die Lieferung sagt das in
   `verification_note`, und die Confidence-Werte tragen dem Rechnung.
-- **Sechs der 13 Deutschland-Deals haben keinen Standort.** Fuer FFG
-  (Flensburg) und den ebm-papst-Geschaeftsbereich liegt keine belegte
-  Koordinate im Bestand. Fuer die vier aus v004 ergaenzten deutschen Ziele
-  (Fermacell, All for One, Nagarro, Surventis) lag das v004-ZIP mit den
-  korrigierten Sitzangaben nicht vor — siehe naechster Schritt. Alle sechs
-  stehen in der Liste, nicht auf der Karte.
+- **Zwei der 13 Deutschland-Deals haben keinen Standort**: FFG (Flensburg) und
+  der ebm-papst-Geschaeftsbereich. Fuer beide fuehrt weder der Boersen-Snapshot
+  noch der v004-Marktdatensatz eine belegte Koordinate. Sie stehen in der
+  Liste, nicht auf der Karte.
 - **Drei Transaktionen mit deutschem Kaeufer und Ziel im Ausland** (Olaplex,
   AgBiTech, Stahl) sind im Bestand, aber nicht auf der Karte: sie haengt am
   Zielunternehmen. Ihre Zahl steht als `meta.buyer_side_count` im Buendel und
   im Seitenkopf (`docs/decisions.md` #19).
-- **Ereignisdaten fehlen bei den v004-Ergaenzungen.** Die Linkpruefung belegt
-  Beziehung und Status am Meldungstext, nennt aber ausdruecklich nicht fuer
-  jede Transaktion ein zweitbelegtes Datum. Sechs Deals sind deshalb undatiert
-  und fallen sichtbar aus dem Zeitraumfilter.
+- **Ein Deal bleibt undatiert** (Siemens/ebm-papst) und faellt sichtbar aus dem
+  Zeitraumfilter. Alle uebrigen tragen jetzt ein Datum aus dem
+  v004-Marktdatensatz.
+- **Zwei Ankuendigungsdaten haben sich mit v004 geaendert** (Uber/Delivery Hero,
+  Frasers/Hugo Boss). Moeglich, dass eigene Recherche und v004 verschiedene
+  Ereignisse meinen; der frueher gefuehrte Wert steht in der Anmerkung des
+  Deals (`docs/decisions.md` #20).
 - **Der Importer kennt noch keine Review Queue.** Er legt jedes gelieferte
   Unternehmen neu an, statt es gegen den Bestand zu halten. Bei einer zweiten
   Lieferung entstehen dadurch Dubletten.
@@ -197,19 +208,15 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 Die Deutschland-V1 steht. Bevor etwas Neues beginnt, sind das die naechsten
 sinnvollen Schritte — in dieser Reihenfolge:
 
-1. **Das v004-ZIP einlesen.** `Marktatlas_v004_Deutschland_2026-09-07.zip`
-   (15,7 MB, Google Drive) enthaelt den korrigierten Datenbestand: 97
-   berichtigte Hauptsitze, 327 Eintraege mit Standort in Deutschland, 409
-   DE-ISIN-Positionen und die Sektorzuordnung mit `sectorSource`. Es liegt
-   dieser Sitzung nicht vor — der MCP-Download deckelt bei 10 MB, der
-   Egress-Proxy sperrt Drive und die Website. Sobald es da ist: `companies.json`
-   und `acquisitions.json` unter `site/dist/assets/` ersetzen und neu
-   importieren. Die vier ergaenzten deutschen Ziele bekommen dadurch ihren
-   belegten Standort; **kein Code muss dafuer geaendert werden**, die
-   Koordinatensuche liest genau diese beiden Dateien.
-2. **Datensatz weiter verbreitern.** 16 Transaktionen pruefen das Modell, sind
-   aber keine Marktabdeckung. Die Pipeline traegt beliebig viele Lieferungen;
-   noetig ist Recherche, kein Code.
+1. **Datensatz verbreitern.** 16 Transaktionen pruefen das Modell, sind aber
+   keine Marktabdeckung. Die Pipeline traegt beliebig viele Lieferungen;
+   noetig ist Recherche, kein Code. Der v004-Marktdatensatz fuehrt 31
+   Beziehungen weltweit — die 21 ohne Deutschlandbezug sind bewusst nicht
+   uebernommen, solange Phase 1 Deutschland ist (Regel 8).
+2. **Sektoren aus v004 uebernehmen.** `market-data.json` fuehrt je Partei
+   `sectors` und dazu `industrySourceUrl`. Unser `industry` kommt bis heute aus
+   der Lieferung und ist unbelegt. Die Zuordnung der zehn v004-Sektoren auf die
+   sechzehn Branchen des Modells ist die eigentliche Arbeit daran.
 3. **Confidence-Berechnung** (`src/domain/confidence.ts`): heute wird die
    Confidence je Datensatz von Hand gesetzt. Sie sollte aus Quellentyp,
    Quellenzahl und Dealstatus folgen, mit Deckelung fuer unbestaetigte Status.

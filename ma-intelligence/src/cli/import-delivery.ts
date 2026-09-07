@@ -22,7 +22,11 @@ const DEFAULT_OUT = resolve(process.cwd(), 'data/intelligence/verified/deutschla
 
 interface SnapshotLocation {
   name: string;
-  id: string;
+  /**
+   * Wikidata-ID des Ortes. Die von v004 ergaenzten Emittenten tragen einen
+   * Ortsnamen ohne ID — fuer die laesst sich keine Quelle nennen.
+   */
+  id?: string;
   lat: number;
   lon: number;
   accuracy: 'headquarters' | 'locality';
@@ -43,6 +47,16 @@ interface AcquisitionEntity {
   coordinateSourceUrl: string;
 }
 
+/**
+ * Eine Partei aus dem Marktdatensatz v004. Anders als der Boersen-Snapshot
+ * fuehrt sie den Ort im Klartext mit und sagt selbst, aus welchem
+ * Wikidata-Eintrag die Koordinate stammt — auch dann, wenn die Partei
+ * (`fermacell`, `surventis`) gar keine eigene Wikidata-Entitaet hat.
+ */
+interface MarketEntity extends AcquisitionEntity {
+  place: string;
+}
+
 function wikidataUrl(id: string): string {
   return `https://www.wikidata.org/wiki/${id}`;
 }
@@ -59,16 +73,43 @@ function buildLookup(): CoordinateLookup {
   const acquisitions = JSON.parse(readFileSync(`${SITE}/acquisitions.json`, 'utf8')) as {
     entities: Record<string, AcquisitionEntity>;
   };
+  // Der Marktdatensatz v004 kennt 10.207 Unternehmen statt 9.868 und fuehrt zu
+  // jeder Deal-Partei einen belegten Standort — auch fuer die, die im
+  // Boersen-Snapshot fehlen.
+  const market = JSON.parse(readFileSync(`${SITE}/market-data.json`, 'utf8')) as {
+    entities: Record<string, MarketEntity>;
+    companies: SnapshotCompany[];
+  };
 
   const byId = new Map<string, GeoPoint>();
-  for (const company of snapshot.companies) {
+  const rememberCompany = (company: SnapshotCompany): void => {
+    // Ohne Wikidata-ID des Ortes gibt es keine zitierbare Quelle — dann lieber
+    // keine Koordinate als eine ohne Herkunft (Regel 14).
+    const location = company.location;
+    if (location === null || location === undefined || location.id === undefined) return;
+    if (byId.has(company.id)) return;
     byId.set(company.id, {
-      latitude: company.location.lat,
-      longitude: company.location.lon,
-      accuracy: company.location.accuracy,
-      source_url: wikidataUrl(company.location.id),
+      latitude: location.lat,
+      longitude: location.lon,
+      accuracy: location.accuracy,
+      source_url: wikidataUrl(location.id),
     });
+  };
+
+  for (const company of snapshot.companies) rememberCompany(company);
+  // Die Parteien des Marktdatensatzes stehen vor dessen uebrigen Unternehmen:
+  // nur sie nennen ihre Koordinatenquelle selbst.
+  for (const entity of Object.values(market.entities)) {
+    if (!byId.has(entity.id)) {
+      byId.set(entity.id, {
+        latitude: entity.lat,
+        longitude: entity.lon,
+        accuracy: entity.accuracy,
+        source_url: entity.coordinateSourceUrl,
+      });
+    }
   }
+  for (const company of market.companies) rememberCompany(company);
   // Der Uebernahme-Datensatz kennt Unternehmen, die im Boersen-Snapshot fehlen.
   for (const entity of Object.values(acquisitions.entities)) {
     if (!byId.has(entity.id)) {
@@ -82,10 +123,26 @@ function buildLookup(): CoordinateLookup {
   }
 
   const byCityName = new Map<string, GeoPoint>();
-  for (const company of snapshot.companies) {
-    for (const location of company.locations) {
+  // Die Parteien des Marktdatensatzes zuerst: sie nennen den Ort im Klartext
+  // und ihre eigene Koordinatenquelle. Nur Ortsmittelpunkte — ein
+  // Firmengebaeude ist kein Stadtmittelpunkt.
+  for (const entity of Object.values(market.entities)) {
+    if (entity.accuracy !== 'locality') continue;
+    const key = entity.place.toLocaleLowerCase('de-DE');
+    if (!byCityName.has(key)) {
+      byCityName.set(key, {
+        latitude: entity.lat,
+        longitude: entity.lon,
+        accuracy: 'locality',
+        source_url: entity.coordinateSourceUrl,
+      });
+    }
+  }
+  for (const company of [...snapshot.companies, ...market.companies]) {
+    for (const location of company.locations ?? []) {
       // Nur Ortsmittelpunkte: ein Firmengebaeude ist kein Stadtmittelpunkt.
       if (location.accuracy !== 'locality') continue;
+      if (location.id === undefined) continue;
       const key = location.name.toLocaleLowerCase('de-DE');
       if (!byCityName.has(key)) {
         byCityName.set(key, {

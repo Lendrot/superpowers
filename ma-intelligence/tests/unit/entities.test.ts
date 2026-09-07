@@ -49,6 +49,21 @@ describe('companySchema', () => {
     ).toBe(true);
   });
 
+  it('lehnt eine Koordinate ohne belegte Quelle ab', () => {
+    // Regel 14 des Projekts: Koordinaten kommen aus einer Quelle oder es gibt
+    // sie nicht. Das steht hier im Schema, damit es niemand vergessen kann.
+    expect(companySchema.safeParse({ ...exampleBuyer, coordinate_source_url: null }).success).toBe(false);
+    expect(
+      companySchema.safeParse({
+        ...exampleBuyer,
+        latitude: null,
+        longitude: null,
+        coordinate_accuracy: 'unknown',
+        coordinate_source_url: null,
+      }).success,
+    ).toBe(true);
+  });
+
   it('haelt die Genauigkeit der Koordinate fest', () => {
     expect(companySchema.safeParse({ ...exampleBuyer, coordinate_accuracy: 'headquarters' }).success).toBe(true);
     // Ohne Koordinate gibt es nichts, dessen Genauigkeit man angeben koennte.

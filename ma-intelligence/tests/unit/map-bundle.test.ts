@@ -52,6 +52,15 @@ describe('buildMapBundle', () => {
     expect(bundle.deals[0]?.status_label).toBe('Gerücht');
   });
 
+  it('trennt die belegte Kaufabsicht von einem Angebot', () => {
+    // v004 fuehrt `interest` als eigenen Zustand: der Kaeufer sagt die Absicht
+    // zu, ein Angebot liegt nicht vor. Das ist nicht bestaetigt und muss von
+    // einem angekuendigten Deal unterscheidbar bleiben (Regel 2).
+    const bundle = buildMapBundle({ ...database(), deals: [{ ...exampleDeal, status: 'intent' }] });
+    expect(bundle.deals[0]?.status_label).toBe('Kaufabsicht');
+    expect(bundle.deals[0]?.unconfirmed).toBe(true);
+  });
+
   it('bietet nur Filterwerte an, die tatsaechlich vorkommen', () => {
     const bundle = buildMapBundle(database());
     expect(bundle.filters.statuses.map((entry) => entry.key)).toEqual(['announced']);
@@ -131,6 +140,19 @@ describe('Der ausgelieferte Deutschland-Datensatz', () => {
       } else {
         expect(company.coordinate_accuracy, `${company.id}`).not.toBe('unknown');
       }
+    }
+  });
+
+  it('belegt jede Koordinate mit einer auswertbaren Quelle', () => {
+    // Der Marktdatensatz fuehrt bei den ergaenzten Emittenten einen Ortsnamen
+    // ohne Wikidata-ID. Daraus entstand einmal ein Link auf
+    // ".../wiki/undefined" — eine Quelle, die keine ist.
+    const parsed = intelligenceDatabaseSchema.parse(raw);
+    for (const company of parsed.companies) {
+      if (company.latitude === null) continue;
+      const url = company.coordinate_source_url;
+      expect(url, `${company.id} ohne Koordinatenquelle`).not.toBeNull();
+      expect(url, `${company.id}: ${url}`).not.toMatch(/undefined|null/);
     }
   });
 });

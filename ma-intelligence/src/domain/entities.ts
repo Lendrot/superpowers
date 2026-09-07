@@ -143,6 +143,11 @@ export const companySchema = z
     longitude: longitudeSchema.nullable(),
     /** Wie genau die Koordinate ist — Gebaeude, Ortsmittelpunkt oder unbekannt. */
     coordinate_accuracy: z.enum(COORDINATE_ACCURACIES),
+    /**
+     * Woher die Koordinate stammt. Ohne Beleg gibt es keine Koordinate — die
+     * Regel steht im Schema, nicht nur in der Dokumentation.
+     */
+    coordinate_source_url: urlSchema.nullable(),
     industry: z.enum(INDUSTRIES),
     subindustry: nonEmptyStringSchema.nullable(),
     website: urlSchema.nullable(),
@@ -158,6 +163,10 @@ export const companySchema = z
   .refine(
     (company) => company.latitude !== null || company.coordinate_accuracy === 'unknown',
     'Ohne Koordinate gibt es keine Genauigkeit',
+  )
+  .refine(
+    (company) => company.latitude === null || company.coordinate_source_url !== null,
+    'Eine Koordinate ohne belegte Quelle gibt es nicht',
   );
 
 // ── Deal ─────────────────────────────────────────────────────────────────────

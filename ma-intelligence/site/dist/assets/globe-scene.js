@@ -1,5 +1,6 @@
+import {statuses} from './market-logic.mjs';
 import * as THREE from 'three';
-import {GlobeNavigation,MIN_DISTANCE,MAX_DISTANCE} from './globe-navigation.js';
+import {GlobeNavigation} from './globe-navigation.js';
 import {GLTFLoader} from './three/GLTFLoader.js';
 import {geoVector,vectorGeo,arcSample,frontVisible,greatCircleAngle} from './globe-math.mjs';
 
@@ -22,7 +23,7 @@ export function createGlobe(host,callbacks={}){
     onHover:event=>{if(!event){callbacks.onHover?.(null);return;}const hit=pick(event,false);renderer.domElement.style.cursor=hit?'pointer':'grab';callbacks.onHover?.(hit?.deal||null,event.clientX,event.clientY);},
     onTap:event=>{const hit=pick(event,true);if(hit?.deal)callbacks.onDealClick?.(hit.deal.id);else if(hit?.companies)callbacks.onCompanyClick?.(hit.companies);}
   });
-  controls.autoRotate=!reduced;
+  controls.autoRotate=false;
   scene.add(new THREE.AmbientLight(0xabc5ef,1.45));
   const sun=new THREE.DirectionalLight(0xfff8e9,2.0);
   sun.position.set(300,220,260);
@@ -81,9 +82,12 @@ export function createGlobe(host,callbacks={}){
   function setCompanies(records){
     companies=records;
     if(companyPoints){scene.remove(companyPoints);companyPoints.geometry.dispose();companyPoints.material.dispose();}
+    records=records.filter(c=>c.location);companies=records;
     const positions=records.flatMap(c=>geoVector(c.location.lat,c.location.lon,100.28));
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-    const material=new THREE.PointsMaterial({color:0xc4d9e7,size:2.0,sizeAttenuation:false,transparent:true,opacity:.38,depthWrite:false});
+    const colors=records.flatMap(c=>new THREE.Color(c.pointColor||0x85caff).toArray());
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+    const material=new THREE.PointsMaterial({vertexColors:true,size:3,sizeAttenuation:false,transparent:true,opacity:.75,depthWrite:false});
     companyPoints=new THREE.Points(geometry,material);scene.add(companyPoints);
   }
   function filterDeals(ids){const allowed=new Set(ids);dealEntries.forEach(e=>e.group.visible=allowed.has(e.deal.id));}
@@ -94,16 +98,17 @@ export function createGlobe(host,callbacks={}){
       const buyer=entities[deal.buyerId],target=entities[deal.targetId];
       const group=new THREE.Group();
       const lift=(index%3)*2.4;
+      const statusColor=statuses[deal.status]?.color||0xd6f391;
       const points=Array.from({length:101},(_,i)=>vec(arcSample(buyer,target,i/100,lift)));
       const curve=new THREE.CatmullRomCurve3(points);
-      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0xd6f391,transparent:true,opacity:.7,depthWrite:false}));
-      line.userData.dealId=deal.id;
+      const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),deal.status==='completed'?new THREE.LineBasicMaterial({color:statusColor,transparent:true,opacity:.7,depthWrite:false}):new THREE.LineDashedMaterial({color:statusColor,transparent:true,opacity:.85,depthWrite:false,dashSize:deal.status==='interest'?.6:1.8,gapSize:1.0}));
+      line.computeLineDistances();line.userData.dealId=deal.id;
       group.add(line);
-      const head=new THREE.Mesh(new THREE.ConeGeometry(1.05,3.35,10),new THREE.MeshBasicMaterial({color:0xe7ffae}));
+      const head=new THREE.Mesh(new THREE.ConeGeometry(1.05,3.35,10),new THREE.MeshBasicMaterial({color:statusColor}));
       head.position.copy(curve.getPoint(.84));head.quaternion.setFromUnitVectors(up,curve.getTangent(.84).normalize());head.userData.dealId=deal.id;group.add(head);
-      const flow=new THREE.Mesh(new THREE.SphereGeometry(.43,8,6),new THREE.MeshBasicMaterial({color:0xedffc1}));group.add(flow);
+      const flow=new THREE.Mesh(new THREE.SphereGeometry(.43,8,6),new THREE.MeshBasicMaterial({color:statusColor}));group.add(flow);
       const dots=[];
-      for(const [entity,role,color] of [[buyer,'buyer',0xd6f391],[target,'target',0x85caff]]){
+      for(const [entity,role,color] of [[buyer,'buyer',statusColor],[target,'target',statusColor]]){
         const dot=new THREE.Mesh(new THREE.SphereGeometry(.85,12,8),new THREE.MeshBasicMaterial({color}));
         dot.position.copy(vec(geoVector(entity.lat,entity.lon,100.65)));dot.userData.dealId=deal.id;group.add(dot);dots.push(dot);
         const ring=new THREE.Mesh(new THREE.RingGeometry(1.35,1.65,28),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.65,side:THREE.DoubleSide,depthWrite:false}));
@@ -118,9 +123,10 @@ export function createGlobe(host,callbacks={}){
   }
   function selectDeal(id,focus=true){
     selected=dealEntries.find(e=>e.deal.id===id)||null;
-    dealEntries.forEach(e=>{const active=e===selected;e.line.material.opacity=selected?(active?1:.15):.7;e.head.material.color.set(active?0xf2ffcc:0xd6f391);e.head.material.transparent=true;e.head.material.opacity=selected&&!active ? .22 : 1;e.flow.visible=!selected||active;e.dots.forEach(dot=>{dot.material.transparent=true;dot.material.opacity=selected&&!active ? .22 : 1;});});
+    dealEntries.forEach(e=>{const active=e===selected;e.line.material.opacity=selected?(active?1:.15):.7;e.head.material.color.set(statuses[e.deal.status]?.color||0xd6f391);e.head.material.transparent=true;e.head.material.opacity=selected&&!active ? .22 : 1;e.flow.visible=!selected||active;e.dots.forEach(dot=>{dot.material.transparent=true;dot.material.opacity=selected&&!active ? .22 : 1;});});
     if(selected&&focus){const center=vectorGeo(arcSample(selected.buyer,selected.target,.5));const angle=greatCircleAngle(selected.buyer,selected.target);focusLocation(center.lat,center.lon,Math.max(145,Math.min(325,155+angle*120))*Math.max(1,.9/camera.aspect));}
   }
+  function germany(){camera.up.set(0,1,0);controls.update();selectDeal(null,false);focusLocation(51,10,130);}
   function home(){camera.up.set(0,1,0);controls.update();selectDeal(null,false);focusLocation(25,-35,homeDistance());}
   function zoom(factor){stopRotation();flight=null;controls.zoom(factor);}
   function toggleRotation(){flight=null;controls.autoRotate=!controls.autoRotate;callbacks.onRotation?.(controls.autoRotate);return controls.autoRotate;}
@@ -162,7 +168,7 @@ export function createGlobe(host,callbacks={}){
     lastRender=time;
     const distance=camera.position.length();
     const visualScale=Math.max(.008,Math.min(1.5,Math.pow((distance-100)/210,1.1)));
-    if(companyPoints)companyPoints.material.size=distance<155?1.75:2;
+    if(companyPoints)companyPoints.material.size=distance<155?2.5:3;
     for(const entry of dealEntries){
       entry.head.scale.setScalar(visualScale);entry.flow.scale.setScalar(visualScale);entry.dots.forEach(dot=>dot.scale.setScalar(visualScale));
       entry.flow.position.copy(entry.curve.getPoint(reduced ? .6 : (time/8500+entry.index*.173)%1));
@@ -175,5 +181,5 @@ export function createGlobe(host,callbacks={}){
     renderer.render(scene,camera);
   }
   frame=requestAnimationFrame(animate);
-  return {setCompanies,setDeals,filterDeals,selectDeal,focusLocation,home,zoom,toggleRotation,showCompanies:visible=>{if(companyPoints)companyPoints.visible=visible;},isRotating:()=>controls.autoRotate,dispose:()=>{cancelAnimationFrame(frame);resizeObserver.disconnect();controls.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();}};
+  return {setCompanies,setDeals,germany,filterDeals,selectDeal,focusLocation,home,zoom,toggleRotation,showCompanies:visible=>{if(companyPoints)companyPoints.visible=visible;},isRotating:()=>controls.autoRotate,dispose:()=>{cancelAnimationFrame(frame);resizeObserver.disconnect();controls.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();}};
 }

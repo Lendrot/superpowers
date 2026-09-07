@@ -360,3 +360,69 @@ ein Marker am falschen Ort; eine eigene Ansicht "deutsche Kaeufer im Ausland"
 bleibt moeglich.
 
 **REVERSIBLE:** YES — `dealsWithBuyerFrom` liefert die Menge bereits.
+
+## 20 — Der v004-Marktdatensatz ist der massgebliche Stand
+
+**DECISION:** `site/dist/assets/market-data.json` aus dem Marktatlas-Stand v004
+Deutschland ist die Leitquelle fuer Ereignisdaten, Sitzangaben und Koordinaten
+der erfassten Beziehungen. Wo eigene Recherche und v004 auseinandergehen, gilt
+v004; der frueher gefuehrte Wert bleibt in den Anmerkungen des Deals stehen.
+
+**WHY:** Der Datensatz nennt zu jeder Partei den Ort, die Koordinate und die
+Wikidata-Seite, aus der die Koordinate stammt, und zu jeder Beziehung
+Ankuendigungs- und Vollzugsdatum. Er ist am 2026-09-07 quellengeprueft worden.
+Das ist belastbarer als ein Websuchindex, aus dem der Grundstock stammt.
+
+**ALTERNATIVES:** Eigene Werte behalten und v004 nur ergaenzend fuehren — dann
+haette der Bestand zwei Wahrheiten ueber dasselbe Datum. Beide Werte in
+getrennten Feldern fuehren — Aufwand ohne Nutzen, solange niemand die Historie
+auswertet.
+
+**TRADEOFFS:** Zwei Ankuendigungsdaten haben sich geaendert (Uber/Delivery Hero
+2026-05-23 → 2026-07-16, Frasers/Hugo Boss 2026-06-10 → 2026-09-01). Moeglich,
+dass beide Werte stimmen und nur verschiedene Ereignisse meinen — die
+Anmerkung haelt das fest, statt den frueheren Wert zu loeschen.
+
+**REVERSIBLE:** YES — der fruehere Wert steht in der Anmerkung.
+
+## 21 — Kaufabsicht ist ein eigener Dealstatus
+
+**DECISION:** `DEAL_STATUSES` fuehrt `intent` ("Kaufabsicht") zwischen
+`sale_process` und `announced`, und der Wert zaehlt zu
+`UNCONFIRMED_DEAL_STATUSES`.
+
+**WHY:** v004 trennt `completed`, `pending` und `interest` und zeichnet die
+Kaufabsicht auf der Karte eigens aus. Der Zustand ist wirklich ein eigener: der
+Kaeufer hat die Absicht belegt erklaert, ein Angebot liegt aber nicht vor. Ihn
+auf `announced` abzubilden haette behauptet, es sei etwas angeboten worden;
+`rumored` haette eine Emittentenmitteilung zum Geruecht gemacht. Regel 2 des
+Projekts verlangt, dass Unbestaetigtes unterscheidbar bleibt.
+
+**ALTERNATIVES:** Auf `announced` oder `rumored` abbilden — beides sagt etwas
+Falsches. Ein eigenes Feld neben dem Status — mehr Struktur fuer einen
+Zustand, der in dieselbe Achse gehoert.
+
+**TRADEOFFS:** Ein achter Status in Filtern und Legende.
+
+**REVERSIBLE:** YES.
+
+## 22 — Jede Koordinate traegt ihre Quelle im Datensatz
+
+**DECISION:** `Company` hat `coordinate_source_url`. Das Schema weist eine
+Koordinate ohne Quelle zurueck.
+
+**WHY:** Regel 14 stand bisher nur in der Dokumentation und im Importer — die
+Herkunft wurde im Lookup gefuehrt und beim Schreiben weggeworfen. Solange alle
+Koordinaten aus einer Datei kamen, fiel das nicht auf. Mit v004 kommen sie aus
+drei Quellen mit verschiedener Genauigkeit; wer den Bestand liest, muss je
+Datensatz sehen koennen, worauf die Koordinate beruht.
+
+**ALTERNATIVES:** Herkunft nur ueber `source_ids` des Unternehmens fuehren —
+das sagt, welche Quellen es zum Unternehmen gibt, nicht welche die Koordinate
+belegt.
+
+**TRADEOFFS:** Ein Pflichtfeld mehr. Es hat sofort einen Fehler gefunden: die
+von v004 ergaenzten Emittenten tragen einen Ortsnamen ohne Wikidata-ID, woraus
+ein Link auf `.../wiki/undefined` entstand.
+
+**REVERSIBLE:** YES.

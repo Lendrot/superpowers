@@ -100,6 +100,8 @@ export const INDUSTRY_LABELS_DE: Readonly<Record<(typeof INDUSTRIES)[number], st
 export const DEAL_STATUSES = [
   'rumored',
   'sale_process',
+  /** Belegte Kaufabsicht: der Kaeufer sagt sie zu, ein Angebot liegt nicht vor. */
+  'intent',
   'announced',
   'signed',
   'regulatory_review',
@@ -114,6 +116,7 @@ export const DEAL_STATUSES = [
 export const DEAL_STATUS_LABELS_DE: Readonly<Record<(typeof DEAL_STATUSES)[number], string>> = {
   rumored: 'Gerücht',
   sale_process: 'Verkaufsprozess',
+  intent: 'Kaufabsicht',
   announced: 'Angekündigt',
   signed: 'Unterzeichnet',
   regulatory_review: 'Kartellrechtliche Prüfung',
@@ -125,7 +128,7 @@ export const DEAL_STATUS_LABELS_DE: Readonly<Record<(typeof DEAL_STATUSES)[numbe
  * Statuswerte, bei denen noch nichts feststeht. Die Oberflaeche muss sie
  * visuell von den bestaetigten trennen (Doc `docs/research-rules.md`).
  */
-export const UNCONFIRMED_DEAL_STATUSES = ['rumored', 'sale_process'] as const;
+export const UNCONFIRMED_DEAL_STATUSES = ['rumored', 'sale_process', 'intent'] as const;
 
 /**
  * Die wirtschaftliche Form der Transaktion. Ob sie rechtlich als Share- oder

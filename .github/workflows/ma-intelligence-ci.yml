@@ -44,8 +44,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # `defaults.run.working-directory` gilt nicht fuer `uses:`-Schritte: die
+      # Action laese sonst die package.json der Repository-Wurzel, die zu einem
+      # anderen Teilprojekt gehoert und kein `packageManager` fuehrt.
       - name: pnpm einrichten
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ma-intelligence/package.json
 
       - name: Node einrichten
         uses: actions/setup-node@v4

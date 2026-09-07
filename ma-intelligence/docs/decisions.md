@@ -163,3 +163,112 @@ verschiebt die Frage nur auf die Qualitaet der Bedingungen.
 
 **REVERSIBLE:** YES, aber bewusst schwer: es braeuchte einen neuen Zustand,
 eine neue Aktion und eine Aenderung an den Tests, die genau das ausschliessen.
+
+## 10 — Deal mit Parteilisten statt fester Kaeufer- und Verkaeuferfelder
+
+**DECISION:** `buyer_company_id`/`seller_company_id`/`seller_name` weichen zwei
+Listen `buyers` und `sellers` aus `DealParty`-Objekten (`company_id` oder
+`name`, dazu optional `share_percentage`).
+
+**WHY:** Konsortien und Mehrfachverkaeufer sind in deutschen Transaktionen der
+Normalfall, nicht die Ausnahme. Ein einzelnes Feld haette spaeter eine
+destruktive Migration erzwungen — genau in dem Moment, in dem schon Daten da
+sind. Jetzt kostet die Aenderung nichts, weil noch nichts gespeichert ist.
+
+**ALTERNATIVES:** (a) Zusatzfelder `co_buyers[]` neben dem Hauptkaeufer — zwei
+Wahrheiten ueber dieselbe Seite. (b) Eine eigene Tabelle `deal_parties` — sauber,
+aber bei JSON-Speicherung nur zusaetzliche Verweise ohne Gewinn.
+
+**TRADEOFFS:** Der haeufige Fall (ein Kaeufer) ist etwas umstaendlicher zu
+schreiben. Ein unbekannter Kaeufer ist die leere Liste — das muss man wissen.
+
+**REVERSIBLE:** YES, aber nach dem ersten Datenbestand teuer. Deshalb jetzt.
+
+## 11 — Wirtschaftliche Form und rechtliche Umsetzung sind zwei Achsen
+
+**DECISION:** `deal_type` (acquisition, majority_stake, merger, carve_out …) und
+`transaction_structure` (share_deal, asset_deal, merger, mixed, unknown) sind
+getrennte Felder. `asset_deal` ist aus `deal_type` entfernt worden. Dazu
+`stake_before_percentage`, `stake_acquired_percentage`, `stake_after_percentage`.
+
+**WHY:** Ein Carve-out kann als Share- oder als Asset-Deal umgesetzt werden;
+beides in einen Wert zu pressen erzwingt spaeter eine Migration. Die drei
+Anteilsfelder bilden Minderheitsbeteiligung, Mehrheitsuebernahme und
+Beteiligungserhoehung ohne weitere Typwerte ab.
+
+**ALTERNATIVES:** Ein kombiniertes Vokabular mit Werten wie
+`carve_out_asset_deal` — kombinatorisch wachsend und nicht filterbar.
+
+**TRADEOFFS:** Ein Feld mehr je Deal.
+
+**REVERSIBLE:** YES.
+
+## 12 — Eigentum an Standorten laeuft ueber Ownership, nicht ueber ein Feld am Asset
+
+**DECISION:** `Asset.owner_id` entfaellt. `Ownership.owned_id` nimmt jetzt eine
+Company- **oder** eine Asset-ID. `Asset.operator_id` bleibt als Betreiber.
+
+**WHY:** Ein Werk hat regelmaessig mehrere Eigentuemer und wechselt sie. Ein
+einzelnes Feld kann weder Miteigentum noch Historie. Ownership kann beides
+bereits — es fehlte nur die Erlaubnis, auf einen Standort zu zeigen.
+
+**ALTERNATIVES:** Eine zweite Beziehungstabelle nur fuer Assets — dieselbe Logik
+zweimal.
+
+**TRADEOFFS:** "Wem gehoert dieses Werk" ist kein Feldzugriff mehr, sondern eine
+Abfrage.
+
+**REVERSIBLE:** YES.
+
+## 13 — Claim: Quellen belegen einzelne Aussagen
+
+**DECISION:** Neben `source_ids` am Datensatz gibt es `Claim`-Datensaetze:
+Subjekt, belegtes Feld, Aussage im Klartext, Quelle, Belegstatus, Confidence.
+
+**WHY:** "Welche Quelle belegt, dass X 35 % an Y haelt?" ist die Frage, an der
+sich dieses System messen lassen muss. Eine Liste von Quellen am Datensatz
+beantwortet sie nicht.
+
+**ALTERNATIVES:** (a) Quellen je Feld direkt am Datensatz — verdoppelt jedes
+Feld. (b) Ein echter Knowledge-Graph mit Reifikation — loest ein Problem, das
+wir nicht haben, und kostet dauerhaft Verstaendlichkeit.
+
+**TRADEOFFS:** Zwei Ebenen der Quellenzuordnung. Regel dagegen: die Quelle eines
+Claims muss auch in den `source_ids` seines Subjekts stehen (geprueft im Store).
+
+**REVERSIBLE:** YES — Claims sind additiv, ohne sie funktioniert alles weiter.
+
+## 14 — Event zeigt auf den Deal, ersetzt ihn nicht
+
+**DECISION:** `Event` traegt keine Transaktionsfelder. Ein Ereignis vom Typ
+`deal_*` muss mindestens einen Deal benennen.
+
+**WHY:** Sonst gibt es zwei Wahrheiten ueber denselben Vorgang: den Kaufpreis am
+Deal und noch einmal in der Meldung. Der Deal ist der strukturierte
+Transaktionsdatensatz, das Event ist die Tatsache, dass an einem Tag etwas
+gemeldet wurde.
+
+**ALTERNATIVES:** Event als Verlaufsprotokoll des Deals — waere Event Sourcing
+und damit deutlich mehr Maschinerie als noetig.
+
+**TRADEOFFS:** Wer nur die Meldung hat und den Deal noch nicht angelegt hat, muss
+ihn anlegen.
+
+**REVERSIBLE:** YES.
+
+## 15 — Koordinatengenauigkeit aus dem Marktatlas uebernommen
+
+**DECISION:** `coordinate_accuracy` (`headquarters` | `locality` | `unknown`) an
+Company und Asset.
+
+**WHY:** Die bestehende Website trennt Standortbeleg und Transaktionsbeleg und
+sagt zu jeder Koordinate, ob sie das Gebaeude oder nur den Ortsmittelpunkt
+meint. Ohne diese Angabe wirkt ein Ortsmittelpunkt auf der Karte wie eine
+Adresse.
+
+**ALTERNATIVES:** Genauigkeit als Freitext in `notes` — nicht filterbar, nicht
+pruefbar.
+
+**TRADEOFFS:** Ein Pflichtfeld mehr; ohne Koordinate ist es `unknown`.
+
+**REVERSIBLE:** YES.

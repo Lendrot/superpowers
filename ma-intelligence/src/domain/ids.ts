@@ -21,8 +21,17 @@ export type AssetId = `asset_${string}`;
 export type CommodityId = `commodity_${string}`;
 export type SourceId = `source_${string}`;
 export type EventId = `event_${string}`;
+export type ClaimId = `claim_${string}`;
 
-export type EntityId = CompanyId | DealId | OwnershipId | AssetId | CommodityId | SourceId | EventId;
+export type EntityId =
+  | CompanyId
+  | DealId
+  | OwnershipId
+  | AssetId
+  | CommodityId
+  | SourceId
+  | EventId
+  | ClaimId;
 
 export const ID_PREFIXES = [
   'company',
@@ -32,6 +41,7 @@ export const ID_PREFIXES = [
   'commodity',
   'source',
   'event',
+  'claim',
 ] as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[number];
@@ -81,12 +91,12 @@ export function companyId(displayName: string, discriminator?: string): CompanyI
  */
 export function dealId(input: {
   targetId: CompanyId;
-  buyerId: CompanyId | null;
+  buyerIds: readonly CompanyId[];
   year: number | null;
   discriminator?: string;
 }): DealId {
   const target = input.targetId.slice('company_'.length);
-  const buyer = input.buyerId === null ? 'unknown_buyer' : input.buyerId.slice('company_'.length);
+  const buyer = buyerSegment(input.buyerIds);
   const year = input.year === null ? 'undated' : String(input.year);
   if (input.year !== null && (!Number.isInteger(input.year) || input.year < 1800 || input.year > 2200)) {
     throw new RangeError(`dealId: unplausibles Jahr ${input.year}`);
@@ -95,16 +105,33 @@ export function dealId(input: {
 }
 
 /**
+ * Ein Konsortium bekommt den erstgenannten Kaeufer plus `et_al`. Die Sortierung
+ * macht die ID unabhaengig davon, in welcher Reihenfolge die Kaeufer geliefert
+ * wurden — sonst haette derselbe Deal zwei IDs.
+ */
+function buyerSegment(buyerIds: readonly CompanyId[]): string {
+  if (buyerIds.length === 0) return 'unknown_buyer';
+  const sorted = [...buyerIds].sort();
+  const first = sorted[0];
+  if (first === undefined) return 'unknown_buyer';
+  const slug = first.slice('company_'.length);
+  return sorted.length === 1 ? slug : `${slug}_et_al`;
+}
+
+/**
  * Eine Beteiligung ist erst durch ihren Gueltigkeitsbeginn eindeutig: derselbe
  * Eigentuemer kann denselben Anteil verkaufen und Jahre spaeter zurueckkaufen.
  */
 export function ownershipId(input: {
   ownerId: CompanyId;
-  ownedId: CompanyId;
+  /** Beteiligungen gibt es an Gesellschaften und an Standorten. */
+  ownedId: CompanyId | AssetId;
   validFrom: string | null;
 }): OwnershipId {
   const owner = input.ownerId.slice('company_'.length);
-  const owned = input.ownedId.slice('company_'.length);
+  const owned = input.ownedId.startsWith('company_')
+    ? input.ownedId.slice('company_'.length)
+    : input.ownedId.slice('asset_'.length);
   const from = input.validFrom === null ? 'open' : slugify(input.validFrom);
   return `ownership_${owner}__${owned}__${from}`;
 }
@@ -142,4 +169,16 @@ export function sourceId(input: {
 export function eventId(input: { date: string; headline: string }): EventId {
   const datePart = slugify(input.date);
   return `event_${datePart}_${shortHash({ headline: input.headline.trim().toLowerCase(), date: input.date })}`;
+}
+
+/**
+ * Ein Beleg wird ueber Subjekt, belegtes Feld und Quelle identifiziert. Dieselbe
+ * Quelle zweimal fuer dieselbe Aussage einzutragen ergibt denselben Datensatz.
+ */
+export function claimId(input: {
+  subjectId: string;
+  field: string | null;
+  sourceId: SourceId;
+}): ClaimId {
+  return `claim_${shortHash({ subject: input.subjectId, field: input.field, source: input.sourceId }, 12)}`;
 }

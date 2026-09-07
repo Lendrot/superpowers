@@ -10,7 +10,7 @@
  * echter Firmenname, ueber den nichts behauptet wird ausser seiner Schreibweise.
  */
 
-import type { Asset, Commodity, Company, Deal, Ownership, Source } from '@/domain/types.js';
+import type { Asset, Claim, Commodity, Company, Deal, Ownership, Source } from '@/domain/types.js';
 
 const NOW = '2026-01-15T10:00:00.000Z';
 
@@ -43,6 +43,7 @@ export const exampleBuyer: Company = {
   },
   latitude: 48.1372,
   longitude: 11.5756,
+  coordinate_accuracy: 'locality',
   industry: 'chemicals',
   subindustry: 'Spezialchemie',
   website: 'https://example.org',
@@ -81,16 +82,19 @@ export const exampleTarget: Company = {
 export const exampleDeal: Deal = {
   id: 'deal_musterwerke_gmbh__beispiel_chemie_ag__2025',
   target_company_id: exampleTarget.id,
-  buyer_company_id: exampleBuyer.id,
-  seller_company_id: null,
-  seller_name: 'Familie Mustermann',
+  buyers: [{ company_id: exampleBuyer.id, name: null, share_percentage: null }],
+  sellers: [{ company_id: null, name: 'Familie Mustermann', share_percentage: null }],
   deal_type: 'acquisition',
+  transaction_structure: 'share_deal',
   status: 'announced',
   announcement_date: '2025-11-04',
   completion_date: null,
   deal_value: 120_000_000,
   currency: 'EUR',
-  ownership_percentage: 100,
+  stake_acquired_percentage: 100,
+  stake_before_percentage: 0,
+  stake_after_percentage: 100,
+  asset_ids: [],
   source_ids: [exampleSource.id],
   confidence: 75,
   evidence: 'FACT',
@@ -130,17 +134,33 @@ export const exampleAsset: Asset = {
   name: 'Musterhuette Beispielheim',
   asset_type: 'smelter',
   operator_id: exampleTarget.id,
-  owner_id: exampleTarget.id,
   country: 'DE',
   region: 'Hessen',
   latitude: 50.1109,
   longitude: 8.6821,
+  coordinate_accuracy: 'locality',
   operational_status: 'operating',
-  commodity_ids: [exampleCommodity.id],
+  commodities: [{ commodity_id: exampleCommodity.id, role: 'primary' }],
   source_ids: [exampleSource.id],
   confidence: 60,
   evidence: 'FACT',
   notes: null,
   created_at: NOW,
   updated_at: NOW,
+};
+
+/**
+ * Ein Beleg fuer eine einzelne Aussage: welche Quelle stuetzt genau welches
+ * Feld welches Datensatzes.
+ */
+export const exampleClaim: Claim = {
+  id: 'claim_0a1b2c3d4e5f',
+  subject_type: 'ownership',
+  subject_id: exampleOwnership.id,
+  field: 'ownership_percentage',
+  statement: 'Beispiel Chemie haelt nach Vollzug 100 % an Musterwerke.',
+  source_id: exampleSource.id,
+  evidence: 'FACT',
+  confidence: 75,
+  created_at: NOW,
 };

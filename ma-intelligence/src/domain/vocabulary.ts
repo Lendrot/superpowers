@@ -27,6 +27,14 @@ export const ENTITY_TYPES = [
   'unknown',
 ] as const;
 
+/**
+ * Woher eine Koordinate stammt. Uebernommen aus dem bestehenden Marktatlas:
+ * die Genauigkeit eines Standorts ist eine eigene Aussage und darf nicht mit
+ * der Belegqualitaet der Transaktion vermengt werden. `locality` heisst
+ * Ortsmittelpunkt, `headquarters` heisst das Gebaeude selbst.
+ */
+export const COORDINATE_ACCURACIES = ['headquarters', 'locality', 'unknown'] as const;
+
 export const COMPANY_STATUSES = [
   'active',
   'acquired',
@@ -115,18 +123,35 @@ export const DEAL_STATUS_LABELS_DE: Readonly<Record<(typeof DEAL_STATUSES)[numbe
  */
 export const UNCONFIRMED_DEAL_STATUSES = ['rumored', 'sale_process'] as const;
 
+/**
+ * Die wirtschaftliche Form der Transaktion. Ob sie rechtlich als Share- oder
+ * Asset-Deal umgesetzt wird, ist eine eigene Achse (`TRANSACTION_STRUCTURES`) —
+ * ein Carve-out kann beides sein, und beides in einen Wert zu pressen erzwingt
+ * spaeter eine Migration.
+ */
 export const DEAL_TYPES = [
   'acquisition',
   'majority_stake',
   'minority_stake',
   'merger',
-  'asset_deal',
   'carve_out',
   'joint_venture',
   'management_buyout',
   'insolvency_sale',
   'unknown',
 ] as const;
+
+/**
+ * Die rechtliche Umsetzung. `mixed` deckt Transaktionen, die Anteile und
+ * Vermoegensgegenstaende zugleich uebertragen.
+ */
+export const TRANSACTION_STRUCTURES = ['share_deal', 'asset_deal', 'merger', 'mixed', 'unknown'] as const;
+
+/**
+ * Die Seite, auf der eine Partei am Deal steht. Das Ziel ist keine Rolle,
+ * sondern ein eigenes Feld — es gibt genau eines.
+ */
+export const DEAL_PARTY_ROLES = ['buyer', 'seller'] as const;
 
 // ── Eigentum ─────────────────────────────────────────────────────────────────
 
@@ -138,6 +163,8 @@ export const OWNERSHIP_RELATIONSHIP_TYPES = [
   'government_owner',
   'foundation_owner',
   'joint_venture',
+  /** Beteiligung an einem Standort statt an einer Gesellschaft. */
+  'asset_owner',
   'unknown',
 ] as const;
 
@@ -149,7 +176,7 @@ export const ASSET_TYPES = [
   'refinery',
   'smelter',
   'processing_plant',
-  'recycling_plant',
+  'recycling_facility',
   'factory',
   'warehouse',
   'port_terminal',
@@ -167,6 +194,12 @@ export const ASSET_OPERATIONAL_STATUSES = [
 ] as const;
 
 // ── Rohstoffe ────────────────────────────────────────────────────────────────
+
+/**
+ * Haupt- oder Nebenprodukt eines Standorts. Kupfer als Hauptprodukt und Gold
+ * als Beiprodukt derselben Mine sind zwei Zeilen, nicht zwei Assets.
+ */
+export const COMMODITY_ROLES = ['primary', 'byproduct', 'unknown'] as const;
 
 export const COMMODITY_CATEGORIES = [
   'base_metal',
@@ -226,3 +259,9 @@ export const EVENT_TYPES = [
  * bleibt es.
  */
 export const EVIDENCE_STATUSES = ['FACT', 'INFERENCE', 'ASSUMPTION', 'UNKNOWN'] as const;
+
+/**
+ * Worauf sich ein `Claim` beziehen kann — der Datensatz, dessen Aussage eine
+ * Quelle belegt.
+ */
+export const CLAIM_SUBJECT_TYPES = ['company', 'deal', 'ownership', 'asset', 'event'] as const;

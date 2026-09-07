@@ -29,25 +29,33 @@ describe('dealId', () => {
   const buyer = companyId('Beispiel Chemie AG');
 
   it('setzt sich aus Ziel, Kaeufer und Jahr zusammen', () => {
-    expect(dealId({ targetId: target, buyerId: buyer, year: 2025 })).toBe(
+    expect(dealId({ targetId: target, buyerIds: [buyer], year: 2025 })).toBe(
       'deal_musterwerke_gmbh__beispiel_chemie_ag__2025',
     );
   });
 
   it('benennt einen noch unbekannten Kaeufer ausdruecklich', () => {
-    expect(dealId({ targetId: target, buyerId: null, year: 2025 })).toBe(
+    expect(dealId({ targetId: target, buyerIds: [], year: 2025 })).toBe(
       'deal_musterwerke_gmbh__unknown_buyer__2025',
     );
   });
 
   it('ist bei gleichen Bestandteilen identisch', () => {
-    const first = dealId({ targetId: target, buyerId: buyer, year: 2025 });
-    const second = dealId({ targetId: target, buyerId: buyer, year: 2025 });
+    const first = dealId({ targetId: target, buyerIds: [buyer], year: 2025 });
+    const second = dealId({ targetId: target, buyerIds: [buyer], year: 2025 });
     expect(first).toBe(second);
   });
 
   it('lehnt unplausible Jahre ab', () => {
-    expect(() => dealId({ targetId: target, buyerId: buyer, year: 25 })).toThrow(RangeError);
+    expect(() => dealId({ targetId: target, buyerIds: [buyer], year: 25 })).toThrow(RangeError);
+  });
+
+  it('kennzeichnet ein Konsortium und ist unabhaengig von der Reihenfolge', () => {
+    const second = companyId('Zweiter Investor AG');
+    const forward = dealId({ targetId: target, buyerIds: [buyer, second], year: 2025 });
+    const reversed = dealId({ targetId: target, buyerIds: [second, buyer], year: 2025 });
+    expect(forward).toBe(reversed);
+    expect(forward).toContain('_et_al__');
   });
 });
 

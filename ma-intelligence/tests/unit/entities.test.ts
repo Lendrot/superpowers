@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assetSchema,
+  claimSchema,
   companySchema,
   dealSchema,
+  eventSchema,
   intelligenceDatabaseSchema,
   ownershipSchema,
   sourceSchema,
@@ -11,6 +13,7 @@ import {
 import {
   exampleAsset,
   exampleBuyer,
+  exampleClaim,
   exampleCommodity,
   exampleDeal,
   exampleOwnership,
@@ -36,7 +39,22 @@ describe('companySchema', () => {
 
   it('laesst keine halbe Koordinate zu', () => {
     expect(companySchema.safeParse({ ...exampleBuyer, latitude: null }).success).toBe(false);
-    expect(companySchema.safeParse({ ...exampleBuyer, latitude: null, longitude: null }).success).toBe(true);
+    expect(
+      companySchema.safeParse({
+        ...exampleBuyer,
+        latitude: null,
+        longitude: null,
+        coordinate_accuracy: 'unknown',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('haelt die Genauigkeit der Koordinate fest', () => {
+    expect(companySchema.safeParse({ ...exampleBuyer, coordinate_accuracy: 'headquarters' }).success).toBe(true);
+    // Ohne Koordinate gibt es nichts, dessen Genauigkeit man angeben koennte.
+    expect(
+      companySchema.safeParse({ ...exampleBuyer, latitude: null, longitude: null }).success,
+    ).toBe(false);
   });
 
   it('prueft Branche und Status gegen das Vokabular', () => {
@@ -74,10 +92,78 @@ describe('dealSchema', () => {
   });
 
   it('laesst einen offenen Kaeufer zu, aber keinen Selbstkauf', () => {
-    expect(dealSchema.safeParse({ ...exampleDeal, buyer_company_id: null }).success).toBe(true);
+    // Verkaufsprozess ohne bekannten Kaeufer: leere Liste, kein Platzhalter.
+    expect(dealSchema.safeParse({ ...exampleDeal, buyers: [], status: 'sale_process' }).success).toBe(true);
     expect(
-      dealSchema.safeParse({ ...exampleDeal, buyer_company_id: exampleDeal.target_company_id }).success,
+      dealSchema.safeParse({
+        ...exampleDeal,
+        buyers: [{ company_id: exampleDeal.target_company_id, name: null, share_percentage: null }],
+      }).success,
     ).toBe(false);
+  });
+
+  it('traegt ein Kaeuferkonsortium', () => {
+    const konsortium = {
+      ...exampleDeal,
+      buyers: [
+        { company_id: exampleBuyer.id, name: null, share_percentage: 60 },
+        { company_id: null, name: 'Mitinvestor Beteiligungs GmbH', share_percentage: 40 },
+      ],
+    };
+    expect(dealSchema.safeParse(konsortium).success).toBe(true);
+  });
+
+  it('traegt mehrere Verkaeufer und einen unbekannten Verkaeufer', () => {
+    expect(
+      dealSchema.safeParse({
+        ...exampleDeal,
+        sellers: [
+          { company_id: null, name: 'Familie Mustermann', share_percentage: 51 },
+          { company_id: null, name: 'Streubesitz', share_percentage: 49 },
+        ],
+      }).success,
+    ).toBe(true);
+    // Unbekannter Verkaeufer ist die leere Liste, nicht ein erfundener Name.
+    expect(dealSchema.safeParse({ ...exampleDeal, sellers: [] }).success).toBe(true);
+  });
+
+  it('verlangt fuer jede Partei eine Identitaet', () => {
+    expect(
+      dealSchema.safeParse({
+        ...exampleDeal,
+        buyers: [{ company_id: null, name: null, share_percentage: 50 }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('bildet eine Beteiligungserhoehung ab', () => {
+    const erhoehung = {
+      ...exampleDeal,
+      deal_type: 'majority_stake' as const,
+      stake_before_percentage: 25,
+      stake_acquired_percentage: 30,
+      stake_after_percentage: 55,
+    };
+    expect(dealSchema.safeParse(erhoehung).success).toBe(true);
+    // Rechnet die Quelle falsch, faellt es auf.
+    expect(dealSchema.safeParse({ ...erhoehung, stake_after_percentage: 80 }).success).toBe(false);
+    // Ein Anteil kann durch einen Zukauf nicht sinken.
+    expect(
+      dealSchema.safeParse({ ...erhoehung, stake_acquired_percentage: null, stake_after_percentage: 10 }).success,
+    ).toBe(false);
+  });
+
+  it('trennt wirtschaftliche Form und rechtliche Umsetzung', () => {
+    expect(dealSchema.safeParse({ ...exampleDeal, transaction_structure: 'share_deal' }).success).toBe(true);
+    // Ein Asset-Deal muss sagen, welche Standorte uebergehen.
+    expect(dealSchema.safeParse({ ...exampleDeal, transaction_structure: 'asset_deal' }).success).toBe(false);
+    expect(
+      dealSchema.safeParse({
+        ...exampleDeal,
+        transaction_structure: 'asset_deal',
+        asset_ids: [exampleAsset.id],
+      }).success,
+    ).toBe(true);
   });
 
   it('verlangt zu einem Wert eine Waehrung', () => {
@@ -108,6 +194,31 @@ describe('ownershipSchema', () => {
     expect(ownershipSchema.safeParse({ ...exampleOwnership, valid_to: '2019-01-01' }).success).toBe(false);
   });
 
+  it('haelt eine Beteiligung an einem Standort', () => {
+    const amStandort = {
+      ...exampleOwnership,
+      owned_id: exampleAsset.id,
+      relationship_type: 'asset_owner' as const,
+    };
+    expect(ownershipSchema.safeParse(amStandort).success).toBe(true);
+    // Ein Werk ist kein Aktionaer.
+    expect(ownershipSchema.safeParse({ ...amStandort, relationship_type: 'shareholder' }).success).toBe(false);
+    // Und eine Gesellschaft ist kein Standort.
+    expect(ownershipSchema.safeParse({ ...exampleOwnership, relationship_type: 'asset_owner' }).success).toBe(false);
+  });
+
+  it('traegt mehrere gleichzeitige Eigentuemer desselben Objekts', () => {
+    const ersterEigentuemer = { ...exampleOwnership, ownership_percentage: 60 };
+    const zweiterEigentuemer = {
+      ...exampleOwnership,
+      id: 'ownership_zweiter__musterwerke_gmbh__2025_11_04',
+      owner_id: 'company_zweiter_investor_ag',
+      ownership_percentage: 40,
+    };
+    expect(ownershipSchema.safeParse(ersterEigentuemer).success).toBe(true);
+    expect(ownershipSchema.safeParse(zweiterEigentuemer).success).toBe(true);
+  });
+
   it('begrenzt Anteile auf 0 bis 100 Prozent', () => {
     expect(ownershipSchema.safeParse({ ...exampleOwnership, ownership_percentage: 100.1 }).success).toBe(false);
     expect(ownershipSchema.safeParse({ ...exampleOwnership, ownership_percentage: null }).success).toBe(true);
@@ -123,6 +234,31 @@ describe('assetSchema und sourceSchema', () => {
   it('erlauben einer Quelle nur dann keine URL, wenn sie ausdruecklich null ist', () => {
     expect(sourceSchema.safeParse({ ...exampleSource, url: null }).success).toBe(true);
     expect(sourceSchema.safeParse({ ...exampleSource, url: 'example.org' }).success).toBe(false);
+  });
+
+  it('unterscheidet Haupt- und Nebenprodukt eines Standorts', () => {
+    const mitBeiprodukt = {
+      ...exampleAsset,
+      commodities: [
+        { commodity_id: exampleCommodity.id, role: 'primary' as const },
+        { commodity_id: 'commodity_gold', role: 'byproduct' as const },
+      ],
+    };
+    expect(assetSchema.safeParse(mitBeiprodukt).success).toBe(true);
+    // Derselbe Rohstoff zweimal waere eine doppelte Aussage.
+    expect(
+      assetSchema.safeParse({
+        ...exampleAsset,
+        commodities: [
+          { commodity_id: exampleCommodity.id, role: 'primary' },
+          { commodity_id: exampleCommodity.id, role: 'byproduct' },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('fuehrt kein Eigentum am Standort — das steht in Ownership', () => {
+    expect(assetSchema.safeParse({ ...exampleAsset, owner_id: exampleTarget.id }).success).toBe(false);
   });
 
   it('binden ein Asset an sein Vokabular', () => {
@@ -141,11 +277,71 @@ describe('intelligenceDatabaseSchema', () => {
       commodities: [exampleCommodity],
       sources: [exampleSource],
       events: [],
+      claims: [exampleClaim],
     };
     expect(intelligenceDatabaseSchema.parse(database)).toEqual(database);
   });
 
   it('verlangt jede Sammlung, auch wenn sie leer ist', () => {
     expect(intelligenceDatabaseSchema.safeParse({ companies: [], deals: [] }).success).toBe(false);
+  });
+});
+
+describe('claimSchema — Quellen belegen einzelne Aussagen', () => {
+  it('nimmt einen Beleg fuer ein einzelnes Feld an', () => {
+    expect(claimSchema.parse(exampleClaim)).toEqual(exampleClaim);
+  });
+
+  it('erlaubt einen Beleg fuer den Datensatz als Ganzes', () => {
+    expect(claimSchema.safeParse({ ...exampleClaim, field: null }).success).toBe(true);
+  });
+
+  it('verlangt, dass subject_id zum subject_type passt', () => {
+    expect(claimSchema.safeParse({ ...exampleClaim, subject_type: 'company' }).success).toBe(false);
+    expect(
+      claimSchema.safeParse({ ...exampleClaim, subject_type: 'deal', subject_id: exampleDeal.id }).success,
+    ).toBe(true);
+  });
+
+  it('verlangt eine lesbare Aussage', () => {
+    expect(claimSchema.safeParse({ ...exampleClaim, statement: 'ja' }).success).toBe(false);
+  });
+});
+
+describe('eventSchema — Abgrenzung zum Deal', () => {
+  const baseEvent = {
+    id: 'event_2025_11_04_0a1b2c3d',
+    event_type: 'deal_announced' as const,
+    date: '2025-11-04',
+    headline: 'Beispiel Chemie kuendigt Uebernahme an',
+    description: null,
+    company_ids: [exampleBuyer.id],
+    asset_ids: [],
+    deal_ids: [exampleDeal.id],
+    source_ids: [exampleSource.id],
+    confidence: 75,
+    evidence: 'FACT' as const,
+    notes: null,
+    created_at: exampleDeal.created_at,
+    updated_at: exampleDeal.updated_at,
+  };
+
+  it('nimmt ein Ereignis an, das seinen Deal benennt', () => {
+    expect(eventSchema.safeParse(baseEvent).success).toBe(true);
+  });
+
+  it('weist ein Deal-Ereignis ohne Deal ab — sonst entsteht eine zweite Wahrheit', () => {
+    expect(eventSchema.safeParse({ ...baseEvent, deal_ids: [] }).success).toBe(false);
+  });
+
+  it('laesst ein Ereignis ohne Deal zu, wenn es keines ist', () => {
+    expect(
+      eventSchema.safeParse({ ...baseEvent, event_type: 'management_change', deal_ids: [] }).success,
+    ).toBe(true);
+  });
+
+  it('traegt keine Transaktionsfelder', () => {
+    expect(eventSchema.safeParse({ ...baseEvent, deal_value: 120_000_000 }).success).toBe(false);
+    expect(eventSchema.safeParse({ ...baseEvent, status: 'announced' }).success).toBe(false);
   });
 });

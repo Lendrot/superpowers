@@ -61,9 +61,24 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/domain/**/*.ts', 'src/ingest/**/*.ts'],
+    files: ['src/review/**/*.ts'],
     rules: {
-      // Regel 3: Validierung und Confidence-Berechnung muessen reproduzierbar
+      // Der Review-Loop ist reine Logik. Dateien und Netzwerk gehoeren in die
+      // CLI-Schicht; sonst laesst sich die Zustandsmaschine nicht ohne echten
+      // PR testen — und genau das muss sie sein.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['node:fs', 'node:fs/*', '@/ingest/*', '@/store/*', '@/cli/*'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/domain/**/*.ts', 'src/ingest/**/*.ts', 'src/review/**/*.ts'],
+    rules: {
+      // Regel 3: Validierung, Confidence-Berechnung und die Entscheidungen des
+      // Review-Loops muessen reproduzierbar
       // sein. Ein Ergebnis, das von der Wanduhr abhaengt, ist nicht pruefbar —
       // Zeitpunkte kommen als Parameter herein (`now`), nie aus der Umgebung.
       'no-restricted-properties': [

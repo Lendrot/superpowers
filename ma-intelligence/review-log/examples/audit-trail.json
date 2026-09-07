@@ -1,0 +1,46 @@
+{
+  "contract_version": "1.0.0",
+  "pull_request": { "repository": "Lendrot/superpowers", "number": 2 },
+  "rounds": [
+    {
+      "round": 1,
+      "review_attempts": [
+        {
+          "status": "ok",
+          "provider_id": "mock",
+          "provider_status": "mock",
+          "received_at": "2026-09-07T12:00:00.000Z",
+          "findings": [
+            {
+              "finding_id": "ARCH-001",
+              "severity": "MEDIUM",
+              "category": "architecture",
+              "file": "src/review/loop.ts",
+              "lines": "120-140",
+              "problem": "Beispiel-Finding aus einem Mock-Reviewer, kein echter Befund.",
+              "evidence": "Diese Datei liegt unter review-log/examples/ und dient nur der Formatdemonstration.",
+              "required_change": "Nichts. Die Datei zeigt den Aufbau eines Audit Trails.",
+              "acceptance_criteria": ["pnpm review audit rendert diese Datei."],
+              "confidence": 0.9
+            }
+          ]
+        }
+      ],
+      "fix": {
+        "completed_at": "2026-09-07T12:30:00.000Z",
+        "verdicts": [
+          {
+            "finding_id": "ARCH-001",
+            "decision": "REJECTED",
+            "rationale": "Beispieleintrag: so sieht eine begruendete Ablehnung aus, die im Trail stehen bleibt.",
+            "changed_files": [],
+            "tests": []
+          }
+        ],
+        "changed_files": [],
+        "test_run": { "command": "pnpm test", "exit_code": 0, "total": 126, "passed": 126, "failed": 0, "skipped": 0 },
+        "remaining_risks": ["Kein Reviewer ist angebunden; dieser Trail stammt aus einem Mock."]
+      }
+    }
+  ]
+}

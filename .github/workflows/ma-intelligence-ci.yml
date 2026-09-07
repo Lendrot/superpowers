@@ -1,0 +1,70 @@
+# CI-Gate fuer das Teilprojekt ma-intelligence/.
+#
+# Laeuft nur, wenn dieses Teilprojekt betroffen ist — der Rest des Repositorys
+# (Superpowers-Plugin, ai-battle-royale) hat eigene Belange und wird hier nicht
+# angefasst.
+#
+# Damit ein roter Check einen Pull Request wirklich blockiert, muss "check" in
+# den Branch-Protection-Regeln von main als Required Status Check eingetragen
+# werden. Das ist eine Repository-Einstellung und kann nicht aus einer Datei
+# heraus gesetzt werden.
+
+name: ma-intelligence
+
+on:
+  pull_request:
+    paths:
+      - 'ma-intelligence/**'
+      - '.github/workflows/ma-intelligence-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ma-intelligence/**'
+      - '.github/workflows/ma-intelligence-ci.yml'
+  workflow_dispatch:
+
+# Lesen genuegt. Der Workflow schreibt nichts ins Repository, und ein Reviewer
+# bekommt ueber ihn keine Schreibrechte.
+permissions:
+  contents: read
+
+concurrency:
+  group: ma-intelligence-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: ma-intelligence
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: pnpm einrichten
+        uses: pnpm/action-setup@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: ma-intelligence/pnpm-lock.yaml
+
+      # --frozen-lockfile: die CI installiert genau das, was im Lockfile steht,
+      # und schlaegt fehl, wenn package.json und Lockfile auseinanderlaufen.
+      - name: Abhaengigkeiten installieren
+        run: pnpm install --frozen-lockfile
+
+      # Getrennte Schritte, damit im PR sofort sichtbar ist, welches Gate haelt.
+      - name: TypeScript pruefen
+        run: pnpm typecheck
+
+      - name: Linting inkl. Schichtgrenzen
+        run: pnpm lint
+
+      - name: Tests
+        run: pnpm test

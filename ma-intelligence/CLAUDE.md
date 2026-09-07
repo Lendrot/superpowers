@@ -29,6 +29,14 @@ naechste Schritt ist — nicht erneut das ganze Repository analysieren.
    oder News-Funktionen, solange Phase 1 nicht traegt. Schemas dafuer existieren
    bereits; sie werden nicht "schon mal befuellt".
 9. **Vor jedem Commit `pnpm check` gruen.** Typecheck, Lint und Tests.
+10. **Tests werden repariert, nie stillgelegt.** Kein `skip`, kein Loeschen,
+    kein Aufweichen einer Zusicherung, damit ein Build gruen wird. Der
+    Review-Loop erkennt es und eskaliert an einen Menschen.
+11. **Kein AI-Review wird simuliert.** Solange kein Reviewer angebunden ist,
+    traegt jedes Review `provider_status: "mock"` und sagt das im Audit. Regeln
+    und Stand: `docs/review-loop.md`.
+12. **Nie direkt auf `main`, nie automatisch mergen.** Der Review-Loop kennt
+    keine Merge-Aktion; der letzte Schritt gehoert einem Menschen.
 
 ## Was ausserhalb dieses Verzeichnisses liegt, wird nicht angefasst
 
@@ -55,4 +63,5 @@ hinzufuegen.
 ```bash
 pnpm check       # typecheck + lint + test — das Gate vor jedem Commit
 pnpm test        # nur Vitest
+pnpm review      # validate | next | audit — der Review-Loop
 ```

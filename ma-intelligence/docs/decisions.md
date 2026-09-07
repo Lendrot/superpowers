@@ -105,3 +105,61 @@ mit Codegenerierung.
 etabliert (`ai-battle-royale`).
 
 **REVERSIBLE:** YES.
+
+## 7 — CI-Workflow in `.github/workflows/`, entgegen Entscheidung 1
+
+**DECISION:** `.github/workflows/ma-intelligence-ci.yml` liegt in der Wurzel des
+Repositorys, obwohl Entscheidung 1 die Wurzel fuer unberuehrt erklaert. Der
+Workflow ist auf Pfade unter `ma-intelligence/**` beschraenkt.
+
+**WHY:** GitHub Actions liest Workflows ausschliesslich aus
+`.github/workflows/`. Ein CI-Gate fuer Pull Requests ist ohne diese Datei nicht
+moeglich. Das Konfliktrisiko ist gering: die Datei ist neu, upstream existiert
+sie nicht, und keine bestehende Datei wird geaendert.
+
+**ALTERNATIVES:** (a) Kein CI-Gate — dann bleibt der Workflow ein Vorsatz.
+(b) Pruefung nur lokal ueber `pnpm check` — haengt daran, dass sie jemand
+ausfuehrt, und blockiert keinen PR.
+
+**TRADEOFFS:** Der erste Eingriff in die Wurzel. Bei einem Upstream-Merge ist
+die Datei zusaetzlicher Inhalt, kein Konflikt.
+
+**REVERSIBLE:** YES — Datei loeschen.
+
+## 8 — Anbieterneutrale Reviewer-Schnittstelle statt SDK-Anbindung
+
+**DECISION:** Ein Reviewer ist ein Objekt mit `id`, `status` und
+`review(request) → Text`. Kein SDK, kein Anbietername, keine Modellwahl im
+Loop. Angebunden ist heute nur ein Mock, der sich als solcher ausweist.
+
+**WHY:** Der Loop soll den Anbieter ueberleben. Und solange keine Zugangsdaten
+vorliegen, ist die ehrliche Umsetzung ein Mock, der sich Mock nennt — kein
+Adapter, der so tut, als koennte er ein Modell erreichen.
+
+**ALTERNATIVES:** (a) Direkte Anbindung an ein SDK — schneller, koppelt aber
+Loop und Anbieter und braucht Zugangsdaten, die es nicht gibt. (b) Warten, bis
+Zugangsdaten da sind — dann bleibt die Mechanik ungetestet.
+
+**TRADEOFFS:** Die Antwort ist Text und wird erst danach validiert. Das ist
+gewollt: eine Modellantwort ist unvertrauenswuerdige Eingabe, und die Pruefung
+gehoert an eine Stelle, nicht in jeden Adapter.
+
+**REVERSIBLE:** YES — ein Adapter ist eine Datei mit einer Methode.
+
+## 9 — Der Loop kennt keine Merge-Aktion
+
+**DECISION:** Die Zustandsmaschine kann `READY_FOR_HUMAN_MERGE` oder
+`HUMAN_REVIEW_REQUIRED` ergeben, aber keine Aktion, die schreibt, zusammenfuehrt
+oder freigibt.
+
+**WHY:** Eine Sicherheitsregel, die nur in der Dokumentation steht, ist eine
+Bitte. Fehlt der Zustand, kann kein Pfad ihn erreichen — auch keiner, den
+spaeter jemand versehentlich baut.
+
+**ALTERNATIVES:** Auto-Merge unter Bedingungen (gruene CI, keine Findings). Das
+verschiebt die Frage nur auf die Qualitaet der Bedingungen.
+
+**TRADEOFFS:** Der letzte Schritt bleibt manuell, auch wenn alles gruen ist.
+
+**REVERSIBLE:** YES, aber bewusst schwer: es braeuchte einen neuen Zustand,
+eine neue Aktion und eine Aenderung an den Tests, die genau das ausschliessen.

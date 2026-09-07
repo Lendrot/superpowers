@@ -8,7 +8,7 @@
 
 import type { IntelligenceDatabase, Industry } from '../domain/types.js';
 import { DEAL_STATUS_LABELS_DE, DEAL_STATUSES, INDUSTRY_LABELS_DE } from '../domain/vocabulary.js';
-import { dealDate, dealView, filterDeals, industriesInUse } from './query.js';
+import { dealDate, dealView, dealsWithBuyerFrom, filterDeals, industriesInUse } from './query.js';
 
 export interface MapBundle {
   meta: {
@@ -18,6 +18,12 @@ export interface MapBundle {
     deal_count: number;
     located_count: number;
     undated_count: number;
+    /**
+     * Deals mit Kaeufer aus dem Land, deren Ziel im Ausland sitzt. Sie zaehlen
+     * zum Bezug, haengen aber nicht an dieser Karte — sichtbar gemacht, statt
+     * still zu fehlen.
+     */
+    buyer_side_count: number;
     source_count: number;
     disclaimer: string;
   };
@@ -160,6 +166,7 @@ export function buildMapBundle(database: IntelligenceDatabase, country = 'DE'): 
       deal_count: entries.length,
       located_count: entries.filter((entry) => entry.target.latitude !== null).length,
       undated_count: entries.length - dates.length,
+      buyer_side_count: dealsWithBuyerFrom(database, country).length,
       source_count: database.sources.length,
       disclaimer: DISCLAIMER,
     },

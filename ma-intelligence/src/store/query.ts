@@ -52,6 +52,21 @@ export function sourcesOf(database: IntelligenceDatabase, sourceIds: readonly st
     .filter((source): source is Source => source !== undefined);
 }
 
+/**
+ * Deals, die zum Bezug eines Landes zaehlen, aber nicht an dessen
+ * Zielunternehmen haengen: der Kaeufer sitzt im Land, das Ziel im Ausland.
+ * Die Laenderkarte filtert ueber das Ziel — dass es diese Faelle gibt, darf
+ * deshalb nicht still verschwinden, sondern wird gezaehlt und angezeigt.
+ */
+export function dealsWithBuyerFrom(database: IntelligenceDatabase, country: string): Deal[] {
+  return database.deals.filter((deal) => {
+    if (companyById(database, deal.target_company_id)?.country === country) return false;
+    return deal.buyers.some(
+      (party) => party.company_id !== null && companyById(database, party.company_id)?.country === country,
+    );
+  });
+}
+
 export function filterDeals(database: IntelligenceDatabase, filter: DealFilter = {}): Deal[] {
   return database.deals.filter((deal) => {
     if (filter.statuses !== undefined && filter.statuses.length > 0 && !filter.statuses.includes(deal.status)) {

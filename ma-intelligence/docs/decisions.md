@@ -334,3 +334,29 @@ in einem Projekt, dessen Datenbank in Git liegt, ist das der ganze Vorteil.
 der Importzeitpunkt. Das ist die ehrlichere Angabe.
 
 **REVERSIBLE:** YES.
+
+## 19 — Deals mit deutschem Kaeufer werden gezaehlt, nicht versteckt
+
+**DECISION:** Der erfasste Bestand folgt dem Auftragsumfang "deutsches
+Zielunternehmen **oder** deutscher Kaeufer". Die Deutschlandkarte haengt
+weiterhin am Zielunternehmen und zeigt deshalb nur die erste Haelfte. Wie viele
+Deals dadurch fehlen, steht als `meta.buyer_side_count` im Kartenbuendel und als
+Satz im Seitenkopf.
+
+**WHY:** Mit dem v004-Bestand kamen erstmals Transaktionen dazu, in denen ein
+deutscher Kaeufer im Ausland kauft (Henkel/Olaplex, BASF/AgBiTech,
+Henkel/Stahl). Sie gehoeren zum Umfang, haben aber keinen deutschen Standort,
+an dem ein Marker sinnvoll haengt. Sie stillschweigend wegzufiltern hiesse, eine
+Zahl zu zeigen, die kleiner ist als der Bestand, ohne das zu sagen — genau die
+Art stiller Luecke, die dieses Projekt sonst ueberall sichtbar macht.
+
+**ALTERNATIVES:** (a) Umfang auf deutsche Ziele verengen — verwirft belegte
+Daten. (b) Marker an den Sitz des deutschen Kaeufers setzen — dann bedeutet ein
+Punkt auf der Karte zweierlei, und die Karte luegt ueber den Ort des Geschaefts.
+
+**TRADEOFFS:** Drei belegte Transaktionen sind derzeit nur ueber den Bestand
+erreichbar, nicht ueber die Oberflaeche. Das ist die kleinere Unehrlichkeit als
+ein Marker am falschen Ort; eine eigene Ansicht "deutsche Kaeufer im Ausland"
+bleibt moeglich.
+
+**REVERSIBLE:** YES — `dealsWithBuyerFrom` liefert die Menge bereits.

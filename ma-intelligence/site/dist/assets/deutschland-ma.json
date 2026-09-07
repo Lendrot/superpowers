@@ -1,11 +1,12 @@
 {
   "meta": {
-    "data_as_of": "2026-09-07T06:00:00.000Z",
+    "data_as_of": "2026-09-07T07:17:13.000Z",
     "scope": "Deals mit Zielunternehmen in DE",
-    "deal_count": 9,
+    "deal_count": 13,
     "located_count": 7,
-    "undated_count": 2,
-    "source_count": 12,
+    "undated_count": 6,
+    "buyer_side_count": 3,
+    "source_count": 20,
     "disclaimer": "Kleiner, handverlesener Datensatz zur Pruefung des Datenmodells — keine vollstaendige Erfassung des deutschen M&A-Markts. Jede Angabe traegt ihre Quelle."
   },
   "filters": {
@@ -23,7 +24,7 @@
       {
         "key": "announced",
         "label": "Angekündigt",
-        "count": 2
+        "count": 5
       },
       {
         "key": "signed",
@@ -38,19 +39,19 @@
       {
         "key": "completed",
         "label": "Vollzogen",
-        "count": 3
+        "count": 4
       }
     ],
     "industries": [
       {
         "key": "chemicals",
         "label": "Chemie",
-        "count": 1
+        "count": 2
       },
       {
         "key": "construction_real_estate",
         "label": "Bau & Immobilien",
-        "count": 1
+        "count": 2
       },
       {
         "key": "consumer_retail",
@@ -85,7 +86,7 @@
       {
         "key": "technology_software",
         "label": "Technologie & Software",
-        "count": 1
+        "count": 3
       }
     ],
     "date_range": {
@@ -284,7 +285,7 @@
       "stake_after_percentage": null,
       "confidence": 65,
       "evidence": "FACT",
-      "notes": "Übernahmeangebot, angekündigt am 23.05.2026. Konditionen und Stand des Vollzugs sind aus der vorliegenden Quelle nicht belegt.",
+      "notes": "Übernahmeangebot, angekündigt am 23.05.2026. Konditionen und Stand des Vollzugs sind aus der vorliegenden Quelle nicht belegt. Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der gespeicherte Name der Bietergesellschaft ist entsprechend zu korrigieren.",
       "sources": [
         {
           "title": "Angekündigte und laufende Übernahmeangebote",
@@ -293,9 +294,24 @@
           "source_type": "database",
           "publication_date": null,
           "reliability_score": 65
+        },
+        {
+          "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "publisher": "Marktatlas",
+          "url": null,
+          "source_type": "other",
+          "publication_date": "2026-09-07",
+          "reliability_score": 70
         }
       ],
-      "claims": []
+      "claims": [
+        {
+          "field": "buyers",
+          "statement": "Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der bei der SEC eingereichte Vertrag bestaetigt die Parteienliste. Die Kaeufergruppe Uber und der offene Status bleiben unveraendert.",
+          "source_title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "source_url": null
+        }
+      ]
     },
     {
       "id": "deal_gerresheimer__silgan_holdings__2026",
@@ -484,6 +500,66 @@
       ]
     },
     {
+      "id": "deal_all_for_one_group__vinci__undated",
+      "target": {
+        "name": "All for One Group",
+        "legal_name": "All for One Group SE",
+        "city": null,
+        "region": null,
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy": "unknown",
+        "industry": "technology_software",
+        "industry_label": "Technologie & Software"
+      },
+      "buyers": [
+        "VINCI"
+      ],
+      "sellers": [],
+      "status": "announced",
+      "status_label": "Angekündigt",
+      "unconfirmed": false,
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "date": null,
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_before_percentage": null,
+      "stake_acquired_percentage": null,
+      "stake_after_percentage": null,
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Gemeinsame begruendete Stellungnahme von Vorstand und Aufsichtsrat zu einem Uebernahmeangebot; VINCI tritt als Kaeufergruppe auf. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer.",
+      "sources": [
+        {
+          "title": "Corporate News: Joint Reasoned Statement",
+          "publisher": "All for One Group SE",
+          "url": "https://www.all-for-one.com/en/company/news-press/detail/corporate-news-joint-reasoned-statement.html",
+          "source_type": "company_primary",
+          "publication_date": null,
+          "reliability_score": 85
+        },
+        {
+          "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "publisher": "Marktatlas",
+          "url": null,
+          "source_type": "other",
+          "publication_date": "2026-09-07",
+          "reliability_score": 70
+        }
+      ],
+      "claims": [
+        {
+          "field": "status",
+          "statement": "Gemeinsame begruendete Stellungnahme zum Uebernahmeangebot; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als offen (pending).",
+          "source_title": "Corporate News: Joint Reasoned Statement",
+          "source_url": "https://www.all-for-one.com/en/company/news-press/detail/corporate-news-joint-reasoned-statement.html"
+        }
+      ]
+    },
+    {
       "id": "deal_ebm_papst_industrielle_antriebstechnik__siemens__undated",
       "target": {
         "name": "ebm-papst Industrielle Antriebstechnik",
@@ -529,6 +605,188 @@
         }
       ],
       "claims": []
+    },
+    {
+      "id": "deal_fermacell__holcim__undated",
+      "target": {
+        "name": "Fermacell",
+        "legal_name": "Fermacell",
+        "city": null,
+        "region": null,
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy": "unknown",
+        "industry": "construction_real_estate",
+        "industry_label": "Bau & Immobilien"
+      },
+      "buyers": [
+        "Holcim"
+      ],
+      "sellers": [],
+      "status": "announced",
+      "status_label": "Angekündigt",
+      "unconfirmed": false,
+      "deal_type": "carve_out",
+      "transaction_structure": "unknown",
+      "date": null,
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_before_percentage": null,
+      "stake_acquired_percentage": null,
+      "stake_after_percentage": null,
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Europaeisches Geschaeft von Fermacell. Die Verkaeuferseite ist in der verfuegbaren Quelle nicht benannt und bleibt leer. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer.",
+      "sources": [
+        {
+          "title": "Holcim to acquire Fermacell",
+          "publisher": "Holcim",
+          "url": "https://www.holcim.com/media/media-releases/holcim-to-acquire-fermacell",
+          "source_type": "company_primary",
+          "publication_date": null,
+          "reliability_score": 85
+        },
+        {
+          "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "publisher": "Marktatlas",
+          "url": null,
+          "source_type": "other",
+          "publication_date": "2026-09-07",
+          "reliability_score": 70
+        }
+      ],
+      "claims": [
+        {
+          "field": "status",
+          "statement": "Holcim kuendigt den Erwerb von Fermacell an; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als offen (pending).",
+          "source_title": "Holcim to acquire Fermacell",
+          "source_url": "https://www.holcim.com/media/media-releases/holcim-to-acquire-fermacell"
+        }
+      ]
+    },
+    {
+      "id": "deal_nagarro__persistent_systems__undated",
+      "target": {
+        "name": "Nagarro",
+        "legal_name": "Nagarro SE",
+        "city": null,
+        "region": null,
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy": "unknown",
+        "industry": "technology_software",
+        "industry_label": "Technologie & Software"
+      },
+      "buyers": [
+        "Persistent Systems"
+      ],
+      "sellers": [],
+      "status": "announced",
+      "status_label": "Angekündigt",
+      "unconfirmed": false,
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "date": null,
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_before_percentage": null,
+      "stake_acquired_percentage": null,
+      "stake_after_percentage": null,
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Freiwilliges oeffentliches Uebernahmeangebot. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer.",
+      "sources": [
+        {
+          "title": "Voluntary public takeover offer by Persistent",
+          "publisher": "Nagarro SE",
+          "url": "https://www.nagarro.com/en/investor-relations/voluntary-public-takeover-offer-by-persistent",
+          "source_type": "company_primary",
+          "publication_date": null,
+          "reliability_score": 85
+        },
+        {
+          "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "publisher": "Marktatlas",
+          "url": null,
+          "source_type": "other",
+          "publication_date": "2026-09-07",
+          "reliability_score": 70
+        }
+      ],
+      "claims": [
+        {
+          "field": "status",
+          "statement": "Nagarro veroeffentlicht das freiwillige oeffentliche Uebernahmeangebot von Persistent; die Linkpruefung fuehrt die Beziehung als offen.",
+          "source_title": "Voluntary public takeover offer by Persistent",
+          "source_url": "https://www.nagarro.com/en/investor-relations/voluntary-public-takeover-offer-by-persistent"
+        }
+      ]
+    },
+    {
+      "id": "deal_surventis__carlyle__undated",
+      "target": {
+        "name": "Surventis",
+        "legal_name": "Surventis",
+        "city": null,
+        "region": null,
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy": "unknown",
+        "industry": "chemicals",
+        "industry_label": "Chemie"
+      },
+      "buyers": [
+        "Carlyle"
+      ],
+      "sellers": [
+        "BASF"
+      ],
+      "status": "completed",
+      "status_label": "Vollzogen",
+      "unconfirmed": false,
+      "deal_type": "carve_out",
+      "transaction_structure": "unknown",
+      "date": null,
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_before_percentage": null,
+      "stake_acquired_percentage": null,
+      "stake_after_percentage": null,
+      "confidence": 75,
+      "evidence": "FACT",
+      "notes": "Herauskauf des BASF-Coatings-Geschaefts durch eine Kaeufergruppe um Carlyle; das Geschaeft firmiert seither als Surventis. Die Linkpruefung vom 2026-09-07 hat Beziehung und Status an der Meldung bestaetigt; ein Ereignisdatum nennt sie nicht. Datum und Transaktionswert bleiben deshalb leer.",
+      "sources": [
+        {
+          "title": "BASF-Pressemitteilung p-26-113 zum Coatings-Geschaeft",
+          "publisher": "BASF SE",
+          "url": "https://www.basf.com/global/en/media/news-releases/2026/07/p-26-113",
+          "source_type": "company_primary",
+          "publication_date": null,
+          "reliability_score": 90
+        },
+        {
+          "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+          "publisher": "Marktatlas",
+          "url": null,
+          "source_type": "other",
+          "publication_date": "2026-09-07",
+          "reliability_score": 70
+        }
+      ],
+      "claims": [
+        {
+          "field": "status",
+          "statement": "BASF meldet den Abschluss des Verkaufs seines Coatings-Geschaefts; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als vollzogen.",
+          "source_title": "BASF-Pressemitteilung p-26-113 zum Coatings-Geschaeft",
+          "source_url": "https://www.basf.com/global/en/media/news-releases/2026/07/p-26-113"
+        }
+      ]
     },
     {
       "id": "deal_uniper__unknown_buyer__undated",

@@ -8,7 +8,9 @@ Branch: `claude/ma-intelligence-platform-7s9wv4`
 **Deutschland-M&A-V1 laeuft**: von der recherchierten Lieferung ueber Validierung,
 Entity Matching und geprueften Bestand bis zur Karte mit Marker, Detailansicht,
 Quellenlink und den drei Filtern — auf der bestehenden Website, die unveraendert
-erhalten geblieben ist. Kein AI-Reviewer ist angebunden; die Review-Loop-
+erhalten geblieben ist. Der Bestand traegt jetzt **16 Transaktionen mit
+Deutschlandbezug**, darunter die sieben deutschen Beziehungen aus dem
+Marktatlas-Stand v004. Kein AI-Reviewer ist angebunden; die Review-Loop-
 Infrastruktur ruht auftragsgemaess.
 
 ## Wichtig fuer den Einstieg
@@ -50,11 +52,15 @@ gebuendelt. Sie wurde erweitert, nicht ersetzt. Ihre Analyse steht in
 - **Import-Pipeline**: Lieferformat mit `ref`-Schluesseln statt IDs, Aufloesung
   gegen den Marktatlas-Bestand ueber Wikidata-ID, sonst ueber einen belegten
   Ortsmittelpunkt. Ohne Beleg bleibt der Standort leer und wird gemeldet.
-- **Datensatz**: neun reale deutsche Transaktionen mit zwoelf Quellen und sieben
-  Einzelbelegen, ausgewaehlt nach Fallunterscheidungen (vollzogen, angekuendigt,
-  unterzeichnet, kartellrechtliche Pruefung, Verkaufsprozess, Geruecht;
-  deutscher und auslaendischer Kaeufer; Beteiligungserhoehung; Carve-out;
-  staatlicher Verkaeufer; offener Kaeufer).
+- **Datensatz**: 16 reale Transaktionen mit Deutschlandbezug, 20 Quellen und 15
+  Einzelbelegen. Grundstock sind neun eigene Recherchen, ausgewaehlt nach
+  Fallunterscheidungen (vollzogen, angekuendigt, unterzeichnet,
+  kartellrechtliche Pruefung, Verkaufsprozess, Geruecht; deutscher und
+  auslaendischer Kaeufer; Beteiligungserhoehung; Carve-out; staatlicher
+  Verkaeufer; offener Kaeufer). Dazu die sieben deutschen Beziehungen aus dem
+  **Marktatlas-Bestand v004**, die dort noch fehlten (Holcim/Fermacell,
+  VINCI/All for One, Henkel/Olaplex, Carlyle/Surventis, Persistent/Nagarro,
+  BASF/AgBiTech, Henkel/Stahl).
 - **Karte**: `site/dist/deutschland/` — Deutschland hervorgehoben, Marker nach
   Status in Farbe **und Form** getrennt (bestaetigt gefuellt, unbestaetigt
   gestrichelt), Detailansicht mit Parteien, Anteilen, Belegstatus, Einzelbelegen
@@ -86,7 +92,7 @@ Findings → Fix → erneutes Review.
 
 **Dokumentation.** `docs/analysis.md` (Bestandsaufnahme und Plan),
 `architecture.md`, `data-schema.md`, `research-rules.md`, `decisions.md`
-(sechs Entscheidungen), `agent/GPT_HANDOFF.md` (Lieferformat fuer GPT).
+(19 Entscheidungen), `agent/GPT_HANDOFF.md` (Lieferformat fuer GPT).
 
 ## Relevante Dateien
 
@@ -132,6 +138,8 @@ Findings → Fix → erneutes Review.
 13. Die bestehende Website wird erweitert, nicht ersetzt.
 14. Koordinaten nur aus belegten Quellen — sonst keine.
 15. Import und Kartenexport sind deterministisch.
+16. Deals mit deutschem Kaeufer und Ziel im Ausland werden gezaehlt und benannt,
+    statt still aus der Karte zu fallen.
 
 Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 
@@ -154,9 +162,20 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
   einem Websuchindex; jede Quelle ist mit URL erfasst und vor einer
   Veroeffentlichung am Original zu bestaetigen. Die Lieferung sagt das in
   `verification_note`, und die Confidence-Werte tragen dem Rechnung.
-- **Zwei von neun Transaktionen haben keinen Standort** (FFG in Flensburg,
-  ebm-papst-Geschaeftsbereich). Fuer beide liegt keine belegte Koordinate im
-  Bestand; sie stehen in der Liste, nicht auf der Karte.
+- **Sechs der 13 Deutschland-Deals haben keinen Standort.** Fuer FFG
+  (Flensburg) und den ebm-papst-Geschaeftsbereich liegt keine belegte
+  Koordinate im Bestand. Fuer die vier aus v004 ergaenzten deutschen Ziele
+  (Fermacell, All for One, Nagarro, Surventis) lag das v004-ZIP mit den
+  korrigierten Sitzangaben nicht vor — siehe naechster Schritt. Alle sechs
+  stehen in der Liste, nicht auf der Karte.
+- **Drei Transaktionen mit deutschem Kaeufer und Ziel im Ausland** (Olaplex,
+  AgBiTech, Stahl) sind im Bestand, aber nicht auf der Karte: sie haengt am
+  Zielunternehmen. Ihre Zahl steht als `meta.buyer_side_count` im Buendel und
+  im Seitenkopf (`docs/decisions.md` #19).
+- **Ereignisdaten fehlen bei den v004-Ergaenzungen.** Die Linkpruefung belegt
+  Beziehung und Status am Meldungstext, nennt aber ausdruecklich nicht fuer
+  jede Transaktion ein zweitbelegtes Datum. Sechs Deals sind deshalb undatiert
+  und fallen sichtbar aus dem Zeitraumfilter.
 - **Der Importer kennt noch keine Review Queue.** Er legt jedes gelieferte
   Unternehmen neu an, statt es gegen den Bestand zu halten. Bei einer zweiten
   Lieferung entstehen dadurch Dubletten.
@@ -178,17 +197,27 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 Die Deutschland-V1 steht. Bevor etwas Neues beginnt, sind das die naechsten
 sinnvollen Schritte — in dieser Reihenfolge:
 
-1. **Datensatz verbreitern.** Neun Transaktionen sind genug, um das Modell zu
-   pruefen, und zu wenig, um damit zu arbeiten. Die Pipeline traegt jetzt
-   beliebig viele Lieferungen; noetig ist Recherche, kein Code.
-2. **Confidence-Berechnung** (`src/domain/confidence.ts`): heute wird die
+1. **Das v004-ZIP einlesen.** `Marktatlas_v004_Deutschland_2026-09-07.zip`
+   (15,7 MB, Google Drive) enthaelt den korrigierten Datenbestand: 97
+   berichtigte Hauptsitze, 327 Eintraege mit Standort in Deutschland, 409
+   DE-ISIN-Positionen und die Sektorzuordnung mit `sectorSource`. Es liegt
+   dieser Sitzung nicht vor — der MCP-Download deckelt bei 10 MB, der
+   Egress-Proxy sperrt Drive und die Website. Sobald es da ist: `companies.json`
+   und `acquisitions.json` unter `site/dist/assets/` ersetzen und neu
+   importieren. Die vier ergaenzten deutschen Ziele bekommen dadurch ihren
+   belegten Standort; **kein Code muss dafuer geaendert werden**, die
+   Koordinatensuche liest genau diese beiden Dateien.
+2. **Datensatz weiter verbreitern.** 16 Transaktionen pruefen das Modell, sind
+   aber keine Marktabdeckung. Die Pipeline traegt beliebig viele Lieferungen;
+   noetig ist Recherche, kein Code.
+3. **Confidence-Berechnung** (`src/domain/confidence.ts`): heute wird die
    Confidence je Datensatz von Hand gesetzt. Sie sollte aus Quellentyp,
    Quellenzahl und Dealstatus folgen, mit Deckelung fuer unbestaetigte Status.
-3. **Review Queue**: unsichere Entity-Matches und Widersprueche zum Bestand
+4. **Review Queue**: unsichere Entity-Matches und Widersprueche zum Bestand
    landen heute nirgends — der Importer legt jedes gelieferte Unternehmen neu
    an. Sobald zwei Lieferungen zusammenkommen, ist das die naechste echte
    Baustelle.
-4. **Branchenklassifikation aus der Quelle**: `industry` kommt heute aus der
+5. **Branchenklassifikation aus der Quelle**: `industry` kommt heute aus der
    Lieferung. Die SPARQL-Abfrage der Website koennte P452 mitholen.
 
 Keine Europa- oder Rohstofferweiterung, bevor das steht. Die

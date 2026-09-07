@@ -164,6 +164,23 @@ describe('Die ausgelieferte Deutschland-Seite', () => {
     }
   });
 
+  it('zaehlt einen Deal mit deutschem Kaeufer und auslaendischem Ziel nicht zur Karte', () => {
+    // Die Karte haengt am Zielunternehmen. Ein deutscher Kaeufer, der im
+    // Ausland kauft, gehoert trotzdem zum erfassten Bezug — er darf nicht
+    // still verschwinden, sondern wird getrennt ausgewiesen.
+    const auslandsziel = { ...exampleTarget, country: 'US' };
+    const bundle = buildMapBundle({ ...database(), companies: [exampleBuyer, auslandsziel] });
+
+    expect(bundle.meta.deal_count).toBe(0);
+    expect(bundle.meta.buyer_side_count).toBe(1);
+  });
+
+  it('zaehlt einen Deal mit deutschem Ziel nicht doppelt', () => {
+    const bundle = buildMapBundle(database());
+    expect(bundle.meta.deal_count).toBe(1);
+    expect(bundle.meta.buyer_side_count).toBe(0);
+  });
+
   it('wird von den bestehenden Seiten aus verlinkt', () => {
     for (const file of ['assets/app.js', 'assets/globe-app.js']) {
       expect(readFileSync(resolve(dist, file), 'utf8')).toContain('href="/deutschland/"');

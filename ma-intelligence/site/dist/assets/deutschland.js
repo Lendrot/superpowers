@@ -322,9 +322,16 @@ async function start() {
   }
 
   const meta = state.data.meta;
+  // Deals mit deutschem Kaeufer und auslaendischem Ziel haengen nicht an dieser
+  // Karte. Sie werden benannt, statt still zu fehlen.
+  const buyerSide =
+    meta.buyer_side_count > 0
+      ? ` Dazu ${nf.format(meta.buyer_side_count)} Transaktionen mit deutschem Käufer und Ziel im Ausland, die diese Karte nicht zeigt.`
+      : '';
   document.getElementById('lead').textContent =
     `${nf.format(meta.deal_count)} erfasste Transaktionen mit deutschem Zielunternehmen, ` +
-    `${nf.format(meta.located_count)} davon mit belegtem Standort. Datenstand ${dateFormat(meta.data_as_of.slice(0, 10))}.`;
+    `${nf.format(meta.located_count)} davon mit belegtem Standort. Datenstand ${dateFormat(meta.data_as_of.slice(0, 10))}.` +
+    buyerSide;
   document.getElementById('disclaimer').textContent = meta.disclaimer;
 
   renderFilters();

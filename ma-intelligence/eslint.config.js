@@ -11,7 +11,26 @@ import tseslint from 'typescript-eslint';
  */
 export default tseslint.config(
   {
-    ignores: ['node_modules/**', 'dist/**', 'coverage/**', 'data/**', 'web/vendor/**'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'coverage/**',
+      'data/**',
+      // Die bestehende Website wird erhalten, nicht umformatiert: mitgelieferte
+      // Bibliotheken und der Code des bisherigen Projektstands bleiben aussen
+      // vor. Neu geschriebene Seiten-Skripte werden sehr wohl geprueft.
+      'site/dist/assets/three/**',
+      'site/dist/assets/leaflet.js',
+      'site/dist/assets/markercluster.js',
+      'site/dist/assets/topojson.js',
+      'site/dist/assets/app.js',
+      'site/dist/assets/globe-app.js',
+      'site/dist/assets/globe-scene.js',
+      'site/dist/assets/globe-navigation.js',
+      'site/dist/assets/globe-math.mjs',
+      'site/dist/assets/map-logic.mjs',
+      'site/scripts/**',
+    ],
   },
   ...tseslint.configs.recommended,
   {
@@ -22,6 +41,14 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
       ],
+    },
+  },
+  {
+    // Browser-Skripte der Website: kein TypeScript, Leaflet und topojson kommen
+    // als Globals aus den mitgelieferten Bibliotheken.
+    files: ['site/dist/assets/deutschland.js'],
+    languageOptions: {
+      globals: { window: 'readonly', document: 'readonly', fetch: 'readonly', L: 'readonly', topojson: 'readonly', Intl: 'readonly' },
     },
   },
   {

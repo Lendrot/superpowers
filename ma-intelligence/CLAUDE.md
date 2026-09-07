@@ -38,6 +38,16 @@ naechste Schritt ist — nicht erneut das ganze Repository analysieren.
 12. **Nie direkt auf `main`, nie automatisch mergen.** Der Review-Loop kennt
     keine Merge-Aktion; der letzte Schritt gehoert einem Menschen.
 
+13. **Die Website unter `site/` ist die Ausgangsbasis, nicht ein Entwurf.**
+    Sie wird erweitert, nicht ersetzt. Vendor-Dateien und der Code des
+    bisherigen Projektstands werden nicht umformatiert; Aenderungen daran
+    bleiben minimal und begruendet (`docs/decisions.md` #16).
+14. **Koordinaten werden nie geschaetzt.** Sie kommen aus einer belegten Quelle
+    oder es gibt keine — dann steht der Datensatz in der Liste, nicht auf der
+    Karte.
+15. **Import und Export sind deterministisch.** Zweimal derselbe Lauf ergibt
+    bytegleiche Dateien; Zeitstempel kommen aus den Daten, nicht aus der Uhr.
+
 ## Was ausserhalb dieses Verzeichnisses liegt, wird nicht angefasst
 
 Die Wurzel des Repositories ist ein Fork von `obra/superpowers`;
@@ -64,4 +74,6 @@ hinzufuegen.
 pnpm check       # typecheck + lint + test — das Gate vor jedem Commit
 pnpm test        # nur Vitest
 pnpm review      # validate | next | audit — der Review-Loop
+pnpm import:delivery <lieferung.json>   # Recherche -> gepruefte Datenbank
+pnpm build:map                          # Datenbank -> Kartendaten der Website
 ```

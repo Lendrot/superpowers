@@ -272,3 +272,65 @@ pruefbar.
 **TRADEOFFS:** Ein Pflichtfeld mehr; ohne Koordinate ist es `unknown`.
 
 **REVERSIBLE:** YES.
+
+## 16 — Die bestehende Website wird erweitert, nicht ersetzt
+
+**DECISION:** Der gelieferte Projektstand (Marktatlas v003) liegt unveraendert
+unter `site/`. Die Deutschland-Ansicht kommt als neue Seite `site/dist/deutschland/`
+dazu und benutzt die bereits gebuendelten Bibliotheken und Geometrien mit. An
+`app.js` und `globe-app.js` wurde je genau ein Navigationslink ergaenzt, sonst
+nichts.
+
+**WHY:** Die Website funktioniert, ist sorgfaeltig gebaut und traegt echte Daten
+mit Quellen. Ein Neubau haette Wochen gekostet und nichts gewonnen. Der
+Kartenstack (Leaflet, MarkerCluster, Natural-Earth-Geometrie) ist bereits lokal
+gebuendelt — damit braucht auch die neue Seite weder CDN noch Kachelserver.
+
+**ALTERNATIVES:** (a) Neue Anwendung mit eigenem Build (Vite, React) — mehr
+Werkzeug, dieselbe Karte. (b) Die bestehende Weltkarte um Filter erweitern —
+haette den vorhandenen, ungetesteten `app.js` umgebaut und die Weltkarte
+gefaehrdet.
+
+**TRADEOFFS:** Zwei Seiten mit aehnlicher Aufgabe und zwei Stylesheets. Die
+neue Seite wiederholt etwas Layoutcode.
+
+**REVERSIBLE:** YES — die neue Seite ist ein eigenes Verzeichnis plus zwei
+Dateien in `assets/`.
+
+## 17 — Koordinaten nur aus belegten Quellen, sonst keine
+
+**DECISION:** Standorte kommen ausschliesslich aus dem vorhandenen
+Wikidata-Snapshot: ueber die Wikidata-ID des Unternehmens oder ueber den
+belegten Ortsmittelpunkt derselben Stadt. Gibt es beides nicht, bleibt der
+Standort `null` und das Unternehmen erscheint nicht auf der Karte, sondern in
+einer eigenen Liste.
+
+**WHY:** Das ist die Regel, die der bisherige Projektstand schon hatte ("No
+geographic coordinates are fabricated"), und sie ist richtig: ein geratener
+Punkt auf einer Karte sieht aus wie eine Tatsache.
+
+**ALTERNATIVES:** Geokodierungsdienst anbinden — externe Abhaengigkeit,
+Schluessel, und eine weitere Quelle, deren Qualitaet zu bewerten waere.
+
+**TRADEOFFS:** Sichtbare Luecken. Aktuell fehlen zwei von neun Transaktionen auf
+der Karte, darunter eine der groessten (Deutz/FFG, weil fuer Flensburg keine
+belegte Koordinate im Bestand liegt).
+
+**REVERSIBLE:** YES.
+
+## 18 — Import und Kartenexport sind deterministisch
+
+**DECISION:** Der Importer nimmt den Zeitstempel aus der Lieferung
+(`prepared_at`) statt aus der Wanduhr, und das Kartenbuendel datiert sich aus
+dem juengsten `updated_at` des Bestands.
+
+**WHY:** Zweimal derselbe Lauf muss dieselbe Datei ergeben. Sonst zeigt jeder
+Git-Diff Zeitstempeländerungen, und die eigentliche Aenderung geht darin unter —
+in einem Projekt, dessen Datenbank in Git liegt, ist das der ganze Vorteil.
+
+**ALTERNATIVES:** Zeitstempel aus der Uhr und Diff-Rauschen hinnehmen.
+
+**TRADEOFFS:** `accessed_at` einer Quelle ist damit der Recherchezeitpunkt, nicht
+der Importzeitpunkt. Das ist die ehrlichere Angabe.
+
+**REVERSIBLE:** YES.

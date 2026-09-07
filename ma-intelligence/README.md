@@ -10,12 +10,16 @@ News-Automatisierung folgen erst, wenn die deutsche Basis traegt.
 
 ## Stand
 
-Schritt 1 von 5 ist umgesetzt: das Datenmodell mit Identitaet, Vokabularen und
-Validierung. Dazu steht die Infrastruktur fuer den Review-Loop (CI-Gate,
-Findings-Format, Fix-Regeln, Rundenbegrenzung, Audit Trail) — **ohne
-angebundenen AI-Reviewer**, siehe [`docs/review-loop.md`](docs/review-loop.md).
-Es gibt noch keine Import-Pipeline, keine Datenbank und keine Karte. Der
-aktuelle Stand steht immer in [`agent/CURRENT_STATE.md`](agent/CURRENT_STATE.md).
+**Deutschland-M&A-V1 laeuft.** Von der recherchierten Lieferung ueber
+Schemapruefung, Standortaufloesung und referentielle Kontrolle bis zur Karte mit
+Marker, Detailansicht, Quellenlink und Filtern nach Dealstatus, Branche und
+Zeitraum. Geruechte sind von bestaetigten Transaktionen in Farbe **und Form**
+unterschieden.
+
+Die bestehende Website (Marktatlas v003) ist die Ausgangsbasis und liegt
+unveraendert unter [`site/`](site/); die Deutschland-Ansicht ist als neue Seite
+dazugekommen. Der aktuelle Stand steht immer in
+[`agent/CURRENT_STATE.md`](agent/CURRENT_STATE.md).
 
 ## Dokumentation
 
@@ -26,6 +30,7 @@ aktuelle Stand steht immer in [`agent/CURRENT_STATE.md`](agent/CURRENT_STATE.md)
 | [`docs/data-schema.md`](docs/data-schema.md) | Die sieben Entitaeten im Detail |
 | [`docs/research-rules.md`](docs/research-rules.md) | Regeln fuer Daten und Recherche |
 | [`docs/decisions.md`](docs/decisions.md) | Architekturentscheidungen mit Begruendung |
+| [`docs/bestandsaufnahme-website.md`](docs/bestandsaufnahme-website.md) | Die bestehende Website: Aufbau, Daten, Probleme, Abgleich |
 | [`docs/review-loop.md`](docs/review-loop.md) | PR → CI → AI-Review → Fix: was laeuft, was Mock ist |
 | [`agent/GPT_HANDOFF.md`](agent/GPT_HANDOFF.md) | Was GPT liefern soll und in welchem Format |
 | [`agent/CLAUDE_HANDOFF.md`](agent/CLAUDE_HANDOFF.md) | Einstieg fuer die naechste Claude-Sitzung |
@@ -34,10 +39,12 @@ aktuelle Stand steht immer in [`agent/CURRENT_STATE.md`](agent/CURRENT_STATE.md)
 
 ```
 src/domain/    Typen, Schemas, IDs, Namensnormalisierung   (kennt niemanden)
-src/review/    Review-Loop: Findings, Urteile, Rundenschutz, Audit
-src/ingest/    Validierung, Entity Matching, Review Queue  (noch leer)
-src/store/     Laden und Schreiben der JSON-Datenbank      (noch leer)
-src/cli/       Kommandos (review)
+src/ingest/    Lieferformat und Uebersetzung ins Datenmodell
+src/store/     Laden, Schreiben, referentielle Pruefung, Abfragen, Kartenbuendel
+src/cli/       Kommandos: import:delivery, build:map, review
+src/review/    Review-Loop: Findings, Urteile, Rundenschutz, Audit (ruht)
+site/          Die Website. site/dist/ wird ausgeliefert,
+               site/dist/deutschland/ ist die Deutschland-Ansicht
 data/intelligence/
   incoming/    Rohlieferungen, unvalidiert
   verified/    geprueft, das ist die Datenbank
@@ -50,6 +57,10 @@ tests/         Vitest
 
 ```bash
 pnpm install
+pnpm import:delivery data/intelligence/incoming/2026-09-deutschland-ma.json
+pnpm build:map   # gepruefte Datenbank -> site/dist/assets/deutschland-ma.json
+npx http-server site/dist -p 8099   # dann http://127.0.0.1:8099/deutschland/
+
 pnpm test        # Vitest
 pnpm typecheck   # tsc --noEmit
 pnpm lint        # ESLint inkl. Schichtgrenzen

@@ -5,10 +5,19 @@ Branch: `claude/ma-intelligence-platform-7s9wv4`
 
 ## Projektstand in einem Satz
 
-Das Datenmodell steht, und die Infrastruktur fuer einen kontrollierten
-Review-Loop (CI-Gate, Findings-Format, Fix-Regeln, Rundenbegrenzung, Audit
-Trail) steht ebenfalls — Import-Pipeline, Datenbank und Karte gibt es noch
-nicht, und **kein AI-Reviewer ist angebunden**.
+**Deutschland-M&A-V1 laeuft**: von der recherchierten Lieferung ueber Validierung,
+Entity Matching und geprueften Bestand bis zur Karte mit Marker, Detailansicht,
+Quellenlink und den drei Filtern — auf der bestehenden Website, die unveraendert
+erhalten geblieben ist. Kein AI-Reviewer ist angebunden; die Review-Loop-
+Infrastruktur ruht auftragsgemaess.
+
+## Wichtig fuer den Einstieg
+
+Die **bestehende Website ist die Ausgangsbasis** und liegt unter `site/`
+(Marktatlas v003, Stand 2026-09-06): 3D-Globus, 2D-Weltkarte mit 9.868
+Unternehmen aus Wikidata, 22 kuratierte Uebernahmen, alle Bibliotheken lokal
+gebuendelt. Sie wurde erweitert, nicht ersetzt. Ihre Analyse steht in
+`docs/bestandsaufnahme-website.md`.
 
 ## Was umgesetzt ist
 
@@ -29,7 +38,31 @@ nicht, und **kein AI-Reviewer ist angebunden**.
 - ESLint-Boundary: `domain` kennt keine Dateien und keine anderen Schichten,
   `ingest` darf nicht persistieren, beide sind frei von Wanduhr und Zufall.
 
-**Review-Loop-Infrastruktur (Schritt A).** Nicht Teil der fuenf Fachschritte,
+**Deutschland-M&A-V1 (Schritte 2 bis 5).**
+
+- **Store**: `loadDatabase`/`saveDatabase` mit Schemapruefung und referentieller
+  Integritaet (gebrochene Verweise, doppelte IDs, Belege ohne Quelle am
+  Subjekt); Warnungen fuer unvollstaendige Erfassung. Sortiert und formatiert
+  geschrieben, damit der Git-Diff lesbar bleibt.
+- **Abfragen**: Filter nach Dealstatus, Branche, Zeitraum und Zielland;
+  `dealView` loest Ziel, Parteien und Quellen auf. Ein Deal ohne Datum faellt
+  sichtbar aus dem Zeitraumfilter, statt auf heute gesetzt zu werden.
+- **Import-Pipeline**: Lieferformat mit `ref`-Schluesseln statt IDs, Aufloesung
+  gegen den Marktatlas-Bestand ueber Wikidata-ID, sonst ueber einen belegten
+  Ortsmittelpunkt. Ohne Beleg bleibt der Standort leer und wird gemeldet.
+- **Datensatz**: neun reale deutsche Transaktionen mit zwoelf Quellen und sieben
+  Einzelbelegen, ausgewaehlt nach Fallunterscheidungen (vollzogen, angekuendigt,
+  unterzeichnet, kartellrechtliche Pruefung, Verkaufsprozess, Geruecht;
+  deutscher und auslaendischer Kaeufer; Beteiligungserhoehung; Carve-out;
+  staatlicher Verkaeufer; offener Kaeufer).
+- **Karte**: `site/dist/deutschland/` — Deutschland hervorgehoben, Marker nach
+  Status in Farbe **und Form** getrennt (bestaetigt gefuellt, unbestaetigt
+  gestrichelt), Detailansicht mit Parteien, Anteilen, Belegstatus, Einzelbelegen
+  und Quellenlinks, Filter fuer Status, Branche und Zeitraum.
+- Import und Kartenexport sind deterministisch: zweimal derselbe Lauf ergibt
+  bytegleiche Dateien.
+
+**Review-Loop-Infrastruktur (Schritt A, ruht).** Nicht Teil der fuenf Fachschritte,
 sondern das Geruest fuer den Arbeitsablauf PR → CI → externes AI-Review →
 Findings → Fix → erneutes Review.
 
@@ -67,6 +100,13 @@ Findings → Fix → erneutes Review.
 | `eslint.config.js` | Die Schichtgrenzen, maschinell erzwungen |
 | `docs/decisions.md` | Warum es so und nicht anders gebaut ist |
 | `docs/review-loop.md` | Der Review-Loop: was IMPLEMENTED, MOCKED und NOT YET CONNECTED ist |
+| `docs/bestandsaufnahme-website.md` | Die bestehende Website: Aufbau, Daten, Probleme, Abgleich mit dem Modell |
+| `site/` | Die Website. `site/dist/` wird ausgeliefert, `site/dist/deutschland/` ist die neue Ansicht |
+| `data/intelligence/incoming/2026-09-deutschland-ma.json` | Die recherchierte Lieferung |
+| `data/intelligence/verified/deutschland-ma.json` | Der gepruefte Bestand |
+| `src/ingest/delivery.ts` | Lieferformat und Uebersetzung ins Datenmodell |
+| `src/store/integrity.ts` | Referentielle Pruefung — was das Schema nicht sehen kann |
+| `src/store/map-bundle.ts` | Was die Karte anzeigt, testbar ausserhalb des Browsers |
 | `src/review/loop.ts` | Zustandsmaschine des Loops — die einzige Stelle, die entscheidet, ob weitergemacht wird |
 | `src/review/findings.ts` | Findings-Format und Auswertung der Reviewer-Antwort |
 | `src/review/provider.ts` | Reviewer-Schnittstelle, anbieterneutral |
@@ -86,6 +126,12 @@ Findings → Fix → erneutes Review.
 8. Anbieterneutrale Reviewer-Schnittstelle statt SDK-Anbindung.
 9. Der Review-Loop kennt keine Merge-Aktion; sein bester Ausgang ist
    `READY_FOR_HUMAN_MERGE`.
+10. Deal traegt Parteilisten; Form und rechtliche Umsetzung sind zwei Achsen.
+11. Eigentum an Standorten laeuft ueber `Ownership`, nicht ueber ein Feld am Asset.
+12. `Claim` belegt einzelne Aussagen, ohne einen Knowledge-Graph zu bauen.
+13. Die bestehende Website wird erweitert, nicht ersetzt.
+14. Koordinaten nur aus belegten Quellen — sonst keine.
+15. Import und Kartenexport sind deterministisch.
 
 Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 
@@ -102,6 +148,18 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 - **Dealwerte ohne Kontext.** `deal_value` unterscheidet nicht zwischen
   Unternehmenswert und Eigenkapitalwert. Erst noetig, wenn Werte verglichen
   werden sollen; vorher ist es unnoetige Komplexitaet.
+- **Der Datensatz ist bewusst klein und nicht primaerverifiziert.** Die
+  Primaerquellen liessen sich aus dem Buildcontainer nicht abrufen — der
+  Egress-Proxy sperrt Unternehmens- und Medienseiten. Die Angaben stammen aus
+  einem Websuchindex; jede Quelle ist mit URL erfasst und vor einer
+  Veroeffentlichung am Original zu bestaetigen. Die Lieferung sagt das in
+  `verification_note`, und die Confidence-Werte tragen dem Rechnung.
+- **Zwei von neun Transaktionen haben keinen Standort** (FFG in Flensburg,
+  ebm-papst-Geschaeftsbereich). Fuer beide liegt keine belegte Koordinate im
+  Bestand; sie stehen in der Liste, nicht auf der Karte.
+- **Der Importer kennt noch keine Review Queue.** Er legt jedes gelieferte
+  Unternehmen neu an, statt es gegen den Bestand zu halten. Bei einer zweiten
+  Lieferung entstehen dadurch Dubletten.
 - **Kein AI-Reviewer angebunden.** Es gibt keine Zugangsdaten und keinen
   Adapter fuer ein Modell. Der Mock weist sich in jedem Audit als Mock aus. Was
   fuer die echte Anbindung fehlt, steht in `docs/review-loop.md`.
@@ -117,25 +175,22 @@ Begruendungen mit Alternativen und Umkehrbarkeit in `docs/decisions.md`.
 
 ## Naechster sinnvoller Schritt
 
-**Schritt 2: Confidence und Validierungsregeln** (`src/domain/confidence.ts`,
-`src/ingest/rules.ts`).
+Die Deutschland-V1 steht. Bevor etwas Neues beginnt, sind das die naechsten
+sinnvollen Schritte — in dieser Reihenfolge:
 
-Inhalt:
+1. **Datensatz verbreitern.** Neun Transaktionen sind genug, um das Modell zu
+   pruefen, und zu wenig, um damit zu arbeiten. Die Pipeline traegt jetzt
+   beliebig viele Lieferungen; noetig ist Recherche, kein Code.
+2. **Confidence-Berechnung** (`src/domain/confidence.ts`): heute wird die
+   Confidence je Datensatz von Hand gesetzt. Sie sollte aus Quellentyp,
+   Quellenzahl und Dealstatus folgen, mit Deckelung fuer unbestaetigte Status.
+3. **Review Queue**: unsichere Entity-Matches und Widersprueche zum Bestand
+   landen heute nirgends — der Importer legt jedes gelieferte Unternehmen neu
+   an. Sobald zwei Lieferungen zusammenkommen, ist das die naechste echte
+   Baustelle.
+4. **Branchenklassifikation aus der Quelle**: `industry` kommt heute aus der
+   Lieferung. Die SPARQL-Abfrage der Website koennte P452 mitholen.
 
-- Ausgangszuverlaessigkeit je `source_type` (Register und Pflichtmitteilung
-  hoch, Analystenbericht niedriger).
-- Score aus bester Quelle plus unabhaengiger Bestaetigung; Deckelung fuer
-  unbestaetigte Dealstatus (ein Geruecht erreicht nie 90).
-- Semantische Regeln mit Schweregrad, die das Schema nicht ausdruecken kann:
-  `completed` ohne `completion_date`, Datensatz ohne Quellen, `evidence: FACT`
-  ohne Beleg, `regulatory_review` ohne Ankuendigungsdatum.
-- Publikationsgate: was unter 50 liegt oder `ASSUMPTION` ist, wird nicht
-  veroeffentlicht.
-
-Danach Schritt 3 (Import-Pipeline mit Review Queue), 4 (Store und CLI),
-5 (Deutschland-Karte). Reihenfolge und Umfang in `docs/analysis.md` §10.
-
-Die Review-Loop-Infrastruktur aendert an dieser Reihenfolge nichts — sie ist das
-Geruest, in dem die naechsten Schritte gepruefte Pull Requests werden. Ihre
-eigene offene Aufgabe ist die Anbindung eines echten Reviewers; was dafuer
+Keine Europa- oder Rohstofferweiterung, bevor das steht. Die
+Review-Loop-Infrastruktur ruht auftragsgemaess; was fuer eine echte Anbindung
 fehlt, steht in `docs/review-loop.md`.

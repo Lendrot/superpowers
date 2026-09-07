@@ -13,7 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
-    "review": "tsx src/cli/review.ts"
+    "review": "tsx src/cli/review.ts",
+    "import:delivery": "tsx src/cli/import-delivery.ts",
+    "build:map": "tsx src/cli/build-map.ts"
   },
   "dependencies": {
     "zod": "^3.23.8"

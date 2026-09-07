@@ -12,7 +12,7 @@ app.innerHTML = `
   <header class="topbar">
     <div class="brand"><span class="brand-icon">${arrow}</span>marktatlas<span class="brand-dot">.</span></div>
     <div class="header-context">Unternehmen auf der Weltkarte</div>
-    <div class="header-actions"><a href="/" class="text-button" style="text-decoration:none;margin:0" aria-label="3D-Globus öffnen">3D</a><span class="year-tag">Fokus <b>2026</b></span><button class="sources-button" id="sources-button">${info}<span>Daten & Quellen</span></button></div>
+    <div class="header-actions"><a href="/deutschland/" class="text-button" style="text-decoration:none;margin:0" aria-label="Deutschland-M&amp;A-Karte öffnen">DE</a><a href="/" class="text-button" style="text-decoration:none;margin:0" aria-label="3D-Globus öffnen">3D</a><span class="year-tag">Fokus <b>2026</b></span><button class="sources-button" id="sources-button">${info}<span>Daten & Quellen</span></button></div>
   </header>
   <div class="workspace">
     <aside class="sidebar">

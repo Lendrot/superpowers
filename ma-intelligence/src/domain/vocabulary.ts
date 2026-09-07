@@ -78,7 +78,7 @@ export const INDUSTRY_LABELS_DE: Readonly<Record<(typeof INDUSTRIES)[number], st
   mining_metals: 'Bergbau & Metalle',
   construction_real_estate: 'Bau & Immobilien',
   consumer_retail: 'Konsum & Handel',
-  food_beverage: 'Nahrungsmittel & Getraenke',
+  food_beverage: 'Nahrungsmittel & Getränke',
   financial_services: 'Finanzdienstleistungen',
   insurance: 'Versicherungen',
   transport_logistics: 'Transport & Logistik',
@@ -107,12 +107,16 @@ export const DEAL_STATUSES = [
   'cancelled',
 ] as const;
 
+/**
+ * Anzeigetexte. Anders als Bezeichner und Kommentare tragen sie echte Umlaute —
+ * sie stehen so in der Oberflaeche.
+ */
 export const DEAL_STATUS_LABELS_DE: Readonly<Record<(typeof DEAL_STATUSES)[number], string>> = {
-  rumored: 'Geruecht',
+  rumored: 'Gerücht',
   sale_process: 'Verkaufsprozess',
-  announced: 'Angekuendigt',
+  announced: 'Angekündigt',
   signed: 'Unterzeichnet',
-  regulatory_review: 'Kartellrechtliche Pruefung',
+  regulatory_review: 'Kartellrechtliche Prüfung',
   completed: 'Vollzogen',
   cancelled: 'Abgebrochen',
 };

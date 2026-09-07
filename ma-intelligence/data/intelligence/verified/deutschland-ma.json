@@ -1,0 +1,2249 @@
+{
+  "companies": [
+    {
+      "id": "company_adnoc",
+      "entity_type": "company",
+      "legal_name": "Abu Dhabi National Oil Company",
+      "display_name": "ADNOC",
+      "former_names": [],
+      "aliases": [
+        "XRG"
+      ],
+      "country": "AE",
+      "headquarters": {
+        "city": "Abu Dhabi",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 24.451111111,
+      "longitude": 54.396944444,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1519",
+      "industry": "energy_utilities",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_covestro_ag_c503aa4b"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Erwerb erfolgte ueber die ADNOC-Investmentgesellschaft XRG.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_agbitech",
+      "entity_type": "company",
+      "legal_name": "AgBiTech",
+      "display_name": "AgBiTech",
+      "former_names": [],
+      "aliases": [],
+      "country": "US",
+      "headquarters": {
+        "city": "Fort Worth",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 32.756388888,
+      "longitude": -97.3325,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q16558",
+      "industry": "chemicals",
+      "subindustry": "Biologischer Pflanzenschutz",
+      "website": null,
+      "status": "acquired",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_basf_se_ffc93e77",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_all_for_one_group",
+      "entity_type": "company",
+      "legal_name": "All for One Group SE",
+      "display_name": "All for One Group",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Filderstadt",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 48.666666666,
+      "longitude": 9.216666666,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q7032",
+      "industry": "technology_software",
+      "subindustry": "SAP-Beratung",
+      "website": "https://www.all-for-one.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q2647871",
+        "domains": [
+          "all-for-one.com"
+        ]
+      },
+      "source_ids": [
+        "source_all_for_one_group_se_e46f09ae",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_basf",
+      "entity_type": "company",
+      "legal_name": "BASF SE",
+      "display_name": "BASF",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Ludwigshafen am Rhein",
+        "region": "Rheinland-Pfalz",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 49.496111111,
+      "longitude": 8.431111111,
+      "coordinate_accuracy": "headquarters",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q2910",
+      "industry": "chemicals",
+      "subindustry": "Basis- und Spezialchemie",
+      "website": "https://www.basf.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q9401",
+        "domains": [
+          "basf.com"
+        ]
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_basf_se_ffc93e77",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 90,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_bundesrepublik_deutschland",
+      "entity_type": "government",
+      "legal_name": "Bundesrepublik Deutschland",
+      "display_name": "Bundesrepublik Deutschland",
+      "former_names": [],
+      "aliases": [
+        "Bund",
+        "Bundesregierung"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": "Berlin",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 52.516666666,
+      "longitude": 13.383333333,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q64",
+      "industry": "other",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_handelsblatt_24aa0e28"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": "Haelt die Uniper-Beteiligung über den Bund; zuständig ist das Bundesfinanzministerium.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_carlyle",
+      "entity_type": "company",
+      "legal_name": "The Carlyle Group Inc.",
+      "display_name": "Carlyle",
+      "former_names": [],
+      "aliases": [],
+      "country": "US",
+      "headquarters": {
+        "city": "Washington, D.C.",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 38.895,
+      "longitude": -77.036666666,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q61",
+      "industry": "financial_services",
+      "subindustry": "Private Equity",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q926806",
+        "domains": []
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_basf_se_5a62d450",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_commerzbank",
+      "entity_type": "company",
+      "legal_name": "Commerzbank AG",
+      "display_name": "Commerzbank",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Frankfurt am Main",
+        "region": "Hessen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 50.11116,
+      "longitude": 8.67437,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q151765",
+      "industry": "financial_services",
+      "subindustry": "Universalbank",
+      "website": "https://www.commerzbank.de",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q157617",
+        "domains": [
+          "commerzbank.de"
+        ]
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_spruchverfahren_direkt_2fa43873"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_covestro",
+      "entity_type": "company",
+      "legal_name": "Covestro AG",
+      "display_name": "Covestro",
+      "former_names": [
+        "Bayer MaterialScience"
+      ],
+      "aliases": [
+        "Covestro Deutschland AG"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": "Leverkusen",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.033333333,
+      "longitude": 6.983333333,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q2938",
+      "industry": "chemicals",
+      "subindustry": "Polymerwerkstoffe",
+      "website": "https://www.covestro.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q812142",
+        "domains": [
+          "covestro.com"
+        ]
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_covestro_ag_c503aa4b"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_delivery_hero",
+      "entity_type": "company",
+      "legal_name": "Delivery Hero SE",
+      "display_name": "Delivery Hero",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Berlin",
+        "region": "Berlin",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 52.516666666,
+      "longitude": 13.383333333,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q64",
+      "industry": "technology_software",
+      "subindustry": "Lieferplattformen",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q23384493",
+        "domains": []
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_deutz",
+      "entity_type": "company",
+      "legal_name": "DEUTZ AG",
+      "display_name": "Deutz",
+      "former_names": [],
+      "aliases": [
+        "Deutz Defense"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": "Köln",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 50.942222222,
+      "longitude": 6.957777777,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q365",
+      "industry": "industrial_manufacturing",
+      "subindustry": "Antriebstechnik",
+      "website": "https://www.deutz.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": [
+          "deutz.com"
+        ]
+      },
+      "source_ids": [
+        "source_deutz_ag_186a1244"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_ebm_papst",
+      "entity_type": "company",
+      "legal_name": "ebm-papst Gruppe",
+      "display_name": "ebm-papst",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": null,
+        "region": "Baden-Württemberg",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": null,
+      "longitude": null,
+      "coordinate_accuracy": "unknown",
+      "coordinate_source_url": null,
+      "industry": "industrial_manufacturing",
+      "subindustry": "Ventilatoren und Motoren",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_siemens_ag_73e6dcf1"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_ebm_papst_industrielle_antriebstechnik",
+      "entity_type": "company",
+      "legal_name": "ebm-papst Geschäft für industrielle Antriebstechnik",
+      "display_name": "ebm-papst Industrielle Antriebstechnik",
+      "former_names": [],
+      "aliases": [
+        "Mechatronic Systems"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": null,
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": null,
+      "longitude": null,
+      "coordinate_accuracy": "unknown",
+      "coordinate_source_url": null,
+      "industry": "industrial_manufacturing",
+      "subindustry": "Mechatronische Antriebe",
+      "website": null,
+      "status": "acquired",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_siemens_ag_73e6dcf1"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Herausgelöster Geschäftsbereich, kein eigenstaendiges Unternehmen; wird bei Siemens als Mechatronic Systems geführt. Rund 650 Beschaeftigte.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_fermacell",
+      "entity_type": "company",
+      "legal_name": "Fermacell",
+      "display_name": "Fermacell",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Düsseldorf",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.225555555,
+      "longitude": 6.776666666,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1718",
+      "industry": "construction_real_estate",
+      "subindustry": "Gipsfaserplatten",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_holcim_acf2cb6a",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_ffg_flensburger_fahrzeugbau",
+      "entity_type": "company",
+      "legal_name": "FFG Flensburger Fahrzeugbau Gesellschaft mbH",
+      "display_name": "FFG Flensburger Fahrzeugbau",
+      "former_names": [],
+      "aliases": [
+        "FFG"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": "Flensburg",
+        "region": "Schleswig-Holstein",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": null,
+      "longitude": null,
+      "coordinate_accuracy": "unknown",
+      "coordinate_source_url": null,
+      "industry": "defense_aerospace",
+      "subindustry": "Gepanzerte Fahrzeuge",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_deutz_ag_186a1244",
+        "source_bundeskartellamt_ce970d79"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": "Für Flensburg liegt im vorhandenen Bestand keine belegte Koordinate vor; der Standort bleibt deshalb leer statt geschätzt.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_frasers_group",
+      "entity_type": "company",
+      "legal_name": "Frasers Group plc",
+      "display_name": "Frasers Group",
+      "former_names": [],
+      "aliases": [],
+      "country": "GB",
+      "headquarters": {
+        "city": "Shirebrook",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 53.2048,
+      "longitude": -1.2197,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q2345424",
+      "industry": "consumer_retail",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q2913554",
+        "domains": []
+      },
+      "source_ids": [
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_gerresheimer",
+      "entity_type": "company",
+      "legal_name": "Gerresheimer AG",
+      "display_name": "Gerresheimer",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Düsseldorf",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.225555555,
+      "longitude": 6.776666666,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1718",
+      "industry": "pharma_healthcare",
+      "subindustry": "Primaerverpackung fuer Pharma",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_verbraucherschutzforum_berlin_2bb95ed1"
+      ],
+      "confidence": 60,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_henkel",
+      "entity_type": "company",
+      "legal_name": "Henkel AG & Co. KGaA",
+      "display_name": "Henkel",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Düsseldorf",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.17568185,
+      "longitude": 6.839556259,
+      "coordinate_accuracy": "headquarters",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1718",
+      "industry": "chemicals",
+      "subindustry": "Klebstoffe und Konsumgüter",
+      "website": "https://www.henkel.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q276507",
+        "domains": [
+          "henkel.com"
+        ]
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_henkel_ag_und_co_kgaa_07b305e7",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 90,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_holcim",
+      "entity_type": "company",
+      "legal_name": "Holcim Ltd",
+      "display_name": "Holcim",
+      "former_names": [],
+      "aliases": [
+        "LafargeHolcim"
+      ],
+      "country": "CH",
+      "headquarters": {
+        "city": "Zug",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 47.168055555,
+      "longitude": 8.516944444,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q68144",
+      "industry": "construction_real_estate",
+      "subindustry": "Baustoffe",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q16466481",
+        "domains": []
+      },
+      "source_ids": [
+        "source_holcim_fa02686e",
+        "source_wikidata_926412b6",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_hugo_boss",
+      "entity_type": "company",
+      "legal_name": "HUGO BOSS AG",
+      "display_name": "Hugo Boss",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Metzingen",
+        "region": "Baden-Württemberg",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 48.536666666,
+      "longitude": 9.285833333,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q82881",
+      "industry": "consumer_retail",
+      "subindustry": "Bekleidung",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q491627",
+        "domains": []
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_nagarro",
+      "entity_type": "company",
+      "legal_name": "Nagarro SE",
+      "display_name": "Nagarro",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "München",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 48.1375,
+      "longitude": 11.575,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1726",
+      "industry": "technology_software",
+      "subindustry": "IT-Dienstleistungen",
+      "website": "https://www.nagarro.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q18128427",
+        "domains": [
+          "nagarro.com"
+        ]
+      },
+      "source_ids": [
+        "source_nagarro_se_7f669bc2",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_olaplex",
+      "entity_type": "company",
+      "legal_name": "Olaplex Holdings, Inc.",
+      "display_name": "Olaplex",
+      "former_names": [],
+      "aliases": [],
+      "country": "US",
+      "headquarters": {
+        "city": "New York City",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 40.712777777,
+      "longitude": -74.006111111,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q60",
+      "industry": "consumer_retail",
+      "subindustry": "Haarpflege",
+      "website": null,
+      "status": "acquired",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_henkel_ag_und_co_kgaa_07b305e7",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_persistent_systems",
+      "entity_type": "company",
+      "legal_name": "Persistent Systems Limited",
+      "display_name": "Persistent Systems",
+      "former_names": [],
+      "aliases": [],
+      "country": "IN",
+      "headquarters": {
+        "city": "Pune",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 18.521111111,
+      "longitude": 73.855277777,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1538",
+      "industry": "technology_software",
+      "subindustry": "IT-Dienstleistungen",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_nagarro_se_7f669bc2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_siemens",
+      "entity_type": "company",
+      "legal_name": "Siemens AG",
+      "display_name": "Siemens",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "München",
+        "region": "Bayern",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 48.144331555,
+      "longitude": 11.575061769,
+      "coordinate_accuracy": "headquarters",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1726",
+      "industry": "industrial_manufacturing",
+      "subindustry": "Automatisierung",
+      "website": "https://www.siemens.com",
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q81230",
+        "domains": [
+          "siemens.com"
+        ]
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_siemens_ag_73e6dcf1"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_silgan_holdings",
+      "entity_type": "company",
+      "legal_name": "Silgan Holdings Inc.",
+      "display_name": "Silgan Holdings",
+      "former_names": [],
+      "aliases": [],
+      "country": "US",
+      "headquarters": {
+        "city": "Stamford",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 41.096666666,
+      "longitude": -73.552222222,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q49169",
+      "industry": "industrial_manufacturing",
+      "subindustry": "Verpackungen",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_verbraucherschutzforum_berlin_2bb95ed1"
+      ],
+      "confidence": 55,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_stahl",
+      "entity_type": "company",
+      "legal_name": "Stahl Parent B.V.",
+      "display_name": "Stahl",
+      "former_names": [],
+      "aliases": [],
+      "country": "NL",
+      "headquarters": {
+        "city": "Waalwijk",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.6825,
+      "longitude": 5.0694,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q9879",
+      "industry": "chemicals",
+      "subindustry": "Spezialchemie für Oberflächen",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_henkel_ag_und_co_kgaa_b977efbb",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_surventis",
+      "entity_type": "company",
+      "legal_name": "Surventis",
+      "display_name": "Surventis",
+      "former_names": [
+        "BASF Coatings"
+      ],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Münster",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.9625,
+      "longitude": 7.625555555,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q2742",
+      "industry": "chemicals",
+      "subindustry": "Lacke und Beschichtungen",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_basf_se_5a62d450",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 80,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_uber",
+      "entity_type": "company",
+      "legal_name": "Uber Technologies, Inc.",
+      "display_name": "Uber",
+      "former_names": [],
+      "aliases": [],
+      "country": "US",
+      "headquarters": {
+        "city": "San Francisco",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 37.775778,
+      "longitude": -122.418035,
+      "coordinate_accuracy": "headquarters",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q62",
+      "industry": "technology_software",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q780442",
+        "domains": []
+      },
+      "source_ids": [
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_unicredit",
+      "entity_type": "company",
+      "legal_name": "UniCredit S.p.A.",
+      "display_name": "UniCredit",
+      "former_names": [],
+      "aliases": [],
+      "country": "IT",
+      "headquarters": {
+        "city": "Mailand",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 45.466944444,
+      "longitude": 9.19,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q490",
+      "industry": "financial_services",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": null,
+        "domains": []
+      },
+      "source_ids": [
+        "source_bloomberg_07233857"
+      ],
+      "confidence": 75,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_uniper",
+      "entity_type": "company",
+      "legal_name": "Uniper SE",
+      "display_name": "Uniper",
+      "former_names": [],
+      "aliases": [],
+      "country": "DE",
+      "headquarters": {
+        "city": "Düsseldorf",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.225555555,
+      "longitude": 6.776666666,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q1718",
+      "industry": "energy_utilities",
+      "subindustry": "Stromerzeugung und Handel",
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q19839259",
+        "domains": []
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_handelsblatt_24aa0e28"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_vinci",
+      "entity_type": "company",
+      "legal_name": "VINCI SA",
+      "display_name": "VINCI",
+      "former_names": [],
+      "aliases": [],
+      "country": "FR",
+      "headquarters": {
+        "city": "Nanterre",
+        "region": null,
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 48.890555555,
+      "longitude": 2.203611111,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q170507",
+      "industry": "construction_real_estate",
+      "subindustry": null,
+      "website": null,
+      "status": "active",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q1475312",
+        "domains": []
+      },
+      "source_ids": [
+        "source_wikidata_926412b6",
+        "source_all_for_one_group_se_e46f09ae",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "company_xella",
+      "entity_type": "company",
+      "legal_name": "Xella International S.A.",
+      "display_name": "Xella",
+      "former_names": [],
+      "aliases": [
+        "Ytong",
+        "Silka"
+      ],
+      "country": "DE",
+      "headquarters": {
+        "city": "Duisburg",
+        "region": "Nordrhein-Westfalen",
+        "street_address": null,
+        "postal_code": null
+      },
+      "latitude": 51.432222222,
+      "longitude": 6.761111111,
+      "coordinate_accuracy": "locality",
+      "coordinate_source_url": "https://www.wikidata.org/wiki/Q2100",
+      "industry": "construction_real_estate",
+      "subindustry": "Baustoffe",
+      "website": null,
+      "status": "acquired",
+      "identifiers": {
+        "lei": null,
+        "handelsregister": null,
+        "vat_id": null,
+        "isin": null,
+        "wikidata": "Q535956",
+        "domains": []
+      },
+      "source_ids": [
+        "source_holcim_fa02686e",
+        "source_wikidata_926412b6",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": null,
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    }
+  ],
+  "deals": [
+    {
+      "id": "deal_agbitech__basf__2026",
+      "target_company_id": "company_agbitech",
+      "buyers": [
+        {
+          "company_id": "company_basf",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": "2026-03-31",
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_basf_se_ffc93e77",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 75,
+      "evidence": "FACT",
+      "notes": "Deutscher Kaeufer, auslaendisches Ziel — der Deal zaehlt zum Deutschlandbezug, erscheint aber nicht auf der Deutschlandkarte, die am Zielunternehmen haengt.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_all_for_one_group__vinci__2026",
+      "target_company_id": "company_all_for_one_group",
+      "buyers": [
+        {
+          "company_id": "company_vinci",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "announced",
+      "announcement_date": "2026-07-16",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_all_for_one_group_se_e46f09ae",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Gemeinsame begruendete Stellungnahme von Vorstand und Aufsichtsrat zu einem Uebernahmeangebot; VINCI tritt als Kaeufergruppe auf.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_commerzbank__unicredit__2026",
+      "target_company_id": "company_commerzbank",
+      "buyers": [
+        {
+          "company_id": "company_unicredit",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "minority_stake",
+      "transaction_structure": "share_deal",
+      "status": "regulatory_review",
+      "announcement_date": "2026-03-16",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": 17.6,
+      "stake_before_percentage": null,
+      "stake_after_percentage": 47.59,
+      "asset_ids": [],
+      "source_ids": [
+        "source_bloomberg_07233857",
+        "source_bloomberg_ce3ba268",
+        "source_spruchverfahren_direkt_2fa43873"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Beteiligungserhöhung, keine Vollzugsübernahme. Übertragung der angedienten Aktien und der Stimmrechte steht unter aufsichtsrechtlichem Vorbehalt. Anteil vorher bleibt leer, weil sich die berichteten Bestandteile (direkte Anteile, Total Return Swaps) nicht widerspruchsfrei zu 47,59 % addieren.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_covestro__adnoc__2025",
+      "target_company_id": "company_covestro",
+      "buyers": [
+        {
+          "company_id": "company_adnoc",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": "2025-12-11",
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": 91.3,
+      "asset_ids": [],
+      "source_ids": [
+        "source_covestro_ag_c503aa4b",
+        "source_boerse_express_ffbb99ea"
+      ],
+      "confidence": 75,
+      "evidence": "FACT",
+      "notes": "Vollzug über die ADNOC-Tochter XRG. Zusammen mit zuvor erworbenen Aktien rund 91,3 % des Grundkapitals. Zum Transaktionswert kursieren unterschiedliche Angaben; er bleibt deshalb leer.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_delivery_hero__uber__2026",
+      "target_company_id": "company_delivery_hero",
+      "buyers": [
+        {
+          "company_id": "company_uber",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "announced",
+      "announcement_date": "2026-07-16",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 65,
+      "evidence": "FACT",
+      "notes": "Übernahmeangebot, angekündigt am 23.05.2026. Konditionen und Stand des Vollzugs sind aus der vorliegenden Quelle nicht belegt. Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der gespeicherte Name der Bietergesellschaft ist entsprechend zu korrigieren. Bis zur Uebernahme des v004-Marktdatensatzes stand hier 2026-05-23 aus eigener Recherche; v004 nennt 2026-07-16.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_ebm_papst_industrielle_antriebstechnik__siemens__undated",
+      "target_company_id": "company_ebm_papst_industrielle_antriebstechnik",
+      "buyers": [
+        {
+          "company_id": "company_siemens",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [
+        {
+          "company_id": "company_ebm_papst",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "deal_type": "carve_out",
+      "transaction_structure": "unknown",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_siemens_ag_73e6dcf1"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Herausgelöster Geschäftsbereich mit rund 650 Beschäftigten, bei Siemens als Mechatronic Systems geführt. Ob Anteile oder Vermögensgegenstände übertragen wurden, ist nicht belegt — transaction_structure bleibt unknown. Das Vollzugsdatum ist aus der vorliegenden Quelle nicht belegt.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_fermacell__holcim__2026",
+      "target_company_id": "company_fermacell",
+      "buyers": [
+        {
+          "company_id": "company_holcim",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "carve_out",
+      "transaction_structure": "unknown",
+      "status": "announced",
+      "announcement_date": "2026-08-20",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_holcim_acf2cb6a",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Europaeisches Geschaeft von Fermacell. Die Verkaeuferseite ist in der verfuegbaren Quelle nicht benannt und bleibt leer.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_ffg_flensburger_fahrzeugbau__deutz__2026",
+      "target_company_id": "company_ffg_flensburger_fahrzeugbau",
+      "buyers": [
+        {
+          "company_id": "company_deutz",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [
+        {
+          "company_id": null,
+          "name": "Eigentümerfamilie der FFG",
+          "share_percentage": null
+        }
+      ],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "signed",
+      "announcement_date": "2026-07-09",
+      "completion_date": null,
+      "deal_value": 1600000000,
+      "currency": "EUR",
+      "stake_acquired_percentage": 100,
+      "stake_before_percentage": 0,
+      "stake_after_percentage": 100,
+      "asset_ids": [],
+      "source_ids": [
+        "source_deutz_ag_186a1244",
+        "source_bundeskartellamt_ce970d79"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": "Erwerb sämtlicher Anteile, Kaufpreis teilweise in neu ausgegebenen Deutz-Aktien; die bisherige Eigentümerfamilie soll anschliessend rund 29,9 % an Deutz halten. Bundeskartellamt hat am 31.07.2026 freigegeben. Vollzug fuer Ende 2026 oder Anfang 2027 erwartet.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_gerresheimer__silgan_holdings__2026",
+      "target_company_id": "company_gerresheimer",
+      "buyers": [
+        {
+          "company_id": "company_silgan_holdings",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "unknown",
+      "status": "rumored",
+      "announcement_date": "2026-03-20",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_verbraucherschutzforum_berlin_2bb95ed1"
+      ],
+      "confidence": 50,
+      "evidence": "FACT",
+      "notes": "GERÜCHT. Belegt ist die Berichterstattung ueber ein geprüftes Übernahmeinteresse, nicht die Transaktion. Das Datum ist das Datum der Meldung. Quelle von geringer Güte.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_hugo_boss__frasers_group__2026",
+      "target_company_id": "company_hugo_boss",
+      "buyers": [
+        {
+          "company_id": "company_frasers_group",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "intent",
+      "announcement_date": "2026-09-01",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_spruchverfahren_direkt_2fa43873",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 65,
+      "evidence": "FACT",
+      "notes": "Übernahmeangebot, angekündigt am 10.06.2026. Frasers Group war zuvor bereits an Hugo Boss beteiligt; die Höhe ist aus der vorliegenden Quelle nicht belegt und bleibt deshalb leer. Bis zur Uebernahme des v004-Marktdatensatzes stand hier 2026-06-10 aus eigener Recherche; v004 nennt 2026-09-01. Status aus v004 uebernommen: interest -> intent.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_nagarro__persistent_systems__2026",
+      "target_company_id": "company_nagarro",
+      "buyers": [
+        {
+          "company_id": "company_persistent_systems",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "announced",
+      "announcement_date": "2026-06-26",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_nagarro_se_7f669bc2",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Freiwilliges oeffentliches Uebernahmeangebot.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_olaplex__henkel__2026",
+      "target_company_id": "company_olaplex",
+      "buyers": [
+        {
+          "company_id": "company_henkel",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": "2026-07-07",
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_henkel_ag_und_co_kgaa_07b305e7",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": "Vollzug laut Mitteilung von Henkel; das Datum stammt aus der Mitteilung selbst. Der Transaktionswert wird dort nicht genannt und bleibt leer.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_stahl__henkel__2026",
+      "target_company_id": "company_stahl",
+      "buyers": [
+        {
+          "company_id": "company_henkel",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "announced",
+      "announcement_date": "2026-02-04",
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_henkel_ag_und_co_kgaa_b977efbb",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Die Halbjahresmitteilung vom 2026-08-06 bezeichnet den Kauf ausdruecklich als noch nicht abgeschlossen. Eine spaetere Vollzugsmeldung wurde in der Linkpruefung nicht gesucht.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_surventis__carlyle__2026",
+      "target_company_id": "company_surventis",
+      "buyers": [
+        {
+          "company_id": "company_carlyle",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [
+        {
+          "company_id": "company_basf",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "deal_type": "carve_out",
+      "transaction_structure": "unknown",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": "2026-06-30",
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_basf_se_5a62d450",
+        "source_marktatlas_ca91c1e2",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 75,
+      "evidence": "FACT",
+      "notes": "Herauskauf des BASF-Coatings-Geschaefts durch eine Kaeufergruppe um Carlyle; das Geschaeft firmiert seither als Surventis.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_uniper__unknown_buyer__undated",
+      "target_company_id": "company_uniper",
+      "buyers": [],
+      "sellers": [
+        {
+          "company_id": "company_bundesrepublik_deutschland",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "deal_type": "minority_stake",
+      "transaction_structure": "share_deal",
+      "status": "sale_process",
+      "announcement_date": null,
+      "completion_date": null,
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_handelsblatt_24aa0e28"
+      ],
+      "confidence": 70,
+      "evidence": "FACT",
+      "notes": "Der Bund muss seine Beteiligung von rund 99,1 % bis Ende 2028 auf 25 % plus eine Aktie zurückführen; Verkauf direkt, über die Börse oder kombiniert. Prozessstart Mai 2026, Bewerbungsfrist bis 12.06.2026. Käufer offen. Kein Tagesdatum belegt, deshalb bleibt das Ankündigungsdatum leer.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "deal_xella__holcim__2026",
+      "target_company_id": "company_xella",
+      "buyers": [
+        {
+          "company_id": "company_holcim",
+          "name": null,
+          "share_percentage": null
+        }
+      ],
+      "sellers": [],
+      "deal_type": "acquisition",
+      "transaction_structure": "share_deal",
+      "status": "completed",
+      "announcement_date": null,
+      "completion_date": "2026-06-19",
+      "deal_value": null,
+      "currency": null,
+      "stake_acquired_percentage": null,
+      "stake_before_percentage": null,
+      "stake_after_percentage": null,
+      "asset_ids": [],
+      "source_ids": [
+        "source_holcim_fa02686e",
+        "source_marktatlas_ecf2c8d0"
+      ],
+      "confidence": 85,
+      "evidence": "FACT",
+      "notes": "Aus dem geprüften Bestand des Marktatlas übernommen (Stand 2026-09-06), Primärquelle des Käufers. Verkäufer nicht belegt.",
+      "created_at": "2026-09-07T07:17:13.000Z",
+      "updated_at": "2026-09-07T07:17:13.000Z"
+    }
+  ],
+  "ownerships": [],
+  "assets": [],
+  "commodities": [],
+  "sources": [
+    {
+      "id": "source_all_for_one_group_se_e46f09ae",
+      "url": "https://www.all-for-one.com/en/company/news-press/detail/corporate-news-joint-reasoned-statement.html",
+      "publisher": "All for One Group SE",
+      "title": "Corporate News: Joint Reasoned Statement",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 85,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_basf_se_5a62d450",
+      "url": "https://www.basf.com/global/en/media/news-releases/2026/07/p-26-113",
+      "publisher": "BASF SE",
+      "title": "BASF-Pressemitteilung p-26-113 zum Coatings-Geschaeft",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_basf_se_ffc93e77",
+      "url": "https://www.basf.com/global/en/media/news-releases/2026/03/p-26-029",
+      "publisher": "BASF SE",
+      "title": "BASF-Pressemitteilung p-26-029 zur Uebernahme von AgBiTech",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_bloomberg_07233857",
+      "url": "https://www.bloomberg.com/news/articles/2026-06-02/unicredit-says-commerzbank-offer-set-to-push-direct-stake-to-34",
+      "publisher": "Bloomberg",
+      "title": "UniCredit Says Commerzbank Offer to Push Direct Stake to 34%",
+      "publication_date": "2026-06-02",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "news_article",
+      "reliability_score": 80,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_bloomberg_ce3ba268",
+      "url": "https://www.bloomberg.com/news/articles/2026-07-08/unicredit-nears-commerzbank-control-as-stake-set-to-reach-47-6",
+      "publisher": "Bloomberg",
+      "title": "UniCredit Nears Commerzbank Control as Stake Set to Reach 47.6%",
+      "publication_date": "2026-07-08",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "news_article",
+      "reliability_score": 80,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_boerse_express_ffbb99ea",
+      "url": "https://www.boerse-express.com/news/articles/covestro-aktie-uebernahme-durch-adnoc-vollzogen-848109",
+      "publisher": "Börse Express",
+      "title": "Covestro Aktie: Übernahme durch Adnoc vollzogen",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "news_article",
+      "reliability_score": 60,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_bundeskartellamt_ce970d79",
+      "url": "https://www.bundeskartellamt.de/SharedDocs/Meldung/DE/Pressemitteilungen/2026/07_31_2026_Deutz-FFG.html",
+      "publisher": "Bundeskartellamt",
+      "title": "Übernahme der FFG Flensburger Fahrzeugbau Gesellschaft mbH durch die Deutz AG genehmigt",
+      "publication_date": "2026-07-31",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "regulatory_filing",
+      "reliability_score": 95,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_covestro_ag_c503aa4b",
+      "url": "https://www.covestro.com/press/adnoc-takeover-offer-for-covestro-successful/",
+      "publisher": "Covestro AG",
+      "title": "Übernahmeangebot von ADNOC für Covestro erfolgreich",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_deutz_ag_186a1244",
+      "url": "https://www.deutz.com/de/news/pressemitteilungen/news-detail/deutz-beschleunigt-transformation-durch-milliarden-transaktion-im-defense-bereich/",
+      "publisher": "DEUTZ AG",
+      "title": "DEUTZ beschleunigt Transformation durch Milliarden-Transaktion im Defense-Bereich",
+      "publication_date": "2026-07-09",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_handelsblatt_24aa0e28",
+      "url": "https://www.handelsblatt.com/unternehmen/energie/uniper-bundesregierung-startet-reprivatisierung-von-uniper/100226126.html",
+      "publisher": "Handelsblatt",
+      "title": "Bundesregierung startet Reprivatisierung von Uniper",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "news_article",
+      "reliability_score": 80,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_henkel_ag_und_co_kgaa_07b305e7",
+      "url": "https://www.henkel.com/press-and-media/press-releases-and-kits/2026-07-07-henkel-successfully-closes-acquisition-of-premium-hair-care-brand-olaplex-2193832",
+      "publisher": "Henkel AG & Co. KGaA",
+      "title": "Henkel successfully closes acquisition of premium hair care brand Olaplex",
+      "publication_date": "2026-07-07",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_henkel_ag_und_co_kgaa_b977efbb",
+      "url": "https://www.henkel.de/presse-und-medien/presseinformationen-und-pressemappen/2026-08-06-henkel-erzielt-starke-umsatz-und-ergebnisentwicklung-im-ersten-halbjahr-und-hebt-umsatzprognose-fuer-2026-an-2217830",
+      "publisher": "Henkel AG & Co. KGaA",
+      "title": "Henkel erzielt starke Umsatz- und Ergebnisentwicklung im ersten Halbjahr",
+      "publication_date": "2026-08-06",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_holcim_acf2cb6a",
+      "url": "https://www.holcim.com/media/media-releases/holcim-to-acquire-fermacell",
+      "publisher": "Holcim",
+      "title": "Holcim to acquire Fermacell",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 85,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_holcim_fa02686e",
+      "url": "https://www.holcim.com/media/media-releases/holcim-completes-acquisition-xella",
+      "publisher": "Holcim",
+      "title": "Holcim completes acquisition of Xella",
+      "publication_date": "2026-06-19",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_marktatlas_ca91c1e2",
+      "url": null,
+      "publisher": "Marktatlas",
+      "title": "Marktatlas – Link- und Quellenpruefung (Website-Stand v004)",
+      "publication_date": "2026-09-07",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "other",
+      "reliability_score": 70,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_marktatlas_ecf2c8d0",
+      "url": null,
+      "publisher": "Marktatlas",
+      "title": "Marktatlas v004 Deutschland — Marktdatensatz (market-data.json)",
+      "publication_date": "2026-09-06",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "database",
+      "reliability_score": 80,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_nagarro_se_7f669bc2",
+      "url": "https://www.nagarro.com/en/investor-relations/voluntary-public-takeover-offer-by-persistent",
+      "publisher": "Nagarro SE",
+      "title": "Voluntary public takeover offer by Persistent",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 85,
+      "language": "en",
+      "archive_url": null
+    },
+    {
+      "id": "source_siemens_ag_73e6dcf1",
+      "url": "https://press.siemens.com/de/de/pressemitteilung/siemens-schliesst-kauf-des-geschaefts-fuer-industrielle-antriebstechnik-von-ebm",
+      "publisher": "Siemens AG",
+      "title": "Siemens schließt Kauf des Geschäfts für industrielle Antriebstechnik von ebm-papst ab",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "company_primary",
+      "reliability_score": 90,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_spruchverfahren_direkt_2fa43873",
+      "url": "https://www.spruchverfahren-direkt.de/?p=5270",
+      "publisher": "Spruchverfahren-direkt",
+      "title": "Angekündigte und laufende Übernahmeangebote",
+      "publication_date": null,
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "database",
+      "reliability_score": 65,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_verbraucherschutzforum_berlin_2bb95ed1",
+      "url": "https://verbraucherschutzforum.berlin/2026-03-20/uebernahmegeruechte-treiben-gerresheimer-aktie-deutlich-nach-oben-412738/",
+      "publisher": "Verbraucherschutzforum Berlin",
+      "title": "Übernahmegerüchte treiben Gerresheimer-Aktie deutlich nach oben",
+      "publication_date": "2026-03-20",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "news_article",
+      "reliability_score": 40,
+      "language": "de",
+      "archive_url": null
+    },
+    {
+      "id": "source_wikidata_926412b6",
+      "url": "https://www.wikidata.org/",
+      "publisher": "Wikidata",
+      "title": "Wikidata-Snapshot boersennotierter Unternehmen (Marktatlas, Stand 2026-09-05)",
+      "publication_date": "2026-09-05",
+      "accessed_at": "2026-09-07T07:17:13.000Z",
+      "source_type": "database",
+      "reliability_score": 70,
+      "language": "en",
+      "archive_url": null
+    }
+  ],
+  "events": [],
+  "claims": [
+    {
+      "id": "claim_16f76eb45b46",
+      "subject_type": "deal",
+      "subject_id": "deal_commerzbank__unicredit__2026",
+      "field": "status",
+      "statement": "Die Übertragung der angedienten Aktien und der zugehoerigen Stimmrechte steht unter dem Vorbehalt der erforderlichen aufsichtsrechtlichen Genehmigungen.",
+      "source_id": "source_bloomberg_ce3ba268",
+      "evidence": "FACT",
+      "confidence": 70,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_1fadf0fafd93",
+      "subject_type": "deal",
+      "subject_id": "deal_covestro__adnoc__2025",
+      "field": "stake_after_percentage",
+      "statement": "Zusammen mit zuvor erworbenen Aktien entspricht das Ergebnis rund 91,3 Prozent aller ausstehenden Covestro-Aktien.",
+      "source_id": "source_covestro_ag_c503aa4b",
+      "evidence": "FACT",
+      "confidence": 75,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_26bff7a230cc",
+      "subject_type": "deal",
+      "subject_id": "deal_surventis__carlyle__2026",
+      "field": "status",
+      "statement": "BASF meldet den Abschluss des Verkaufs seines Coatings-Geschaefts; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als vollzogen.",
+      "source_id": "source_basf_se_5a62d450",
+      "evidence": "FACT",
+      "confidence": 80,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_5724fea03e4a",
+      "subject_type": "deal",
+      "subject_id": "deal_stahl__henkel__2026",
+      "field": "status",
+      "statement": "Die Henkel-Mitteilung vom 2026-08-06 bezeichnet den Erwerb von Stahl ausdruecklich als noch nicht abgeschlossen.",
+      "source_id": "source_henkel_ag_und_co_kgaa_b977efbb",
+      "evidence": "FACT",
+      "confidence": 85,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_605271c604f1",
+      "subject_type": "deal",
+      "subject_id": "deal_olaplex__henkel__2026",
+      "field": "completion_date",
+      "statement": "Henkel meldet am 2026-07-07 den erfolgreichen Abschluss der Uebernahme der Haarpflegemarke Olaplex.",
+      "source_id": "source_henkel_ag_und_co_kgaa_07b305e7",
+      "evidence": "FACT",
+      "confidence": 90,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_aa8d4238b8ee",
+      "subject_type": "deal",
+      "subject_id": "deal_delivery_hero__uber__2026",
+      "field": "buyers",
+      "statement": "Die Linkpruefung vom 2026-09-07 nennt als rechtlichen Bieter die Uber International Technologies II Corporation; der bei der SEC eingereichte Vertrag bestaetigt die Parteienliste. Die Kaeufergruppe Uber und der offene Status bleiben unveraendert.",
+      "source_id": "source_marktatlas_ca91c1e2",
+      "evidence": "FACT",
+      "confidence": 75,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_ab518a960ef1",
+      "subject_type": "deal",
+      "subject_id": "deal_ffg_flensburger_fahrzeugbau__deutz__2026",
+      "field": "status",
+      "statement": "Das Bundeskartellamt hat die Übernahme der FFG durch die Deutz AG am 31. Juli 2026 freigegeben.",
+      "source_id": "source_bundeskartellamt_ce970d79",
+      "evidence": "FACT",
+      "confidence": 90,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_aed56e1e8f45",
+      "subject_type": "deal",
+      "subject_id": "deal_agbitech__basf__2026",
+      "field": "status",
+      "statement": "BASF meldet die Uebernahme von AgBiTech; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als vollzogen.",
+      "source_id": "source_basf_se_ffc93e77",
+      "evidence": "FACT",
+      "confidence": 80,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_b8eb43d4cc89",
+      "subject_type": "deal",
+      "subject_id": "deal_commerzbank__unicredit__2026",
+      "field": "stake_after_percentage",
+      "statement": "UniCredit erwarb waehrend der Angebotsfrist rund 17,60 Prozent des Grundkapitals und kommt damit auf rund 47,59 Prozent.",
+      "source_id": "source_bloomberg_ce3ba268",
+      "evidence": "FACT",
+      "confidence": 70,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_d9df4eba3828",
+      "subject_type": "deal",
+      "subject_id": "deal_uniper__unknown_buyer__undated",
+      "field": "status",
+      "statement": "Die Bundesregierung hat den Verkaufsprozess fuer ihre Uniper-Beteiligung gestartet; die Bewerbungsfrist endete am 12. Juni 2026.",
+      "source_id": "source_handelsblatt_24aa0e28",
+      "evidence": "FACT",
+      "confidence": 70,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_e3ff058b8019",
+      "subject_type": "deal",
+      "subject_id": "deal_ffg_flensburger_fahrzeugbau__deutz__2026",
+      "field": "deal_value",
+      "statement": "Der Kaufpreis fuer saemtliche Anteile an der FFG liegt bei rund 1,6 Milliarden Euro.",
+      "source_id": "source_deutz_ag_186a1244",
+      "evidence": "FACT",
+      "confidence": 85,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_ed3b7637d70a",
+      "subject_type": "deal",
+      "subject_id": "deal_all_for_one_group__vinci__2026",
+      "field": "status",
+      "statement": "Gemeinsame begruendete Stellungnahme zum Uebernahmeangebot; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als offen (pending).",
+      "source_id": "source_all_for_one_group_se_e46f09ae",
+      "evidence": "FACT",
+      "confidence": 80,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_f32bbce77a6d",
+      "subject_type": "deal",
+      "subject_id": "deal_gerresheimer__silgan_holdings__2026",
+      "field": "status",
+      "statement": "Berichtet wurde, dass Silgan Holdings eine Offerte fuer Gerresheimer prueft. Die Transaktion selbst ist nicht belegt.",
+      "source_id": "source_verbraucherschutzforum_berlin_2bb95ed1",
+      "evidence": "FACT",
+      "confidence": 50,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_faa09ed8b597",
+      "subject_type": "deal",
+      "subject_id": "deal_nagarro__persistent_systems__2026",
+      "field": "status",
+      "statement": "Nagarro veroeffentlicht das freiwillige oeffentliche Uebernahmeangebot von Persistent; die Linkpruefung fuehrt die Beziehung als offen.",
+      "source_id": "source_nagarro_se_7f669bc2",
+      "evidence": "FACT",
+      "confidence": 80,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    },
+    {
+      "id": "claim_fc8a8c412a03",
+      "subject_type": "deal",
+      "subject_id": "deal_fermacell__holcim__2026",
+      "field": "status",
+      "statement": "Holcim kuendigt den Erwerb von Fermacell an; die Linkpruefung vom 2026-09-07 fuehrt die Beziehung als offen (pending).",
+      "source_id": "source_holcim_acf2cb6a",
+      "evidence": "FACT",
+      "confidence": 80,
+      "created_at": "2026-09-07T07:17:13.000Z"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+data/wikidata-raw.json
+*.tar.gz
+*.tar
+.DS_Store

@@ -1,0 +1,248 @@
+{
+  "reviewedOn": "2026-09-06",
+  "complete": false,
+  "entities": [
+    {
+      "existing": "Q1856518"
+    },
+    {
+      "existing": "Q5058678"
+    },
+    {
+      "existing": "Q1282130"
+    },
+    {
+      "existing": "Q108666978"
+    },
+    {
+      "existing": "Q338825"
+    },
+    {
+      "existing": "Q3117577"
+    },
+    {
+      "existing": "Q47498532"
+    },
+    {
+      "existing": "Q7949044"
+    },
+    {
+      "id": "safaricom",
+      "name": "Safaricom",
+      "place": "Nairobi",
+      "locationSourceUrl": "https://www.globaldata.com/company-profile/safaricom-ltd/locations/"
+    },
+    {
+      "id": "verum",
+      "name": "Verum Partners",
+      "place": "Belo Horizonte",
+      "locationSourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-verum-partners-expanding-its-capital-projects-capabilities-in-brazil"
+    },
+    {
+      "id": "comware",
+      "name": "COMWARE",
+      "place": "Tokio",
+      "locationSourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-comware-to-strengthen-accenture-edge-and-accelerate-digital-core-reinvention-for-mid-market-companies-in-japan"
+    },
+    {
+      "id": "piramal",
+      "name": "Piramal Pharma",
+      "place": "Mumbai",
+      "locationSourceUrl": "https://www.piramalpharma.com/contact-us"
+    },
+    {
+      "id": "yapan",
+      "name": "Yapan Bio",
+      "place": "Hyderabad",
+      "locationSourceUrl": "https://www.eqs-news.com/de/news/corporate/piramal-pharma-limited-completes-acquisition-of-controlling-stake-in-yapan-bio-private-limited/aa568294-a68a-4d94-bf89-b32eda281541_en"
+    },
+    {
+      "id": "energyfuels",
+      "name": "Energy Fuels",
+      "place": "Lakewood",
+      "locationSourceUrl": "https://www.energyfuels.com/contact-us/"
+    },
+    {
+      "id": "asm",
+      "name": "Australian Strategic Materials",
+      "place": "Perth",
+      "locationSourceUrl": "https://asm-au.com/about/corporate-directory/"
+    },
+    {
+      "id": "cboe-au",
+      "name": "Cboe Australia",
+      "place": "Sydney",
+      "locationSourceUrl": "https://s21.q4cdn.com/671813756/files/doc_news/TMX-Group-Completes-Acquisition-of-Cboe-Australia-2026.pdf"
+    },
+    {
+      "id": "eventspec",
+      "name": "Eventspec · operatives Geschäft",
+      "place": "Johannesburg",
+      "locationSourceUrl": "https://www.epirocgroup.com/en/media/corporate-press-releases/2026/20260804-epiroc-completes-acquisition-of-the-business-of-mining-aftermarket-solutions-provider-in-south-africa"
+    },
+    {
+      "id": "torishima",
+      "name": "Torishima Pump",
+      "place": "Takatsuki",
+      "locationSourceUrl": "https://www.torishima.co.jp/en/outline/olinfo/au/"
+    },
+    {
+      "id": "shin",
+      "name": "Shin Nippon Machinery",
+      "place": "Tokio",
+      "locationSourceUrl": "https://www.snm.co.jp/intro/gaiyo/"
+    },
+    {
+      "id": "newark",
+      "name": "Newark Engineering Group",
+      "place": "Singapur",
+      "locationSourceUrl": "https://www.prnewswire.com/news-releases/wesco-completes-acquisition-of-newark-engineering-group-expanding-data-center-cooling-and-lifecycle-services-302815535.html"
+    },
+    {
+      "id": "cybrid",
+      "name": "Cybrid Technologies",
+      "place": "Suzhou",
+      "locationSourceUrl": "https://www.linkedin.com/pulse/cybrid-technologies-completes-acquisition-controlling-okuic"
+    },
+    {
+      "id": "genernano",
+      "name": "Suzhou Jinlan Nanotechnology (GenerNano)",
+      "place": "Suzhou",
+      "locationSourceUrl": "https://m.made-in-china.com/company-genernano/info.html"
+    }
+  ],
+  "deals": [
+    {
+      "id": "vodacom-safaricom",
+      "buyerId": "Q1856518",
+      "targetId": "safaricom",
+      "completedOn": "2026-06-30",
+      "status": "completed",
+      "sourceUrl": "https://www.vodacom.com/news-article.php?articleID=16911",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "20 Prozentpunkte hinzugekauft; effektiver Anteil anschließend rund 55 %. Käufergruppe Vodacom, Transaktion über die Beteiligungsstruktur.",
+      "kind": "majority"
+    },
+    {
+      "id": "holcim-pacasmayo",
+      "buyerId": "Q16466481",
+      "targetId": "Q5058678",
+      "completedOn": "2026-03-30",
+      "status": "completed",
+      "sourceUrl": "https://www.holcim.com/media/media-releases/holcim-completes-acquisition-majority-stake-cementos-pacasmayo",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Mehrheitsbeteiligung. Weitere Aktien waren Gegenstand eines gesonderten Pflichtangebots.",
+      "kind": "majority"
+    },
+    {
+      "id": "ecopetrol-brava",
+      "buyerId": "Q1282130",
+      "targetId": "Q108666978",
+      "completedOn": "2026-08-18",
+      "status": "completed",
+      "sourceUrl": "https://www.prnewswire.com/news-releases/ecopetrol-completes-acquisition-of-a-controlling-51-stake-in-brava-energia-sa-and-strengthens-its-growth-platform-in-brazil-302853566.html",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Rund 51 % der stimmberechtigten Aktien. Kauf über die hundertprozentige Tochter Ecopetrol Investimentos do Brasil; der Pfeil beginnt beim Hauptsitz der Käufergruppe.",
+      "kind": "majority"
+    },
+    {
+      "id": "accenture-verum",
+      "buyerId": "Q338825",
+      "targetId": "verum",
+      "completedOn": "2026-05-18",
+      "status": "completed",
+      "sourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-verum-partners-expanding-its-capital-projects-capabilities-in-brazil",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company"
+    },
+    {
+      "id": "accenture-comware",
+      "buyerId": "Q338825",
+      "targetId": "comware",
+      "completedOn": "2026-08-31",
+      "status": "completed",
+      "sourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-comware-to-strengthen-accenture-edge-and-accelerate-digital-core-reinvention-for-mid-market-companies-in-japan",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company"
+    },
+    {
+      "id": "piramal-yapan",
+      "buyerId": "piramal",
+      "targetId": "yapan",
+      "completedOn": "2026-08-18",
+      "status": "completed",
+      "sourceUrl": "https://www.eqs-news.com/de/news/corporate/piramal-pharma-limited-completes-acquisition-of-controlling-stake-in-yapan-bio-private-limited/aa568294-a68a-4d94-bf89-b32eda281541_en",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "40,67 Prozentpunkte hinzugekauft; Anteil danach 74 %. Keine vollständige Übernahme.",
+      "kind": "majority"
+    },
+    {
+      "id": "energyfuels-asm",
+      "buyerId": "energyfuels",
+      "targetId": "asm",
+      "completedOn": "2026-08-28",
+      "status": "completed",
+      "sourceUrl": "https://investors.energyfuels.com/2026-08-28-Energy-Fuels-Completes-Acquisition-of-Australian-Strategic-Materials",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "ASM am Hauptsitz im Raum Perth; Produktionsanlagen unter anderem in Südkorea. Der Pfeil zeigt keinen Anlagenstandort.",
+      "kind": "company"
+    },
+    {
+      "id": "tmx-cboe-au",
+      "buyerId": "Q3117577",
+      "targetId": "cboe-au",
+      "completedOn": "2026-08-02",
+      "status": "completed",
+      "sourceUrl": "https://s21.q4cdn.com/671813756/files/doc_news/TMX-Group-Completes-Acquisition-of-Cboe-Australia-2026.pdf",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Erworben wurde Middlebury Holdings Pty. Limited (Cboe Australia). Nicht die weltweite Cboe-Gruppe.",
+      "kind": "company"
+    },
+    {
+      "id": "epiroc-eventspec",
+      "buyerId": "Q47498532",
+      "targetId": "eventspec",
+      "completedOn": "2026-08-04",
+      "status": "completed",
+      "sourceUrl": "https://www.epirocgroup.com/en/media/corporate-press-releases/2026/20260804-epiroc-completes-acquisition-of-the-business-of-mining-aftermarket-solutions-provider-in-south-africa",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Übernahme des operativen Geschäfts von Eventspec. Die Quelle bestätigt keinen Kauf sämtlicher Gesellschaftsanteile.",
+      "kind": "business"
+    },
+    {
+      "id": "torishima-shin",
+      "buyerId": "torishima",
+      "targetId": "shin",
+      "completedOn": "2026-07-01",
+      "status": "completed",
+      "sourceUrl": "https://www.torishima.co.jp/uploads/Presentation_FY2026_First_en.pdf",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Abschlussdatum laut Torishimas Quartalspräsentation vom August 2026.",
+      "kind": "company"
+    },
+    {
+      "id": "wesco-newark",
+      "buyerId": "Q7949044",
+      "targetId": "newark",
+      "completedOn": "2026-07-01",
+      "status": "completed",
+      "sourceUrl": "https://www.prnewswire.com/news-releases/wesco-completes-acquisition-of-newark-engineering-group-expanding-data-center-cooling-and-lifecycle-services-302815535.html",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company"
+    },
+    {
+      "id": "cybrid-genernano",
+      "buyerId": "cybrid",
+      "targetId": "genernano",
+      "completedOn": "2026-02-09",
+      "status": "completed",
+      "sourceUrl": "https://www.linkedin.com/pulse/cybrid-technologies-completes-acquisition-controlling-okuic",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Kontrollbeteiligung laut Käufermeldung vom 9. Februar, veröffentlicht am 10. Februar. Beteiligungshöhe in dieser Quelle nicht beziffert.",
+      "kind": "majority"
+    }
+  ]
+}

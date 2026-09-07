@@ -1,0 +1,126 @@
+// @ts-check
+import tseslint from 'typescript-eslint';
+
+/**
+ * Der maschinelle Teil der Architekturregeln aus CLAUDE.md.
+ *
+ * Die Schichtung ist durch Verzeichnisse plus diese Boundary-Regeln isoliert,
+ * nicht durch getrennte Packages: `domain` kennt niemanden, `ingest` kennt
+ * `domain`, `store` kennt `domain`, `cli` kennt alles. Was ein Test schlecht
+ * pruefen kann, prueft der Linter.
+ */
+export default tseslint.config(
+  {
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'coverage/**',
+      'data/**',
+      // Die bestehende Website wird erhalten, nicht umformatiert: mitgelieferte
+      // Bibliotheken und der Code des bisherigen Projektstands bleiben aussen
+      // vor. Neu geschriebene Seiten-Skripte werden sehr wohl geprueft.
+      'site/dist/assets/three/**',
+      'site/dist/assets/leaflet.js',
+      'site/dist/assets/markercluster.js',
+      'site/dist/assets/topojson.js',
+      'site/dist/assets/app.js',
+      'site/dist/assets/globe-app.js',
+      'site/dist/assets/globe-scene.js',
+      'site/dist/assets/globe-navigation.js',
+      'site/dist/assets/globe-math.mjs',
+      'site/dist/assets/map-logic.mjs',
+      'site/scripts/**',
+    ],
+  },
+  ...tseslint.configs.recommended,
+  {
+    rules: {
+      // Ein mit `_` benannter Wert ist ausdruecklich ungenutzt — das ist die
+      // uebliche Art, ein Feld beim Destrukturieren wegzunehmen.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
+    },
+  },
+  {
+    // Browser-Skripte der Website: kein TypeScript, Leaflet und topojson kommen
+    // als Globals aus den mitgelieferten Bibliotheken.
+    files: ['site/dist/assets/deutschland.js'],
+    languageOptions: {
+      globals: { window: 'readonly', document: 'readonly', fetch: 'readonly', L: 'readonly', topojson: 'readonly', Intl: 'readonly' },
+    },
+  },
+  {
+    files: ['src/domain/**/*.ts'],
+    rules: {
+      // Regel 1: Das Domain-Modell ist rein. Es liest keine Dateien, spricht
+      // mit keinem Netzwerk und kennt keine Persistenz — sonst ist es nicht
+      // mehr testbar, ohne die halbe Plattform hochzufahren.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            'node:fs',
+            'node:fs/*',
+            'node:http',
+            'node:https',
+            'node:child_process',
+            '@/ingest/*',
+            '@/store/*',
+            '@/cli/*',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/ingest/**/*.ts'],
+    rules: {
+      // Regel 2: Die Pipeline entscheidet, sie persistiert nicht. Wer schreibt,
+      // ist `store` — sonst landen ungepruefte Daten in der Datenbank.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['node:fs', 'node:fs/*', '@/store/*', '@/cli/*'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/review/**/*.ts'],
+    rules: {
+      // Der Review-Loop ist reine Logik. Dateien und Netzwerk gehoeren in die
+      // CLI-Schicht; sonst laesst sich die Zustandsmaschine nicht ohne echten
+      // PR testen — und genau das muss sie sein.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['node:fs', 'node:fs/*', '@/ingest/*', '@/store/*', '@/cli/*'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/domain/**/*.ts', 'src/ingest/**/*.ts', 'src/review/**/*.ts'],
+    rules: {
+      // Regel 3: Validierung, Confidence-Berechnung und die Entscheidungen des
+      // Review-Loops muessen reproduzierbar
+      // sein. Ein Ergebnis, das von der Wanduhr abhaengt, ist nicht pruefbar —
+      // Zeitpunkte kommen als Parameter herein (`now`), nie aus der Umgebung.
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'Date',
+          property: 'now',
+          message: 'Zeitpunkte werden hereingereicht (Parameter `now`), nicht aus der Wanduhr gelesen.',
+        },
+        {
+          object: 'Math',
+          property: 'random',
+          message: 'Kein Zufall in Domain und Pipeline — IDs und Scores sind deterministisch.',
+        },
+      ],
+    },
+  },
+);

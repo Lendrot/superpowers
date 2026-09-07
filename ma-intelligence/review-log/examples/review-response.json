@@ -1,0 +1,17 @@
+{
+  "contract_version": "1.0.0",
+  "findings": [
+    {
+      "finding_id": "ARCH-001",
+      "severity": "MEDIUM",
+      "category": "architecture",
+      "file": "src/review/loop.ts",
+      "lines": "120-140",
+      "problem": "Beispiel-Finding aus einem Mock-Reviewer, kein echter Befund.",
+      "evidence": "Diese Datei liegt unter review-log/examples/ und dient nur der Formatdemonstration.",
+      "required_change": "Nichts. Die Datei zeigt, wie eine Reviewer-Antwort aussehen muss.",
+      "acceptance_criteria": ["pnpm review validate akzeptiert diese Datei."],
+      "confidence": 0.9
+    }
+  ]
+}

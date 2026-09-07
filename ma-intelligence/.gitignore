@@ -1,4 +1,6 @@
 node_modules/
 coverage/
-dist/
+# Nur ein Build-Verzeichnis im Projektstamm — site/dist/ ist KEIN Build,
+# sondern die ausgelieferte Website und gehoert ins Repository.
+/dist/
 *.log

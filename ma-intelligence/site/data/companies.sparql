@@ -1,0 +1,28 @@
+
+SELECT DISTINCT ?company ?companyLabel ?exchange ?exchangeLabel ?ticker ?directTicker
+  ?hq ?hqLabel ?country ?countryLabel ?coord ?accuracy
+WHERE {
+  ?company p:P414 ?listing .
+  ?listing ps:P414 ?exchange ; wikibase:rank ?listingRank .
+  FILTER(?listingRank != wikibase:DeprecatedRank)
+  FILTER NOT EXISTS { ?listing pq:P582 ?end . FILTER(?end < "2026-01-01T00:00:00Z"^^xsd:dateTime) }
+  FILTER NOT EXISTS { ?listing pq:P580 ?start . FILTER(?start > "2026-09-05T23:59:59Z"^^xsd:dateTime) }
+  FILTER NOT EXISTS { ?company wdt:P576 ?closed . FILTER(?closed < "2026-01-01T00:00:00Z"^^xsd:dateTime) }
+  OPTIONAL { ?listing pq:P249 ?ticker }
+  OPTIONAL { ?company wdt:P249 ?directTicker }
+  ?company p:P159 ?hqStatement .
+  ?hqStatement ps:P159 ?hq ; wikibase:rank ?hqRank .
+  FILTER(?hqRank != wikibase:DeprecatedRank)
+  FILTER NOT EXISTS { ?hqStatement pq:P582 ?hqEnd . FILTER(?hqEnd < "2026-09-05T00:00:00Z"^^xsd:dateTime) }
+  FILTER NOT EXISTS { ?hqStatement pq:P580 ?hqStart . FILTER(?hqStart > "2026-09-05T23:59:59Z"^^xsd:dateTime) }
+  OPTIONAL { ?hqStatement pq:P625 ?exactCoord }
+  OPTIONAL { ?hqStatement pq:P276/wdt:P625 ?buildingCoord }
+  OPTIONAL { ?hq wdt:P625 ?placeCoord }
+  BIND(COALESCE(?exactCoord, ?buildingCoord, ?placeCoord) AS ?coord)
+  FILTER(BOUND(?coord))
+  BIND(IF(BOUND(?exactCoord) || BOUND(?buildingCoord), "headquarters", "locality") AS ?accuracy)
+  OPTIONAL { ?hq wdt:P17 ?hqCountry }
+  OPTIONAL { ?company wdt:P17 ?companyCountry }
+  BIND(COALESCE(?hqCountry, ?companyCountry) AS ?country)
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "de,en" . }
+}

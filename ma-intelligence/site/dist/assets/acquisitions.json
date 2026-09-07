@@ -1,0 +1,879 @@
+{
+  "meta": {
+    "year": 2026,
+    "asOf": "2026-09-06",
+    "complete": false,
+    "verifiedDealCount": 22,
+    "sourceCompanyCount": 9868,
+    "regionCount": 6,
+    "countryCount": 18,
+    "scope": "Curated worldwide selection of completed acquisitions, confirmed by buyer releases or issuer SEC filings. Not an exhaustive global M&A database. Arrows show buyer to acquired company, not seller or physical routes. Headquarters/locality coordinates are geographic reference points, not a historical legal-domicile audit."
+  },
+  "entities": {
+    "Q7128508": {
+      "id": "Q7128508",
+      "name": "Palo Alto Networks",
+      "lat": 37.35,
+      "lon": -121.966666666,
+      "place": "Santa Clara",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q7128508",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q7128508",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q159260",
+      "region": "Nordamerika"
+    },
+    "Q7455653": {
+      "id": "Q7455653",
+      "name": "ServiceNow",
+      "lat": 37.35,
+      "lon": -121.966666666,
+      "place": "Santa Clara",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q7455653",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q7455653",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q159260",
+      "region": "Nordamerika"
+    },
+    "Q1034654": {
+      "id": "Q1034654",
+      "name": "Capital One",
+      "lat": 38.928333333,
+      "lon": -77.175277777,
+      "place": "McLean",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q1034654",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q1034654",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q963138",
+      "region": "Nordamerika"
+    },
+    "Q507154": {
+      "id": "Q507154",
+      "name": "Novartis",
+      "lat": 47.5744252,
+      "lon": 7.5764914,
+      "place": "Basel",
+      "country": "Schweiz",
+      "accuracy": "headquarters",
+      "existingCompanyId": "Q507154",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q507154",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q78",
+      "region": "Europa"
+    },
+    "Q16466481": {
+      "id": "Q16466481",
+      "name": "Holcim",
+      "lat": 47.168055555,
+      "lon": 8.516944444,
+      "place": "Zug",
+      "country": "Schweiz",
+      "accuracy": "locality",
+      "existingCompanyId": "Q16466481",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q16466481",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q68144",
+      "region": "Europa"
+    },
+    "Q52825": {
+      "id": "Q52825",
+      "name": "ABB",
+      "lat": 47.41148425,
+      "lon": 8.54149114,
+      "place": "Zürich",
+      "country": "Schweiz",
+      "accuracy": "headquarters",
+      "existingCompanyId": "Q52825",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q52825",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q72",
+      "region": "Europa"
+    },
+    "Q212322": {
+      "id": "Q212322",
+      "name": "GSK",
+      "lat": 51.5165,
+      "lon": -0.128333333,
+      "place": "London",
+      "country": "Vereinigtes Königreich",
+      "accuracy": "headquarters",
+      "existingCompanyId": "Q212322",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q212322",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q84",
+      "region": "Europa"
+    },
+    "Q306764": {
+      "id": "Q306764",
+      "name": "Abbott",
+      "lat": 42.3171549,
+      "lon": -87.8594086,
+      "place": "North Chicago",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q306764",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q306764",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q338720",
+      "region": "Nordamerika"
+    },
+    "Q22121866": {
+      "id": "Q22121866",
+      "name": "Exact Sciences",
+      "lat": 43.074722222,
+      "lon": -89.384166666,
+      "place": "Madison",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q22121866",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q22121866",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q43788",
+      "region": "Nordamerika"
+    },
+    "Q1347782": {
+      "id": "Q1347782",
+      "name": "Marvell",
+      "lat": 37.411820472,
+      "lon": -121.982046573,
+      "place": "Santa Clara",
+      "country": "Vereinigte Staaten",
+      "accuracy": "headquarters",
+      "existingCompanyId": "Q1347782",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q1347782",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q159260",
+      "region": "Nordamerika"
+    },
+    "Q95": {
+      "id": "Q95",
+      "name": "Google",
+      "lat": 37.422053,
+      "lon": -122.084442,
+      "place": "Googleplex",
+      "country": "Vereinigte Staaten",
+      "accuracy": "headquarters",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q95",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q694178",
+      "region": "Nordamerika"
+    },
+    "Q535956": {
+      "id": "Q535956",
+      "name": "Xella",
+      "lat": 51.432222222,
+      "lon": 6.761111111,
+      "place": "Duisburg",
+      "country": "Deutschland",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q535956",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q2100",
+      "region": "Europa"
+    },
+    "Q5197666": {
+      "id": "Q5197666",
+      "name": "CyberArk",
+      "lat": 42.336944444,
+      "lon": -71.209722222,
+      "place": "Newton",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q5197666",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q49196",
+      "region": "Nordamerika"
+    },
+    "Q60741065": {
+      "id": "Q60741065",
+      "name": "Brex",
+      "lat": 37.775,
+      "lon": -122.419444444,
+      "place": "San Francisco",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q60741065",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q62",
+      "region": "Nordamerika"
+    },
+    "wiz": {
+      "id": "wiz",
+      "name": "Wiz",
+      "lat": 40.712777777,
+      "lon": -74.006111111,
+      "place": "New York City",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/wiz-acquisition/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q60",
+      "region": "Nordamerika"
+    },
+    "armis": {
+      "id": "armis",
+      "name": "Armis",
+      "lat": 37.775,
+      "lon": -122.419444444,
+      "place": "San Francisco",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.linkedin.com/company/armis-security",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q62",
+      "region": "Nordamerika"
+    },
+    "avidity": {
+      "id": "avidity",
+      "name": "Avidity Biosciences",
+      "lat": 32.715,
+      "lon": -117.1625,
+      "place": "San Diego",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.sec.gov/Archives/edgar/data/1599901/000119312525202371/d25770dex991.htm",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q16552",
+      "region": "Nordamerika"
+    },
+    "netcontrol": {
+      "id": "netcontrol",
+      "name": "Netcontrol",
+      "lat": 60.170833333,
+      "lon": 24.9375,
+      "place": "Helsinki",
+      "country": "Finnland",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.netcontrol.com/abb-completes-netcontrol-acquisition/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1757",
+      "region": "Europa"
+    },
+    "rapt": {
+      "id": "rapt",
+      "name": "RAPT Therapeutics",
+      "lat": 37.656111111,
+      "lon": -122.425555555,
+      "place": "South San Francisco",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.sec.gov/Archives/edgar/data/1673772/000119312526086530/0001193125-26-086530-index.htm",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q927122",
+      "region": "Nordamerika"
+    },
+    "celestial": {
+      "id": "celestial",
+      "name": "Celestial AI",
+      "lat": 37.35,
+      "lon": -121.966666666,
+      "place": "Santa Clara",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.linkedin.com/company/celestial-ai",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q159260",
+      "region": "Nordamerika"
+    },
+    "Q1856518": {
+      "id": "Q1856518",
+      "name": "Vodacom",
+      "lat": -26.0,
+      "lon": 28.133333,
+      "place": "Midrand",
+      "country": "Südafrika",
+      "accuracy": "locality",
+      "existingCompanyId": "Q1856518",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q1856518",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q639518",
+      "region": "Afrika"
+    },
+    "Q5058678": {
+      "id": "Q5058678",
+      "name": "Cementos Pacasmayo",
+      "lat": -12.06,
+      "lon": -77.0375,
+      "place": "Lima",
+      "country": "Peru",
+      "accuracy": "locality",
+      "existingCompanyId": "Q5058678",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q5058678",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q2868",
+      "region": "Südamerika"
+    },
+    "Q1282130": {
+      "id": "Q1282130",
+      "name": "Ecopetrol",
+      "lat": 4.60971,
+      "lon": -74.08175,
+      "place": "Bogotá",
+      "country": "Kolumbien",
+      "accuracy": "locality",
+      "existingCompanyId": "Q1282130",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q1282130",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q2841",
+      "region": "Südamerika"
+    },
+    "Q108666978": {
+      "id": "Q108666978",
+      "name": "Brava Energia",
+      "lat": -22.911111111,
+      "lon": -43.205555555,
+      "place": "Rio de Janeiro",
+      "country": "Brasilien",
+      "accuracy": "locality",
+      "existingCompanyId": "Q108666978",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q108666978",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q8678",
+      "region": "Südamerika"
+    },
+    "Q338825": {
+      "id": "Q338825",
+      "name": "Accenture",
+      "lat": 50.17546,
+      "lon": 8.52764,
+      "place": "Dublin",
+      "country": "Irland",
+      "accuracy": "headquarters",
+      "existingCompanyId": "Q338825",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q338825",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1761",
+      "region": "Europa"
+    },
+    "Q3117577": {
+      "id": "Q3117577",
+      "name": "TMX Group",
+      "lat": 43.670277777,
+      "lon": -79.386666666,
+      "place": "Toronto",
+      "country": "Kanada",
+      "accuracy": "locality",
+      "existingCompanyId": "Q3117577",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q3117577",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q172",
+      "region": "Nordamerika"
+    },
+    "Q47498532": {
+      "id": "Q47498532",
+      "name": "Epiroc",
+      "lat": 59.316666666,
+      "lon": 18.166666666,
+      "place": "Nacka",
+      "country": "Schweden",
+      "accuracy": "locality",
+      "existingCompanyId": "Q47498532",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q47498532",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q946647",
+      "region": "Europa"
+    },
+    "Q7949044": {
+      "id": "Q7949044",
+      "name": "WESCO International",
+      "lat": 40.441666666,
+      "lon": -80.0,
+      "place": "Pittsburgh",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": "Q7949044",
+      "locationSourceUrl": "https://www.wikidata.org/wiki/Q7949044",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1342",
+      "region": "Nordamerika"
+    },
+    "safaricom": {
+      "id": "safaricom",
+      "name": "Safaricom",
+      "lat": -1.286388888,
+      "lon": 36.817222222,
+      "place": "Nairobi",
+      "country": "Kenia",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.globaldata.com/company-profile/safaricom-ltd/locations/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q3870",
+      "region": "Afrika"
+    },
+    "verum": {
+      "id": "verum",
+      "name": "Verum Partners",
+      "lat": -19.928055555,
+      "lon": -43.941944444,
+      "place": "Belo Horizonte",
+      "country": "Brasilien",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-verum-partners-expanding-its-capital-projects-capabilities-in-brazil",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q42800",
+      "region": "Südamerika"
+    },
+    "comware": {
+      "id": "comware",
+      "name": "COMWARE",
+      "lat": 35.689444444,
+      "lon": 139.691666666,
+      "place": "Tokio",
+      "country": "Japan",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-comware-to-strengthen-accenture-edge-and-accelerate-digital-core-reinvention-for-mid-market-companies-in-japan",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1490",
+      "region": "Asien"
+    },
+    "piramal": {
+      "id": "piramal",
+      "name": "Piramal Pharma",
+      "lat": 19.075833333,
+      "lon": 72.8775,
+      "place": "Mumbai",
+      "country": "Indien",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.piramalpharma.com/contact-us",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1156",
+      "region": "Asien"
+    },
+    "yapan": {
+      "id": "yapan",
+      "name": "Yapan Bio",
+      "lat": 17.361666666,
+      "lon": 78.474722222,
+      "place": "Hyderabad",
+      "country": "Indien",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.eqs-news.com/de/news/corporate/piramal-pharma-limited-completes-acquisition-of-controlling-stake-in-yapan-bio-private-limited/aa568294-a68a-4d94-bf89-b32eda281541_en",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1361",
+      "region": "Asien"
+    },
+    "energyfuels": {
+      "id": "energyfuels",
+      "name": "Energy Fuels",
+      "lat": 39.706389,
+      "lon": -105.102778,
+      "place": "Lakewood",
+      "country": "Vereinigte Staaten",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.energyfuels.com/contact-us/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q462804",
+      "region": "Nordamerika"
+    },
+    "asm": {
+      "id": "asm",
+      "name": "Australian Strategic Materials",
+      "lat": -31.955833333,
+      "lon": 115.859722222,
+      "place": "Perth",
+      "country": "Australien",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://asm-au.com/about/corporate-directory/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q3183",
+      "region": "Ozeanien"
+    },
+    "cboe-au": {
+      "id": "cboe-au",
+      "name": "Cboe Australia",
+      "lat": -33.867777777,
+      "lon": 151.21,
+      "place": "Sydney",
+      "country": "Australien",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://s21.q4cdn.com/671813756/files/doc_news/TMX-Group-Completes-Acquisition-of-Cboe-Australia-2026.pdf",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q3130",
+      "region": "Ozeanien"
+    },
+    "eventspec": {
+      "id": "eventspec",
+      "name": "Eventspec · operatives Geschäft",
+      "lat": -26.204361111,
+      "lon": 28.041638888,
+      "place": "Johannesburg",
+      "country": "Südafrika",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.epirocgroup.com/en/media/corporate-press-releases/2026/20260804-epiroc-completes-acquisition-of-the-business-of-mining-aftermarket-solutions-provider-in-south-africa",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q34647",
+      "region": "Afrika"
+    },
+    "torishima": {
+      "id": "torishima",
+      "name": "Torishima Pump",
+      "lat": 34.846,
+      "lon": 135.61725,
+      "place": "Takatsuki",
+      "country": "Japan",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.torishima.co.jp/en/outline/olinfo/au/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q335423",
+      "region": "Asien"
+    },
+    "shin": {
+      "id": "shin",
+      "name": "Shin Nippon Machinery",
+      "lat": 35.689444444,
+      "lon": 139.691666666,
+      "place": "Tokio",
+      "country": "Japan",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.snm.co.jp/intro/gaiyo/",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q1490",
+      "region": "Asien"
+    },
+    "newark": {
+      "id": "newark",
+      "name": "Newark Engineering Group",
+      "lat": 1.3,
+      "lon": 103.8,
+      "place": "Singapur",
+      "country": "Singapur",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.prnewswire.com/news-releases/wesco-completes-acquisition-of-newark-engineering-group-expanding-data-center-cooling-and-lifecycle-services-302815535.html",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q334",
+      "region": "Asien"
+    },
+    "cybrid": {
+      "id": "cybrid",
+      "name": "Cybrid Technologies",
+      "lat": 31.3,
+      "lon": 120.619444444,
+      "place": "Suzhou",
+      "country": "Volksrepublik China",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://www.linkedin.com/pulse/cybrid-technologies-completes-acquisition-controlling-okuic",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q42622",
+      "region": "Asien"
+    },
+    "genernano": {
+      "id": "genernano",
+      "name": "Suzhou Jinlan Nanotechnology (GenerNano)",
+      "lat": 31.3,
+      "lon": 120.619444444,
+      "place": "Suzhou",
+      "country": "Volksrepublik China",
+      "accuracy": "locality",
+      "existingCompanyId": null,
+      "locationSourceUrl": "https://m.made-in-china.com/company-genernano/info.html",
+      "coordinateSourceUrl": "https://www.wikidata.org/wiki/Q42622",
+      "region": "Asien"
+    }
+  },
+  "deals": [
+    {
+      "id": "accenture-comware",
+      "buyerId": "Q338825",
+      "targetId": "comware",
+      "completedOn": "2026-08-31",
+      "status": "completed",
+      "sourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-comware-to-strengthen-accenture-edge-and-accelerate-digital-core-reinvention-for-mid-market-companies-in-japan",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Asien",
+        "Europa"
+      ]
+    },
+    {
+      "id": "energyfuels-asm",
+      "buyerId": "energyfuels",
+      "targetId": "asm",
+      "completedOn": "2026-08-28",
+      "status": "completed",
+      "sourceUrl": "https://investors.energyfuels.com/2026-08-28-Energy-Fuels-Completes-Acquisition-of-Australian-Strategic-Materials",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "ASM am Hauptsitz im Raum Perth; Produktionsanlagen unter anderem in Südkorea. Der Pfeil zeigt keinen Anlagenstandort.",
+      "kind": "company",
+      "regions": [
+        "Nordamerika",
+        "Ozeanien"
+      ]
+    },
+    {
+      "id": "ecopetrol-brava",
+      "buyerId": "Q1282130",
+      "targetId": "Q108666978",
+      "completedOn": "2026-08-18",
+      "status": "completed",
+      "sourceUrl": "https://www.prnewswire.com/news-releases/ecopetrol-completes-acquisition-of-a-controlling-51-stake-in-brava-energia-sa-and-strengthens-its-growth-platform-in-brazil-302853566.html",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Rund 51 % der stimmberechtigten Aktien. Kauf über die hundertprozentige Tochter Ecopetrol Investimentos do Brasil; der Pfeil beginnt beim Hauptsitz der Käufergruppe.",
+      "kind": "majority",
+      "regions": [
+        "Südamerika"
+      ]
+    },
+    {
+      "id": "piramal-yapan",
+      "buyerId": "piramal",
+      "targetId": "yapan",
+      "completedOn": "2026-08-18",
+      "status": "completed",
+      "sourceUrl": "https://www.eqs-news.com/de/news/corporate/piramal-pharma-limited-completes-acquisition-of-controlling-stake-in-yapan-bio-private-limited/aa568294-a68a-4d94-bf89-b32eda281541_en",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "40,67 Prozentpunkte hinzugekauft; Anteil danach 74 %. Keine vollständige Übernahme.",
+      "kind": "majority",
+      "regions": [
+        "Asien"
+      ]
+    },
+    {
+      "id": "epiroc-eventspec",
+      "buyerId": "Q47498532",
+      "targetId": "eventspec",
+      "completedOn": "2026-08-04",
+      "status": "completed",
+      "sourceUrl": "https://www.epirocgroup.com/en/media/corporate-press-releases/2026/20260804-epiroc-completes-acquisition-of-the-business-of-mining-aftermarket-solutions-provider-in-south-africa",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Übernahme des operativen Geschäfts von Eventspec. Die Quelle bestätigt keinen Kauf sämtlicher Gesellschaftsanteile.",
+      "kind": "business",
+      "regions": [
+        "Afrika",
+        "Europa"
+      ]
+    },
+    {
+      "id": "tmx-cboe-au",
+      "buyerId": "Q3117577",
+      "targetId": "cboe-au",
+      "completedOn": "2026-08-02",
+      "status": "completed",
+      "sourceUrl": "https://s21.q4cdn.com/671813756/files/doc_news/TMX-Group-Completes-Acquisition-of-Cboe-Australia-2026.pdf",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Erworben wurde Middlebury Holdings Pty. Limited (Cboe Australia). Nicht die weltweite Cboe-Gruppe.",
+      "kind": "company",
+      "regions": [
+        "Nordamerika",
+        "Ozeanien"
+      ]
+    },
+    {
+      "id": "torishima-shin",
+      "buyerId": "torishima",
+      "targetId": "shin",
+      "completedOn": "2026-07-01",
+      "status": "completed",
+      "sourceUrl": "https://www.torishima.co.jp/uploads/Presentation_FY2026_First_en.pdf",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Abschlussdatum laut Torishimas Quartalspräsentation vom August 2026.",
+      "kind": "company",
+      "regions": [
+        "Asien"
+      ]
+    },
+    {
+      "id": "wesco-newark",
+      "buyerId": "Q7949044",
+      "targetId": "newark",
+      "completedOn": "2026-07-01",
+      "status": "completed",
+      "sourceUrl": "https://www.prnewswire.com/news-releases/wesco-completes-acquisition-of-newark-engineering-group-expanding-data-center-cooling-and-lifecycle-services-302815535.html",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Asien",
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "vodacom-safaricom",
+      "buyerId": "Q1856518",
+      "targetId": "safaricom",
+      "completedOn": "2026-06-30",
+      "status": "completed",
+      "sourceUrl": "https://www.vodacom.com/news-article.php?articleID=16911",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "20 Prozentpunkte hinzugekauft; effektiver Anteil anschließend rund 55 %. Käufergruppe Vodacom, Transaktion über die Beteiligungsstruktur.",
+      "kind": "majority",
+      "regions": [
+        "Afrika"
+      ]
+    },
+    {
+      "id": "holcim-xella",
+      "buyerId": "Q16466481",
+      "targetId": "Q535956",
+      "completedOn": "2026-06-19",
+      "status": "completed",
+      "sourceUrl": "https://www.holcim.com/media/media-releases/holcim-completes-acquisition-xella",
+      "sourceTitle": "Holcim · Xella-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Europa"
+      ]
+    },
+    {
+      "id": "accenture-verum",
+      "buyerId": "Q338825",
+      "targetId": "verum",
+      "completedOn": "2026-05-18",
+      "status": "completed",
+      "sourceUrl": "https://newsroom.accenture.com/news/2026/accenture-to-acquire-verum-partners-expanding-its-capital-projects-capabilities-in-brazil",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Europa",
+        "Südamerika"
+      ]
+    },
+    {
+      "id": "abb-netcontrol",
+      "buyerId": "Q52825",
+      "targetId": "netcontrol",
+      "completedOn": "2026-05-05",
+      "status": "completed",
+      "sourceUrl": "https://new.abb.com/news/detail/134832/abb-completes-netcontrol-acquisition-expanding-grid-automation-offering-for-utilities",
+      "sourceTitle": "ABB · Netcontrol-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Europa"
+      ]
+    },
+    {
+      "id": "servicenow-armis",
+      "buyerId": "Q7455653",
+      "targetId": "armis",
+      "completedOn": "2026-04-20",
+      "status": "completed",
+      "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1373715/000137371526000054/erq1fy26.htm",
+      "sourceTitle": "ServiceNow · Quartalsmitteilung bei der SEC",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "capitalone-brex",
+      "buyerId": "Q1034654",
+      "targetId": "Q60741065",
+      "completedOn": "2026-04-07",
+      "status": "completed",
+      "sourceUrl": "https://www.capitalone.com/about/newsroom/capital-one-completes-acquisition-of-brex/",
+      "sourceTitle": "Capital One · Brex-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "holcim-pacasmayo",
+      "buyerId": "Q16466481",
+      "targetId": "Q5058678",
+      "completedOn": "2026-03-30",
+      "status": "completed",
+      "sourceUrl": "https://www.holcim.com/media/media-releases/holcim-completes-acquisition-majority-stake-cementos-pacasmayo",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Mehrheitsbeteiligung. Weitere Aktien waren Gegenstand eines gesonderten Pflichtangebots.",
+      "kind": "majority",
+      "regions": [
+        "Europa",
+        "Südamerika"
+      ]
+    },
+    {
+      "id": "abbott-exact",
+      "buyerId": "Q306764",
+      "targetId": "Q22121866",
+      "completedOn": "2026-03-23",
+      "status": "completed",
+      "sourceUrl": "https://abbott.mediaroom.com/2026-03-23-Abbott-completes-acquisition-of-Exact-Sciences",
+      "sourceTitle": "Abbott · Exact-Sciences-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "google-wiz",
+      "buyerId": "Q95",
+      "targetId": "wiz",
+      "completedOn": "2026-03-11",
+      "status": "completed",
+      "sourceUrl": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/wiz-acquisition/",
+      "sourceTitle": "Google · Abschluss der Wiz-Übernahme",
+      "note": "Google gehört zu Alphabet. Als Käufer wird Google selbst angezeigt.",
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "gsk-rapt",
+      "buyerId": "Q212322",
+      "targetId": "rapt",
+      "completedOn": "2026-03-03",
+      "status": "completed",
+      "sourceUrl": "https://www.gsk.com/en-gb/media/press-releases/gsk-completes-acquisition-of-rapt-therapeutics/",
+      "sourceTitle": "GSK · RAPT-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Europa",
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "novartis-avidity",
+      "buyerId": "Q507154",
+      "targetId": "avidity",
+      "completedOn": "2026-02-27",
+      "status": "completed",
+      "sourceUrl": "https://www.novartis.com/news/media-releases/novartis-successfully-completes-acquisition-avidity-biosciences-strengthening-late-stage-neuroscience-pipeline-and-advancing-xrna-strategy",
+      "sourceTitle": "Novartis · Avidity-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Europa",
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "paloalto-cyberark",
+      "buyerId": "Q7128508",
+      "targetId": "Q5197666",
+      "completedOn": "2026-02-11",
+      "status": "completed",
+      "sourceUrl": "https://www.paloaltonetworks.com/company/press/2026/palo-alto-networks-completes-acquisition-of-cyberark-to-secure-the-ai-era",
+      "sourceTitle": "Palo Alto Networks · CyberArk-Übernahme abgeschlossen",
+      "note": "CyberArk wird am in Wikidata erfassten Standort Newton gezeigt. Das Unternehmen hat auch Standorte in Israel.",
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    },
+    {
+      "id": "cybrid-genernano",
+      "buyerId": "cybrid",
+      "targetId": "genernano",
+      "completedOn": "2026-02-09",
+      "status": "completed",
+      "sourceUrl": "https://www.linkedin.com/pulse/cybrid-technologies-completes-acquisition-controlling-okuic",
+      "sourceTitle": "Unternehmensmeldung · Abschluss",
+      "note": "Kontrollbeteiligung laut Käufermeldung vom 9. Februar, veröffentlicht am 10. Februar. Beteiligungshöhe in dieser Quelle nicht beziffert.",
+      "kind": "majority",
+      "regions": [
+        "Asien"
+      ]
+    },
+    {
+      "id": "marvell-celestial",
+      "buyerId": "Q1347782",
+      "targetId": "celestial",
+      "completedOn": "2026-02-02",
+      "status": "completed",
+      "sourceUrl": "https://www.marvell.com/company/newsroom/marvell-completes-acquisition-of-celestial-ai.html",
+      "sourceTitle": "Marvell · Celestial-AI-Übernahme abgeschlossen",
+      "note": null,
+      "kind": "company",
+      "regions": [
+        "Nordamerika"
+      ]
+    }
+  ]
+}

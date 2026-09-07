@@ -1,0 +1,17 @@
+NASA Earth 3D Model
+Credit: NASA Visualization Technology Applications and Development (VTAD)
+Source: https://science.nasa.gov/resource/earth-3d-model/
+Requested embed: https://solarsystem.nasa.gov/gltf_embed/2393/
+Asset: Earth_1_12756.glb, bundled unchanged as earth-nasa.glb.
+Model orientation and scale are applied at runtime.
+This model is a historical visualization, not live imagery.
+
+Fallback asset:
+NASA Blue Marble (2002), land surface, ocean color and sea ice.
+Source image:
+https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_2048.jpg
+Source page:
+https://science.nasa.gov/earth/earth-observatory/the-blue-marble-true-color-global-imagery-at-1km-resolution/
+Credit: NASA Goddard Space Flight Center. Reto Stockli / Robert Simmon and the
+MODIS teams, with additional data from USGS and partner data contributors.
+This is a historical satellite mosaic, not a current or live Earth observation.

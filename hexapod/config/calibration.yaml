@@ -1,0 +1,3 @@
+# Nullpunkt-Offsets pro Servo in Grad (Servo-Name = <Bein>.<Gelenk>).
+# Wird von tools/calibrate.py geschrieben. Fehlende Einträge = 0.
+offsets_deg: {}

@@ -1,0 +1,3 @@
+PyYAML>=6.0
+smbus2>=0.4      # nur auf dem Raspberry Pi nötig (echte PCA9685)
+pytest>=7.0      # nur für Tests

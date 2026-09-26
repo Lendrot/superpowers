@@ -1,0 +1,127 @@
+# Hexapod-Späher — Hardware-Konfiguration
+#
+# WICHTIG: Alle Winkel- und Pulsgrenzen hier sind KONSERVATIVE STARTWERTE,
+# keine gemessenen Werte. Die Software setzt keine Grenze voraus, die nicht in
+# dieser Datei steht (fehlende Schlüssel => Fehler beim Start). Vor dem ersten
+# Lauf mit montierten Beinen jede Grenze mit `tools/calibrate.py` prüfen und
+# hier eintragen.
+#
+# Winkelkonvention (für ALLE Gelenke):
+#   - Gelenkwinkel in Grad, 0 = Mittelstellung ("neutral")
+#   - Nullpunkt-Offsets pro Servo stehen in calibration.yaml, nicht hier
+#   - `inverted: true` dreht die Drehrichtung um (gespiegelte Montage links/rechts)
+
+pwm:
+  i2c_bus: 1                 # Raspberry Pi 5: /dev/i2c-1
+  frequency_hz: 50           # Standard-Servo-Frame 20 ms
+  # Interner Oszillator des PCA9685. Nennwert 25 MHz, reale Chips weichen
+  # einige Prozent ab. Wenn gemessene Pulsbreiten (Oszilloskop) nicht passen,
+  # hier korrigieren — nicht in den Servo-Grenzen.
+  oscillator_hz: 25000000
+
+# Spannungsgruppen: Servos einer Gruppe hängen am selben UBEC/Versorgungszweig.
+# max_moving_servos = wie viele Servos dieser Gruppe GLEICHZEITIG fahren dürfen.
+# Weitere Bewegungsaufträge warten, bis ein Platz frei wird.
+# ANNAHME (bitte prüfen): ein Versorgungszweig pro PCA9685-Board.
+power_groups:
+  rail_right:
+    max_moving_servos: 3
+  rail_left:
+    max_moving_servos: 3
+
+boards:
+  pca_right:
+    address: 0x40
+    power_group: rail_right
+  pca_left:
+    address: 0x41
+    power_group: rail_left
+
+# Gilt für jeden Servo, sofern dort nicht überschrieben.
+# MG996R: Pulsbereich laut diversen Datenblättern 500–2500 µs bzw. 1000–2000 µs,
+# je nach Charge. travel_deg ist der Stellweg, der diesem Pulsbereich entspricht.
+# Beides ist NICHT verifiziert — mit einem einzelnen Servo ohne Last nachmessen.
+servo_defaults:
+  pulse_min_us: 500
+  pulse_max_us: 2500
+  travel_deg: 180
+  max_speed_deg_s: 60        # Standard-Stellgeschwindigkeit der Rampen
+  max_offset_deg: 20         # größter zulässiger Kalibrierungs-Offset
+
+# Soft-Start
+# Der MG996R hat KEINE Positionsrückmeldung. Der erste Puls nach dem
+# Einschalten lässt den Servo von seiner (unbekannten) Ist-Position zum
+# kommandierten Winkel springen. Das lässt sich softwareseitig nicht
+# vollständig verhindern, nur entschärfen:
+#   1. Servos werden einzeln nacheinander aktiviert (activation_delay_s),
+#      nie alle gleichzeitig.
+#   2. Wenn der Roboter in einer bekannten Parkhaltung abgelegt wird, trage sie
+#      unter assumed_rest_pose ein. Dann ist der erste Puls diese Haltung
+#      (kein Sprung) und erst danach wird langsam in die Mittelstellung
+#      gefahren. `null` = Parkhaltung unbekannt, erster Puls = Mittelstellung.
+startup:
+  activation_delay_s: 0.4
+  speed_deg_s: 20
+  assumed_rest_pose: null
+  # Beispiel:
+  # assumed_rest_pose:
+  #   coxa: 0
+  #   femur: 40
+  #   tibia: -60
+
+update_hz: 50                # Takt der Rampen-Interpolation
+
+logging:
+  servo_log_file: logs/servo_commands.log
+  max_bytes: 5000000
+  backup_count: 5
+
+# Kanalbelegung + Gelenkgrenzen
+# coxa = Hüfte, femur = Oberschenkel, tibia = Unterschenkel
+# min_deg/max_deg: ±30° als vorsichtiger Start. Echte mechanische Anschläge
+# (Kollision mit Körper/Nachbarbein) sind unbekannt und müssen ermittelt werden.
+legs:
+  R1:
+    board: pca_right
+    joints:
+      coxa:  {channel: 0, min_deg: -30, max_deg: 30, inverted: false}
+      femur: {channel: 1, min_deg: -30, max_deg: 30, inverted: false}
+      tibia: {channel: 2, min_deg: -30, max_deg: 30, inverted: false}
+  R2:
+    board: pca_right
+    joints:
+      coxa:  {channel: 3, min_deg: -30, max_deg: 30, inverted: false}
+      femur: {channel: 4, min_deg: -30, max_deg: 30, inverted: false}
+      tibia: {channel: 5, min_deg: -30, max_deg: 30, inverted: false}
+  R3:
+    board: pca_right
+    joints:
+      coxa:  {channel: 6, min_deg: -30, max_deg: 30, inverted: false}
+      femur: {channel: 7, min_deg: -30, max_deg: 30, inverted: false}
+      tibia: {channel: 8, min_deg: -30, max_deg: 30, inverted: false}
+  L1:
+    board: pca_left
+    joints:
+      coxa:  {channel: 0, min_deg: -30, max_deg: 30, inverted: true}
+      femur: {channel: 1, min_deg: -30, max_deg: 30, inverted: true}
+      tibia: {channel: 2, min_deg: -30, max_deg: 30, inverted: true}
+  L2:
+    board: pca_left
+    joints:
+      coxa:  {channel: 3, min_deg: -30, max_deg: 30, inverted: true}
+      femur: {channel: 4, min_deg: -30, max_deg: 30, inverted: true}
+      tibia: {channel: 5, min_deg: -30, max_deg: 30, inverted: true}
+  L3:
+    board: pca_left
+    joints:
+      coxa:  {channel: 6, min_deg: -30, max_deg: 30, inverted: true}
+      femur: {channel: 7, min_deg: -30, max_deg: 30, inverted: true}
+      tibia: {channel: 8, min_deg: -30, max_deg: 30, inverted: true}
+
+# Greifer: nur Kanalbelegung. Die Funktion der beiden Servos (z. B. Backe +
+# Hub?) ist noch nicht festgelegt — kommt mit Schritt 7.
+gripper:
+  board: pca_left
+  joints:
+    servo_a: {channel: 9,  min_deg: -30, max_deg: 30, inverted: false}
+    servo_b: {channel: 10, min_deg: -30, max_deg: 30, inverted: false}
